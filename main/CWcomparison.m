@@ -8,13 +8,13 @@ ref_state = make_reference(altitude, mu, rad);
 T = orbit_period(mu, ref_semi_major);
 n = 2 * pi / T;
 int_period = [100, 0];
-        
+  
 [ref_t, ref_orbit] = ...
-    ode45(@(t, y) orbit_prop(t, y, mu), int_period, ref_state);
+ ode45(@(t, y) orbit_prop(t, y, mu), int_period, ref_state);
 % Make conjunction
 conj_state = make_conjunction(altitude, mu, rad);
 [~, conj_orbit] = ...
-    ode45(@(t, y) orbit_prop(t, y, mu), ref_t, conj_state);
+ ode45(@(t, y) orbit_prop(t, y, mu), ref_t, conj_state);
 relCart = (conj_orbit - ref_orbit)';
 % Get coordinate transform for cartesian to hill
 ref_orbit = ref_orbit';
@@ -24,11 +24,11 @@ unit_cross = cross(unit_rad, unit_along);
 
 hillVecs = zeros(size(relCart));
 for i = 1:length(ref_t)
-    Q = [unit_rad(:, i)';
-         unit_along(:, i)';
-         unit_cross(:, i)'];
-    Q = blkdiag(Q, Q);
-    hillVecs(:, i) = Q * relCart(:, i);
+ Q = [unit_rad(:, i)';
+   unit_along(:, i)';
+   unit_cross(:, i)'];
+ Q = blkdiag(Q, Q);
+ hillVecs(:, i) = Q * relCart(:, i);
 end
 unitRelVels = hillVecs(4:6, :) ./ vecnorm(hillVecs(4:6, :));
 
@@ -36,10 +36,10 @@ curvHillVecs = curvilinear_hill_vecs(hillVecs, rad + altitude);
 CWsolution = zeros(size(hillVecs));
 curviCWsolution = CWsolution;
 for j = 1:length(ref_t)
-   t = ref_t(1) - ref_t(j);
-   hill_matrix = make_hill_matrix(n, t);
-   CWsolution(:, j) = hill_matrix * hillVecs(:, j);
-   curviCWsolution(:, j) = hill_matrix * curvHillVecs(:, j);
+ t = ref_t(1) - ref_t(j);
+ hill_matrix = make_hill_matrix(n, t);
+ CWsolution(:, j) = hill_matrix * hillVecs(:, j);
+ curviCWsolution(:, j) = hill_matrix * curvHillVecs(:, j);
 end
 
 
@@ -60,7 +60,7 @@ figure
 hold on
 grid minor
 plot(rel_distance(valid), CWError(valid), rel_distance(valid), curvCWError(valid),...
-     'LineWidth', 2)
+  'LineWidth', 2)
 ax = gca;
 ax.GridAlpha = 1;
 ax.LineWidth = 1;
