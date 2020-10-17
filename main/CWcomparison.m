@@ -35,6 +35,7 @@ unitRelVels = hillVecs(4:6, :) ./ vecnorm(hillVecs(4:6, :));
 curvHillVecs = curvilinear_hill_vecs(hillVecs, rad + altitude);
 CWsolution = zeros(size(hillVecs));
 curviCWsolution = CWsolution;
+CW2solution = zeros(3,length(ref_t));
 for j = 1:length(ref_t)
  t = ref_t(1) - ref_t(j);
  hill_matrix = make_hill_matrix(n, t);
