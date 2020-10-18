@@ -26,7 +26,7 @@ sensorReadings = sensor_model(relativeOrbit, sensorParams);
 %% MAIN LOOP
 for i = offset : estimatorParams.stepSize : length(timeVec)
  % STATE ESTIMATION
- sensorReading = sensorReadings(i);
+ sensorReading = sensorReadings(i,:);
  time = timeVec(i);
  real_time_delay = 0.01;
  
