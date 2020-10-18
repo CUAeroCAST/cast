@@ -8,6 +8,7 @@ gmatParams = struct;
 sensorParams = struct;
 estimatorParams = struct;
  estimatorParams.stepSize = 1;
+ estimatorParams.initState = [0,0,0,0,0,0];
 guidanceParams = struct;
 
 %% GMAT
