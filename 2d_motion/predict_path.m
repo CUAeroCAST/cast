@@ -1,4 +1,4 @@
-function [path] = predict_path(t,hillMat,t0,tStep)
+function [tVec,path] = predict_path(t,hillMat,t0,tStep)
 % This function predicts the 2d path of the collision object
 % Inputs:
 % t: time vector from the original 2D path

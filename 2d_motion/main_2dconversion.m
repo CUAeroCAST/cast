@@ -39,5 +39,5 @@ end
 unitRelVels = hillVecs(4:6, :) ./ vecnorm(hillVecs(4:6, :));
 %% Converting to 2d plane
 refOrbit = refOrbit';
-relScaledHill = convert_2d(tRef,refOrbit,conjOrbit);
+[tRef, relScaledHill] = convert_2d(tRef,refOrbit,conjOrbit);
 [t100,predictedPath100] = predict_path(tRef,relScaledHill,100,1);
