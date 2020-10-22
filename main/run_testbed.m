@@ -18,7 +18,10 @@ relativeOrbit = chiefOrbit - deputyOrbit;
 
 %% SENSOR MODEL
 
-sensorReadings = sensor_model(relativeOrbit, sensorParams);
+sensorScenario = init_sensor_model(relativeOrbit, sensorParams);
+sensorReadings = sensor_model(sensorScenario);
+
+%% STATE ESTIMATION
 
 [offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams);
 
