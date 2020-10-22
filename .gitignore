@@ -1,1 +1,16 @@
 *.asv 
+.MATLABDriveTag
+analysis/.MATLABDriveTag
+analysis/conjunction_assessment/.MATLABDriveTag
+analysis/cw_equations/.MATLABDriveTag
+analysis/odefunctions/.MATLABDriveTag
+analysis/testbed/.MATLABDriveTag
+analysis/utils/.MATLABDriveTag
+data/.MATLABDriveTag
+gmat/.MATLABDriveTag
+guidance/.MATLABDriveTag
+logging/.MATLABDriveTag
+main/.MATLABDriveTag
+micro_controller/.MATLABDriveTag
+sensing/.MATLABDriveTag
+state_estimation/.MATLABDriveTag
