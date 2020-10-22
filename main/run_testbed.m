@@ -22,6 +22,7 @@ relativeOrbit = chiefOrbit - deputyOrbit;
 sensorReadings = sensor_model(relativeOrbit, sensorParams);
 
 [offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams);
+estimatorParams.currentTime = timeVec(offset);
 
 %% MAIN LOOP
 for i = offset : estimatorParams.stepSize : length(timeVec)
