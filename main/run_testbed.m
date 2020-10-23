@@ -5,20 +5,38 @@ open_logging();
 
 %% CONFIG
 gmatParams = struct;
-sensorParams = struct;
 estimatorParams = struct;
  estimatorParams.stepSize = 1;
 guidanceParams = struct;
+
+%Sensor parameters
+sensorParams.samplingRate = 10;
+sensorParams.maxRange = 4e3;
+sensorParams.beamDivergence = 0.5; %deg
+sensorParams.rangeAccuracy = 0.025; %m
+sensorParams.beamLimits = [-0.75,0.75];
+sensorParams.sensorType = 'Lidar';
+
+%Target parameters
+targetParams.Mesh = extendedObjectMesh('sphere');
+targetParams.Dimensions.Length = 4.5e-3; 
+targetParams.Dimensions.Width = 4.5e-3;
+targetParams.Dimensions.Height = 4.5e-3;
+targetParams.Dimensions.OriginOffset = [0,0,0];
 
 %% GMAT
 
 [chiefOrbit, deputyOrbit, timeVec] = make_gmat_orbits(gmatParams);
 
 relativeOrbit = chiefOrbit - deputyOrbit;
+%Temp creation of relative orbit for init_sensor_model
+relativeOrbit = zeros(3,3);
+timeVec = [0,1,2];
 
 %% SENSOR MODEL
 
-sensorScenario = init_sensor_model(relativeOrbit, sensorParams);
+sensorScenario = init_sensor_model(relativeOrbit, timeVec, sensorParams,...
+                                   targetParams);
 sensorReadings = sensor_model(sensorScenario);
 
 %% STATE ESTIMATION
