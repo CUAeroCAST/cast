@@ -1,5 +1,5 @@
 % This function updates a live plot during runtimee
-function PlotStruct = update_live_plot(PlotStruct,estimatorParams,gantryPos,covAxes,estPos,videoObj,f,AXIS)
+function [PlotStruct,collision] = update_live_plot(PlotStruct,estimatorParams,gantryPos,covAxes,estPos,videoObj,f,AXIS,collision)
 
 %% Extract information from estimator params
 %implement later once this struct is defined
@@ -24,6 +24,26 @@ legend('Incoming Object Covariance','Incoming Object Path','Gantry Path','Gantry
 title('2D Collision Live Scenario')
 xlabel('X distance(m)')
 ylabel('Y distance(m)')
+
+% Add warning to show when manuevor starts
+if ((gantryPos(1)~=PlotStruct.gantryPositions(end-1,1)) || (gantryPos(2)~=PlotStruct.gantryPositions(end-1,2)))
+    txt = ('Spacecraft is Maneuvering');
+    t1 = text(10,5,txt);
+    t1.Color = [0,1,0];   %green
+end
+
+% Add confirmation if object has been avoided
+if  collision == 0
+    if ((estPos(1)-2*covAxes(1))<gantryPos(1) &&   (estPos(1)+2*covAxes(1))>gantryPos(1)...
+            && (estPos(2)-2*covAxes(2))<gantryPos(2) &&   (estPos(2)+2*covAxes(2))>gantryPos(2))
+        collision = 1;
+    end
+elseif collision == 1
+    txt = ('Potential Collision Has Occured!');
+    t1 = text(8,3,txt);
+    t1.Color = [1,0,0];   %red
+end
+
 %% Save frame to video
 frame = getframe(gcf);
 legend(gca, 'off')

@@ -2,14 +2,14 @@
 close all;clc;clear all;
 
 %% Dummy Variable Setup
-incomingPosY = [20:-1:0]';
-incomingPosX = [20:-1:0]';
+incomingPosY = [20:-.5:0]';
+incomingPosX = [20:-.5:0]';
 
-gantryPosX = [0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0];
-gantryPosY = [0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;2;3;4;5];
+gantryPosX = [0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0];
+gantryPosY = [0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;.5;1;1.5;2;2.5;3;3.5;4;4.5;5];
 
-covRadX = rand(21,1)*.5+1;
-covRadY = rand(21,1)*.5+1;
+covRadX = rand(42,1)*.5+1;
+covRadY = rand(42,1)*.5+1;
 
 estimatorParams = 0;
 
@@ -27,9 +27,10 @@ videoFig = figure;
 axis = [-1,20,-1,20];
 
 %% Test function
+colOccurance = 0;   %flag for if covariance has intersected with gantry pos
 for i = 1:length(incomingPosY)
-   PlotStruct = update_live_plot(PlotStruct,estimatorParams,[gantryPosX(i),gantryPosY(i)],[covRadX(i),covRadY(i)]...
-       ,[incomingPosX(i),incomingPosY(i)],vobj,videoFig,axis);
+   [PlotStruct,colOccurance] = update_live_plot(PlotStruct,estimatorParams,[gantryPosX(i),gantryPosY(i)],[covRadX(i),covRadY(i)]...
+       ,[incomingPosX(i),incomingPosY(i)],vobj,videoFig,axis,colOccurance);
 end
 close(vobj)
 close(videoFig)
