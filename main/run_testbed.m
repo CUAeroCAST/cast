@@ -7,6 +7,7 @@ open_logging();
 gmatParams = struct;
 estimatorParams = struct;
  estimatorParams.stepSize = 1;
+ estimatorParams.initState = [0,0,0,0,0,0];
 guidanceParams = struct;
 
 %Sensor parameters
@@ -42,6 +43,7 @@ sensorReadings = sensor_model(sensorScenario);
 %% STATE ESTIMATION
 
 [offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams);
+estimatorParams.currentTime = timeVec(offset);
 
 %% MAIN LOOP
 for i = offset : estimatorParams.stepSize : length(timeVec)

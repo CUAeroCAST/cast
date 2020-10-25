@@ -20,5 +20,4 @@ for i = 1:n_steps
     tgtmeshes = targetMeshes(ego);
     sensorReadings{i} = sensor(tgtmeshes,pose(ego),scenario.SimulationTime);
 end
-
 end
