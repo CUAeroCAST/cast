@@ -8,6 +8,7 @@ gmatParams = struct;
 sensorParams = struct;
 estimatorParams = struct;
  estimatorParams.stepSize = 1;
+ estimatorParams.initState = [0,0,0,0,0,0];
 guidanceParams = struct;
 
 %% GMAT
@@ -21,11 +22,12 @@ relativeOrbit = chiefOrbit - deputyOrbit;
 sensorReadings = sensor_model(relativeOrbit, sensorParams);
 
 [offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams);
+estimatorParams.currentTime = timeVec(offset);
 
 %% MAIN LOOP
 for i = offset : estimatorParams.stepSize : length(timeVec)
  % STATE ESTIMATION
- sensorReading = sensorReadings(i);
+ sensorReading = sensorReadings(i,:);
  time = timeVec(i);
  real_time_delay = 0.01;
  
