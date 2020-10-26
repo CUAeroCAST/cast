@@ -42,3 +42,9 @@ CODING GUIDELINES:
  All functionality should be unit tested for expected behavior.
  
  Testing scripts should be in the same folder and named <func>_test.m.
+ 
+ MATLAB Packages and Add-Ons:
+ Optimization Toolbox
+ Deep Learning Toolbox
+ Sensor Fusion
+ Lidar Toolbox
