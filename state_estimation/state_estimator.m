@@ -2,7 +2,10 @@
 function [estimate, estimatorParams] = state_estimator(sensorReading, time,...
                                                        estimatorParams)
  %Calculate the requested step size and update current estimator time
- stepSize = estimatorParams.currentTime - time; 
+ stepSize = time - estimatorParams.currentTime; 
+ if(stepSize < 0)
+     error("State estimation is receiving request for invalid time")
+ end
  estimatorParams.currentTime = time;
  
  %Estimate the requested state and correct based on sensor reading
