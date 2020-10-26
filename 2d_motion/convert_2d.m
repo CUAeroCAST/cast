@@ -12,7 +12,7 @@ function [tRef,relScaledHill] = convert_2d(tRef,refOrbit,conjOrbit)
 % Author: Jason Balke | Project: CAST | Date: 10/20/20
 %----------------------------------------------------------------------------------------%
 % Get normal vector to collision plane and location of collision
-planeUnitVec = refOrbit(1,1:3)/norm(refOrbit(1,1:3));
+planeNormalVec = cross(refOrbit(1,4:6),conjOrbit(1,4:6));
 colPoint = [refOrbit(1,1:3) 0 0 0]; 
 % Projecting onto 2D plane
 for j = 1:length(refOrbit)
@@ -21,13 +21,13 @@ for j = 1:length(refOrbit)
     conj2colPoint(j,:) = conjOrbit(j,:)-colPoint;
     % Project the vectors onto the 2D plane
     ref2dPos(j,:) = ref2colPoint(j,1:3)-...
-        (dot(ref2colPoint(j,1:3),planeUnitVec)/norm(planeUnitVec)^2)*planeUnitVec;
+        (dot(ref2colPoint(j,1:3),planeNormalVec)/norm(planeNormalVec)^2)*planeNormalVec;
     conj2dPos(j,:) = conj2colPoint(j,1:3)-...
-        (dot(conj2colPoint(j,1:3),planeUnitVec)/norm(planeUnitVec)^2)*planeUnitVec;
+        (dot(conj2colPoint(j,1:3),planeNormalVec)/norm(planeNormalVec)^2)*planeNormalVec;
     ref2dVel(j,:) = ref2colPoint(j,4:6)-...
-        (dot(ref2colPoint(j,4:6),planeUnitVec)/norm(planeUnitVec)^2)*planeUnitVec;
+        (dot(ref2colPoint(j,4:6),planeNormalVec)/norm(planeNormalVec)^2)*planeNormalVec;
     conj2dVel(j,:) = conj2colPoint(j,4:6)-...
-        (dot(conj2colPoint(j,4:6),planeUnitVec)/norm(planeUnitVec)^2)*planeUnitVec;
+        (dot(conj2colPoint(j,4:6),planeNormalVec)/norm(planeNormalVec)^2)*planeNormalVec;
 end
 % Combine position and velocity into the full state vector
 ref2d = [ref2dPos(:,1:2) ref2dVel(:,1:2)];

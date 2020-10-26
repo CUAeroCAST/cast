@@ -46,7 +46,7 @@ for j = 1:length(ref_t)
  if j>1 && j<length(ref_t)-1
      tstep = (ref_t(1) - ref_t(j))-(ref_t(1) - ref_t(j-1));
      other_hill_matrix = make_hill_matrix(n,tstep);
-     CWsolution2(:,j) = hill_matrix*CWsolution2(:,j-1);
+     CWsolution2(:,j) = other_hill_matrix*CWsolution2(:,j-1);
  else
      CWsolution2(:,j) = CWsolution(:, j);
  end

@@ -2,7 +2,6 @@
 % This is a script that makes the 2d motion, it'll become a function at
 % some point
 clear;close all;clc;
-addpath('C:\Users\Jason\Documents\ASEN4018\git\cast\main')
 importCast
 %% Generate Orbits - This should be replaced with GMAT generated orbits
 % Make Reference Orbit
