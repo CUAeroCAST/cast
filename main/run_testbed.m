@@ -77,7 +77,7 @@ for i = offset : estimatorParams.stepSize : length(timeVec)
  
  % Visualization
  
- [PlotStruct,collisionFlag] = update_live_plot(PlotStruct,estimate,recv,vobj,axis,collisionFlag,i);
+ %[PlotStruct,collisionFlag] = update_live_plot(PlotStruct,estimate,recv,vobj,axis,collisionFlag,i);
  
  pause(real_time_delay)
 
