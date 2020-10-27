@@ -9,6 +9,6 @@ function [estimate, estimatorParams] = state_estimator(sensorReading, time,...
  estimatorParams.currentTime = time;
  
  %Estimate the requested state and correct based on sensor reading
- estimate.state = predict(estimatorParams.filter, stepSize);
- estimate.correctedState = correct(estimatorParams.filter,sensorReading);
+ [estimate.predState, estimate.Ppred] = predict(estimatorParams.filter, stepSize);
+ [estimate.corrState, estimate.Pcorr] = correct(estimatorParams.filter,sensorReading);
 end
