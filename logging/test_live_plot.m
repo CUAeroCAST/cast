@@ -18,7 +18,7 @@ PlotStruct.incomingPositions = [20 20]; %est pos is 1x2
 PlotStruct.gantryPositions = [0 0]; %gantryPos is 1x2
 
 %% Video setup
-filename = '2D_collision_avoid';
+filename = 'logging/2D_collision_avoid_test';
 vobj = VideoWriter(filename, 'MPEG-4');
 vobj.FrameRate = 2;
 vobj.Quality = 100;
@@ -29,8 +29,11 @@ axis = [-1,20,-1,20];
 %% Test function
 colOccurance = 0;   %flag for if covariance has intersected with gantry pos
 for i = 1:length(incomingPosY)
-   [PlotStruct,colOccurance] = update_live_plot(PlotStruct,estimatorParams,[gantryPosX(i),gantryPosY(i)],[covRadX(i),covRadY(i)]...
-       ,[incomingPosX(i),incomingPosY(i)],vobj,videoFig,axis,colOccurance);
+    estimate.state = [incomingPosX(i),0,incomingPosY(i),0,0,0];
+    estimate.covarianceMat = [covRadX(i) 0 0 0 0 0;0 0 0 0 0 0;0 0 covRadY(i) 0 0 0;0 0 0 0 0 0;0 0 0 0 0 0;0 0 0 0 0 0];
+    recv.state = [gantryPosX(i),gantryPosY(i)];
+   [PlotStruct,colOccurance] = update_live_plot(PlotStruct,estimate...
+       ,recv,vobj,axis,colOccurance,i);
 end
 close(vobj)
 close(videoFig)
