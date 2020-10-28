@@ -12,7 +12,7 @@ function [tRef,relScaledHill] = convert_2d(tRef,refOrbit,conjOrbit)
 % Author: Jason Balke | Project: CAST | Date: 10/20/20
 %----------------------------------------------------------------------------------------%
 % Get normal vector to collision plane and location of collision
-planeNormalVec = cross(refOrbit(1,4:6),conjOrbit(1,4:6));
+planeNormalVec = refOrbit(2,4:6) - conjOrbit(2,4:6);
 colPoint = [refOrbit(1,1:3) 0 0 0]; 
 % Projecting onto 2D plane
 for j = 1:length(refOrbit)
