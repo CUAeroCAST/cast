@@ -2,8 +2,8 @@
 function [PlotStruct,collisionFlag] = update_live_plot(PlotStruct,estimate,recv,videoObj,AXIS,collisionFlag,i)
 
 %% Extract information from estimate struct and recv struct
-covAxes = [estimate.covarianceMat(1,1),estimate.covarianceMat(3,3)]; %This may need refining if off-axes tilt for ellipse is present
-estPos = [estimate.state(1),estimate.state(3)];    %x and y estimated position for incoming object
+covAxes = [estimate.Pcorr(1,1),estimate.Pcorr(3,3)]; %This may need refining if off-axes tilt for ellipse is present
+estPos = [estimate.corrState(1),estimate.corrState(3)];    %x and y estimated position for incoming object
 gantryPos = [recv.state(1),recv.state(2)];         %assume for now that recv.state is [xpos,ypos]
 %% Append New Data into PlotStruct
 if i>1
