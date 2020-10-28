@@ -7,6 +7,7 @@ ref_state = make_reference(altitude, mu, rad);
 [~, ref_semi_major, ~, ~, ~, ~] = elements_from_state(ref_state, mu);
 T = orbit_period(mu, ref_semi_major);
 n = 2 * pi / T;
+nsteps = 100;
 int_period = [100, 0];
   
 [ref_t, ref_orbit] = ...
@@ -43,25 +44,17 @@ for j = 1:length(ref_t)
  CWsolution(:, j) = hill_matrix * hillVecs(:, j);
  curviCWsolution(:, j) = hill_matrix * curvHillVecs(:, j);
  CW2solution(:,j) = cw_2nd_order(hillVecs(:,j),n,rad+1200,t);
- [r,c] = size(hillVecs);
- CWsolution2 = zeros(r,c-j);
- for jj = j:length(CWsolution2)
-     if jj>1 && jj<length(ref_t)
-         tstep = (ref_t(1) - ref_t(jj))-(ref_t(1) - ref_t(jj-1));
-         other_hill_matrix = make_hill_matrix(n,tstep);
-         CWsolution2(:,jj) = other_hill_matrix*CWsolution2(:,jj-1);
-     else
-         CWsolution2(:,jj) = CWsolution(:, jj);
-     end
-     
- end
- CWsolution2full(j) = {CWsolution2};
+
+ tstep = t / nsteps;  
+ stepHillMatrix = make_hill_matrix(n, tstep);
+ nStepHillMatrix = stepHillMatrix ^ nsteps;
+ CWsolution2(:, j) = nStepHillMatrix * hillVecs(:, j);
 end
 
 CWError = vecnorm(cross(CWsolution(1:3, :), unitRelVels)) * 1000;
 curvCWError = sphError(curviCWsolution(1:3, :), rad + altitude, unitRelVels) * 1000;
 CW2ndError = vecnorm(cross(CW2solution(1:3,:),unitRelVels))*1000;
-% CW2Error = vecnorm(cross(CWsolution2(1:3,:),unitRelVels))*1000;
+CW2Error = vecnorm(cross(CWsolution2(1:3,:),unitRelVels))*1000;
 rel_distance = vecnorm(relCart(1:3, :));
 valid = rel_distance < 150;
 
