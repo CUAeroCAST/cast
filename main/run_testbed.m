@@ -50,7 +50,6 @@ estimatorParams.currentTime = timeVec(offset);
 %% LIVE PLOT INITIALIZATION
 filename = '2D_collision_avoid';
 vobj = VideoWriter(filename, 'MPEG-4');
-vobj.FrameRate = 1/length(timeVec); 
 vobj.Quality = 100;
 open(vobj);
 videoFig = figure;
