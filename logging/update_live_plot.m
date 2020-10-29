@@ -1,4 +1,5 @@
 % This function updates a live plot during runtime
+
 function plotStruct = update_live_plot(plotStruct,estimate,recv,i)
 videoObj = plotStruct.vobj;
 axis_ = plotStruct.axis;
