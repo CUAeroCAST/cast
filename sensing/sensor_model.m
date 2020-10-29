@@ -18,6 +18,12 @@ sensor = ego.Sensors{1};
 for i = 1:n_steps 
     advance(scenario);
     tgtmeshes = targetMeshes(ego);
-    sensorReadings{i} = sensor(tgtmeshes,pose(ego),scenario.SimulationTime);
+    temp = sensor(tgtmeshes,pose(ego),scenario.SimulationTime);
+    if any(isnan(temp),'all')
+        %If there are nan values, take the middle reading
+        sensorReadings{i} = temp(median(1:length(temp(:,1))),:);
+    else
+        sensorReadings{i} = temp;
+    end
 end
 end

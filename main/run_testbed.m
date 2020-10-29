@@ -17,7 +17,7 @@ sensorParams.samplingRate = 100;
 sensorParams.maxRange = 4e3;
 sensorParams.beamDivergence = 0.5; %deg
 sensorParams.rangeAccuracy = 0.025; %m
-sensorParams.beamLimits = [-0.25,0.25];
+sensorParams.beamLimits = [-0.75,0.75];
 sensorParams.sensorType = 'Lidar';
 
 %Target parameters
