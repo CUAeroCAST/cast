@@ -1,16 +1,16 @@
 %% HOUSEKEEPING
 clear; clc; close all
 importCast;
-open_logging();
+datapath = open_logging();
 
 %% CONFIG
 gmatParams = struct;
 estimatorParams = struct;
-PlotStruct = struct;
-recv = struct;
  estimatorParams.stepSize = 1;
  estimatorParams.initState = [0,0,0,0,0,0];
 guidanceParams = struct;
+plotStruct = struct;
+recv = struct;
 
 %Sensor parameters
 sensorParams.samplingRate = 10;
@@ -27,6 +27,20 @@ targetParams.Dimensions.Width = 4.5e-3;
 targetParams.Dimensions.Height = 4.5e-3;
 targetParams.Dimensions.OriginOffset = [0,0,0];
 
+%Live Plot
+plotStruct.filename = [datapath, filesep, '2D_collision_avoid'];
+plotStruct.vobj = VideoWriter(plotStruct.filename, 'MPEG-4');
+plotStruct.vobj.Quality = 100;
+open(plotStruct.vobj);
+plotStruct.videoFig = figure;
+plotStruct.axis = [-1,20,-1,20];
+plotStruct.collisionFlag = 0;   %flag for if covariance has intersected with gantry pos
+
+%Save parameter structs
+log_struct(gmatParams, [datapath, filesep, 'gmatParams'])
+log_struct(estimatorParams, [datapath, filesep, 'estimatorParams'])
+log_struct(guidanceParams, [datapath, filesep, 'guidanceParams'])
+log_struct(plotStruct, [datapath, filesep, 'plotStruct'])
 %% GMAT
 
 [chiefOrbit, deputyOrbit, timeVec] = make_gmat_orbits(gmatParams);
@@ -47,15 +61,6 @@ sensorReadings = sensor_model(sensorScenario);
 [offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams);
 estimatorParams.currentTime = timeVec(offset);
 
-%% LIVE PLOT INITIALIZATION
-filename = '2D_collision_avoid';
-vobj = VideoWriter(filename, 'MPEG-4');
-vobj.Quality = 100;
-open(vobj);
-videoFig = figure;
-axis = [-1,20,-1,20];
-
-collisionFlag = 0;   %flag for if covariance has intersected with gantry pos
 
 %% MAIN LOOP
 for i = offset : estimatorParams.stepSize : length(timeVec)
@@ -76,12 +81,10 @@ for i = offset : estimatorParams.stepSize : length(timeVec)
  
  % Visualization
  
- %[PlotStruct,collisionFlag] = update_live_plot(PlotStruct,estimate,recv,vobj,axis,collisionFlag,i);
+ plotStruct = update_live_plot(plotStruct,estimate,recv,i);
  
  pause(real_time_delay)
 
 end
 %% CLEANUP
-close(vobj);
-close(videoFig)
-close_logging();
+close_logging(plotStruct);
