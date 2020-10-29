@@ -6,6 +6,8 @@ open_logging();
 %% CONFIG
 gmatParams = struct;
 estimatorParams = struct;
+PlotStruct = struct;
+recv = struct;
  estimatorParams.stepSize = 1;
  estimatorParams.initState = [0,0,0,0,0,0];
 guidanceParams = struct;
@@ -45,6 +47,16 @@ sensorReadings = sensor_model(sensorScenario);
 [offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams);
 estimatorParams.currentTime = timeVec(offset);
 
+%% LIVE PLOT INITIALIZATION
+filename = '2D_collision_avoid';
+vobj = VideoWriter(filename, 'MPEG-4');
+vobj.Quality = 100;
+open(vobj);
+videoFig = figure;
+axis = [-1,20,-1,20];
+
+collisionFlag = 0;   %flag for if covariance has intersected with gantry pos
+
 %% MAIN LOOP
 for i = offset : estimatorParams.stepSize : length(timeVec)
  % STATE ESTIMATION
@@ -62,11 +74,14 @@ for i = offset : estimatorParams.stepSize : length(timeVec)
  
  recv = run_io(maneuver, delay);
  
- update_live_plot(recv);
+ % Visualization
+ 
+ %[PlotStruct,collisionFlag] = update_live_plot(PlotStruct,estimate,recv,vobj,axis,collisionFlag,i);
  
  pause(real_time_delay)
 
 end
 %% CLEANUP
-
+close(vobj);
+close(videoFig)
 close_logging();
