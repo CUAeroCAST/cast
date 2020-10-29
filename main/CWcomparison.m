@@ -7,6 +7,7 @@ ref_state = make_reference(altitude, mu, rad);
 [~, ref_semi_major, ~, ~, ~, ~] = elements_from_state(ref_state, mu);
 T = orbit_period(mu, ref_semi_major);
 n = 2 * pi / T;
+nsteps = 100;
 int_period = [100, 0];
   
 [ref_t, ref_orbit] = ...
@@ -35,17 +36,25 @@ unitRelVels = hillVecs(4:6, :) ./ vecnorm(hillVecs(4:6, :));
 curvHillVecs = curvilinear_hill_vecs(hillVecs, rad + altitude);
 CWsolution = zeros(size(hillVecs));
 curviCWsolution = CWsolution;
+CW2solution = zeros(3,length(ref_t));
+CWsolution2full = {};
 for j = 1:length(ref_t)
  t = ref_t(1) - ref_t(j);
  hill_matrix = make_hill_matrix(n, t);
  CWsolution(:, j) = hill_matrix * hillVecs(:, j);
  curviCWsolution(:, j) = hill_matrix * curvHillVecs(:, j);
+ CW2solution(:,j) = cw_2nd_order(hillVecs(:,j),n,rad+1200,t);
+
+ tstep = t / nsteps;  
+ stepHillMatrix = make_hill_matrix(n, tstep);
+ nStepHillMatrix = stepHillMatrix ^ nsteps;
+ CWsolution2(:, j) = nStepHillMatrix * hillVecs(:, j);
 end
-
-
 
 CWError = vecnorm(cross(CWsolution(1:3, :), unitRelVels)) * 1000;
 curvCWError = sphError(curviCWsolution(1:3, :), rad + altitude, unitRelVels) * 1000;
+CW2ndError = vecnorm(cross(CW2solution(1:3,:),unitRelVels))*1000;
+CW2Error = vecnorm(cross(CWsolution2(1:3,:),unitRelVels))*1000;
 rel_distance = vecnorm(relCart(1:3, :));
 valid = rel_distance < 150;
 
@@ -60,14 +69,11 @@ figure
 hold on
 grid minor
 plot(rel_distance(valid), CWError(valid), rel_distance(valid), curvCWError(valid),...
-  'LineWidth', 2)
+  rel_distance(valid), CW2ndError(valid), 'LineWidth', 2)
 ax = gca;
 ax.GridAlpha = 1;
 ax.LineWidth = 1;
 title('Collision Plane Error Introduced by CW Equations')
 xlabel('Initial Relative Distance (km)')
 ylabel('Collision Plane Error (m)')
-legend('Cartesian CW', 'Spherical CW')
-
-
-
+legend('Cartesian CW', 'Spherical CW', 'Cardesian 2nd Order CW')
