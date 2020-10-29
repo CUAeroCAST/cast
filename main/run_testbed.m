@@ -13,7 +13,7 @@ recv = struct;
 guidanceParams = struct;
 
 %Sensor parameters
-sensorParams.samplingRate = 10;
+sensorParams.samplingRate = 100;
 sensorParams.maxRange = 4e3;
 sensorParams.beamDivergence = 0.5; %deg
 sensorParams.rangeAccuracy = 0.025; %m
@@ -31,11 +31,11 @@ targetParams.Dimensions.OriginOffset = [0,0,0];
 
 [chiefOrbit, deputyOrbit, timeVec] = make_gmat_orbits(gmatParams);
 
-relativeOrbit = chiefOrbit - deputyOrbit;
 %Temp creation of relative orbit for init_sensor_model
-relativeOrbit = zeros(3,3);
-timeVec = [0,1,2];
-
+load('relativeOrbitExample.mat');
+relativeOrbit = align_orbit(relativeOrbitExample);
+n = length(relativeOrbit);
+timeVec = linspace(0,n/1000,n)';
 %% SENSOR MODEL
 
 sensorScenario = init_sensor_model(relativeOrbit, timeVec, sensorParams,...

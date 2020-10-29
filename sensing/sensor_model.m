@@ -1,7 +1,7 @@
 % This function operates a parametric sensor model, returning the readings from a relative
 % orbit.
 function sensorReadings = sensor_model(scenario)
-n_steps = scenario.UpdateRate*(scenario.StopTime - scenario.SimulationTime);
+n_steps = floor(scenario.UpdateRate*(scenario.StopTime - scenario.SimulationTime));
 %Store sensor readings in cell matrix as we don't know the # of channels
 sensorReadings = cell(n_steps,1);
 
