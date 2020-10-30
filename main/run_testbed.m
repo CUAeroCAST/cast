@@ -77,8 +77,8 @@ for i = offset : estimatorParams.stepSize : length(timeVec)
                                                       estimatorParams);
  
  %This needs to be set when the covariance elipse is within bounds, only
- if(estimate.corrState(2)>0)
-  collisionTime = estimate.corrState(1)/estimate.corrState(2) + ...
+ if(estimate.corrState(2)<0)
+  collisionTime = -estimate.corrState(1)/estimate.corrState(2) + ...
                   estimatorParams.currentTime;
   %need to calculate it when we can avoid
   collisionEstimate = desync_predict(collisionTime, estimatorParams); 
