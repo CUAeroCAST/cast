@@ -4,6 +4,8 @@ importCast;
 open_logging();
 
 %% CONFIG
+scalingFactor = 222; %Distance scaling factor for testbed
+
 gmatParams = struct;
 estimatorParams = struct;
 PlotStruct = struct;
@@ -13,7 +15,7 @@ recv = struct;
 guidanceParams = struct;
 
 %Sensor parameters
-sensorParams.samplingRate = 100;
+sensorParams.samplingRate = 1e3;
 sensorParams.maxRange = 4e3;
 sensorParams.beamDivergence = 0.5; %deg
 sensorParams.rangeAccuracy = 0.025; %m
@@ -29,15 +31,18 @@ targetParams.Dimensions.OriginOffset = [0,0,0];
 
 %Avoidance Parameters
 canAvoid = false;
-collisionTime = 100; %seconds
 %% GMAT
 
 [chiefOrbit, deputyOrbit, timeVec] = make_gmat_orbits(gmatParams);
 
 %Temp creation of relative orbit for init_sensor_model
 load('relativeOrbitExample.mat');
-relativeOrbit = align_orbit(relativeOrbitExample);
-%TODO: convert to meters and apply scaling factor
+relativeOrbit = align_orbit(relativeOrbit);
+relativeOrbit = relativeOrbit.*(1000/scalingFactor);
+%Trim values outside sensor range
+[~,I] = min(abs(relativeOrbit(:,1) - sensorParams.maxRange));
+relativeOrbit(1:I,:) = [];
+
 n = length(relativeOrbit);
 timeVec = linspace(0,n/1000,n)';
 %% SENSOR MODEL
@@ -72,8 +77,13 @@ for i = offset : estimatorParams.stepSize : length(timeVec)
                                                       estimatorParams);
  
  %This needs to be set when the covariance elipse is within bounds, only
- %need to calculate it when we can avoid
- collisionEstimate = desync_predict(collisionTime, estimatorParams); 
+ if(estimate.corrState(2)>0)
+  collisionTime = estimate.corrState(1)/estimate.corrState(2) + ...
+                  estimatorParams.currentTime;
+  %need to calculate it when we can avoid
+  collisionEstimate = desync_predict(collisionTime, estimatorParams); 
+ end
+ 
  % GUIDANCE
 
  [maneuver, delay] = make_maneuver(estimate, guidanceParams);
