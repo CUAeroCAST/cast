@@ -27,6 +27,9 @@ targetParams.Dimensions.Width = 4.5e-3;
 targetParams.Dimensions.Height = 4.5e-3;
 targetParams.Dimensions.OriginOffset = [0,0,0];
 
+%Avoidance Parameters
+canAvoid = false;
+collisionTime = 100; %seconds
 %% GMAT
 
 [chiefOrbit, deputyOrbit, timeVec] = make_gmat_orbits(gmatParams);
@@ -34,6 +37,7 @@ targetParams.Dimensions.OriginOffset = [0,0,0];
 %Temp creation of relative orbit for init_sensor_model
 load('relativeOrbitExample.mat');
 relativeOrbit = align_orbit(relativeOrbitExample);
+%TODO: convert to meters and apply scaling factor
 n = length(relativeOrbit);
 timeVec = linspace(0,n/1000,n)';
 %% SENSOR MODEL
@@ -62,12 +66,14 @@ for i = offset : estimatorParams.stepSize : length(timeVec)
  % STATE ESTIMATION
  sensorReading = sensorReadings{i};
  time = timeVec(i);
- real_time_delay = 0.01;
- 
+ real_time_delay = 0;
  
  [estimate, estimatorParams] = state_estimator(sensorReading, time,...
                                                       estimatorParams);
-
+ 
+ %This needs to be set when the covariance elipse is within bounds, only
+ %need to calculate it when we can avoid
+ collisionEstimate = desync_predict(collisionTime, estimatorParams); 
  % GUIDANCE
 
  [maneuver, delay] = make_maneuver(estimate, guidanceParams);
