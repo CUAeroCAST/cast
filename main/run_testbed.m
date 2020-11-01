@@ -9,7 +9,6 @@ scalingFactor = 222; %Distance scaling factor for testbed
 gmatParams = struct;
 estimatorParams = struct;
  estimatorParams.stepSize = 1;
- estimatorParams.initState = [0,0,0,0,0,0];
 guidanceParams = struct;
 plotStruct = struct;
 recv = struct;
@@ -68,8 +67,9 @@ sensorScenario = init_sensor_model(relativeOrbit, timeVec, sensorParams,...
 sensorReadings = sensor_model(sensorScenario);
 
 %% STATE ESTIMATION
-
-[offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams);
+%Determine how many sensor readings to use for batch LLS estimate
+initialReadings = sensorReadings(1:10,:);
+[offset, estimatorParams] = init_estimator(initialReadings, estimatorParams);
 estimatorParams.currentTime = timeVec(offset);
 
 
