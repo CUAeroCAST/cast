@@ -15,11 +15,13 @@ plotStruct = struct;
 recv = struct;
 
 %Sensor parameters
+makeSensorPlot = false;
+
 sensorParams.samplingRate = 4e3;
 sensorParams.maxRange = 4e3;
 sensorParams.beamDivergence = 0.9; %deg
 sensorParams.rangeAccuracy = 0.025; %m
-sensorParams.beamLimits = [-0.45,0.45];
+sensorParams.beamLimits = [-1.35,1.35];
 sensorParams.sensorType = 'Lidar';
 sensorParams.scanRate = 10; %Hz
 
@@ -60,12 +62,13 @@ relativeOrbit = relativeOrbit.*(1000/scalingFactor);
 relativeOrbit(1:I,:) = [];
 
 n = length(relativeOrbit);
-timeVec = linspace(0,n/1000,n)';
+%This needs to be corrected
+timeVec = linspace(0,n/10,n)';
 %% SENSOR MODEL
 
 sensorScenario = init_sensor_model(relativeOrbit, timeVec, sensorParams,...
                                    targetParams);
-sensorReadings = sensor_model(sensorScenario);
+sensorReadings = sensor_model(sensorScenario, makeSensorPlot);
 
 %% STATE ESTIMATION
 
@@ -76,7 +79,7 @@ estimatorParams.currentTime = timeVec(offset);
 %% MAIN LOOP
 for i = offset : estimatorParams.stepSize : length(timeVec)
  % STATE ESTIMATION
- sensorReading = sensorReadings{i};
+ sensorReading = sensorReadings(i,:);
  time = timeVec(i);
  real_time_delay = 0;
  
