@@ -13,18 +13,19 @@ plotStruct = struct;
 recv = struct;
 
 %Sensor parameters
-sensorParams.samplingRate = 10;
+sensorParams.samplingRate = 4e3;
 sensorParams.maxRange = 4e3;
-sensorParams.beamDivergence = 0.5; %deg
+sensorParams.beamDivergence = 0.9; %deg
 sensorParams.rangeAccuracy = 0.025; %m
-sensorParams.beamLimits = [-0.25,0.25];
+sensorParams.beamLimits = [-0.45,0.45];
 sensorParams.sensorType = 'Lidar';
+sensorParams.scanRate = 10; %Hz
 
 %Target parameters
 targetParams.Mesh = extendedObjectMesh('sphere');
-targetParams.Dimensions.Length = 4.5e-3; 
-targetParams.Dimensions.Width = 4.5e-3;
-targetParams.Dimensions.Height = 4.5e-3;
+targetParams.Dimensions.Length = 40e-3; 
+targetParams.Dimensions.Width = 40e-3;
+targetParams.Dimensions.Height = 40e-3;
 targetParams.Dimensions.OriginOffset = [0,0,0];
 
 %Live Plot
