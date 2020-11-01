@@ -4,6 +4,8 @@ importCast;
 datapath = open_logging();
 
 %% CONFIG
+scalingFactor = 222; %Distance scaling factor for testbed
+
 gmatParams = struct;
 estimatorParams = struct;
  estimatorParams.stepSize = 1;
@@ -28,6 +30,9 @@ targetParams.Dimensions.Width = 40e-3;
 targetParams.Dimensions.Height = 40e-3;
 targetParams.Dimensions.OriginOffset = [0,0,0];
 
+%Avoidance Parameters
+canAvoid = false;
+
 %Live Plot
 plotStruct.filename = [datapath, filesep, '2D_collision_avoid'];
 plotStruct.vobj = VideoWriter(plotStruct.filename, 'MPEG-4');
@@ -46,11 +51,16 @@ log_struct(plotStruct, [datapath, filesep, 'plotStruct'])
 
 [chiefOrbit, deputyOrbit, timeVec] = make_gmat_orbits(gmatParams);
 
-relativeOrbit = chiefOrbit - deputyOrbit;
 %Temp creation of relative orbit for init_sensor_model
-relativeOrbit = zeros(3,3);
-timeVec = [0,1,2];
+load('relativeOrbitExample.mat');
+relativeOrbit = align_orbit(relativeOrbit);
+relativeOrbit = relativeOrbit.*(1000/scalingFactor);
+%Trim values outside sensor range
+[~,I] = min(abs(relativeOrbit(:,1) - sensorParams.maxRange));
+relativeOrbit(1:I,:) = [];
 
+n = length(relativeOrbit);
+timeVec = linspace(0,n/1000,n)';
 %% SENSOR MODEL
 
 sensorScenario = init_sensor_model(relativeOrbit, timeVec, sensorParams,...
@@ -68,12 +78,19 @@ for i = offset : estimatorParams.stepSize : length(timeVec)
  % STATE ESTIMATION
  sensorReading = sensorReadings{i};
  time = timeVec(i);
- real_time_delay = 0.01;
- 
+ real_time_delay = 0;
  
  [estimate, estimatorParams] = state_estimator(sensorReading, time,...
                                                       estimatorParams);
-
+ 
+ %This needs to be set when the covariance elipse is within bounds, only
+ if(estimate.corrState(2)<0)
+  collisionTime = -estimate.corrState(1)/estimate.corrState(2) + ...
+                  estimatorParams.currentTime;
+  %need to calculate it when we can avoid
+  collisionEstimate = desync_predict(collisionTime, estimatorParams); 
+ end
+ 
  % GUIDANCE
 
  [maneuver, delay] = make_maneuver(estimate, guidanceParams);
