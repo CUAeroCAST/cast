@@ -1,6 +1,7 @@
 % This function updates a live plot during runtimee
-function [PlotStruct,collisionFlag] = update_live_plot(PlotStruct,estimate,recv,videoObj,AXIS,collisionFlag,i)
-
+function plotStruct = update_live_plot(plotStruct,estimate,recv,i)
+videoObj = plotStruct.vobj;
+axis_ = plotStruct.axis;
 %% Extract information from estimate struct and recv struct
 covAxes = [estimate.Pcorr(1,1),estimate.Pcorr(3,3)]; %This may need refining if off-axes tilt for ellipse is present
 estPos = [estimate.corrState(1),estimate.corrState(3)];    %x and y estimated position for incoming object
@@ -8,20 +9,20 @@ gantryPos = [recv.state(1),recv.state(2)];         %assume for now that recv.sta
 %% Append New Data into PlotStruct
 if i>1
     %structure fields: 'covEllipses', 'incomingPositions', 'incomingEstPositions', 'gantryPositions'
-    PlotStruct.covEllipses = [PlotStruct.covEllipses;covAxes]; %covAxes must be 1x2 where first el is yrad, second is zrad
-    PlotStruct.incomingPositions = [PlotStruct.incomingPositions;estPos]; %est pos is 1x2
-    PlotStruct.gantryPositions = [PlotStruct.gantryPositions;gantryPos]; %gantryPos is 1x2
+    plotStruct.covEllipses = [plotStruct.covEllipses;covAxes]; %covAxes must be 1x2 where first el is yrad, second is zrad
+    plotStruct.incomingPositions = [plotStruct.incomingPositions;estPos]; %est pos is 1x2
+    plotStruct.gantryPositions = [plotStruct.gantryPositions;gantryPos]; %gantryPos is 1x2
 else
-    PlotStruct.covEllipses = covAxes; %covAxes must be 1x2 where first el is yrad, second is zrad
-    PlotStruct.incomingPositions = estPos; %est pos is 1x2
-    PlotStruct.gantryPositions = gantryPos; %gantryPos is 1x2
+    plotStruct.covEllipses = covAxes; %covAxes must be 1x2 where first el is yrad, second is zrad
+    plotStruct.incomingPositions = estPos; %est pos is 1x2
+    plotStruct.gantryPositions = gantryPos; %gantryPos is 1x2
 end
 %% Plot updated path with current positional and covariance information
 hold on
 ellipse(estPos(1),estPos(2),2*covAxes(1),2*covAxes(2),'color','r','linewidth',2);
-plot(PlotStruct.incomingPositions(:,1),PlotStruct.incomingPositions(:,2),'linewidth',2)
-plot(PlotStruct.gantryPositions(:,1),PlotStruct.gantryPositions(:,2),'linewidth',2)
-axis(AXIS)
+plot(plotStruct.incomingPositions(:,1),plotStruct.incomingPositions(:,2),'linewidth',2)
+plot(plotStruct.gantryPositions(:,1),plotStruct.gantryPositions(:,2),'linewidth',2)
+axis(axis_)
 plot(gantryPos(1),gantryPos(2),'b*','linewidth',2)
 plot(estPos(1),estPos(2),'r*','linewidth',2)
 legend('Incoming Object Covariance','Incoming Object Path','Gantry Path','Gantry Position','Estimated Incoming Object Position','location','northwest')
@@ -31,7 +32,7 @@ ylabel('Y distance(m)')
 
 % Add warning to show when manuevor starts
 if i>1
-    if ((gantryPos(1)~=PlotStruct.gantryPositions(end-1,1)) || (gantryPos(2)~=PlotStruct.gantryPositions(end-1,2)))
+    if ((gantryPos(1)~=plotStruct.gantryPositions(end-1,1)) || (gantryPos(2)~=plotStruct.gantryPositions(end-1,2)))
         txt = ('Spacecraft is Maneuvering');
         t1 = annotation('textbox');
         t1.String = txt;
@@ -40,12 +41,12 @@ if i>1
     end
 end
 % Add confirmation if object has been avoided
-if  collisionFlag == 0
+if  plotStruct.collisionFlag == 0
     if ((estPos(1)-2*covAxes(1))<=gantryPos(1) &&   (estPos(1)+2*covAxes(1))>=gantryPos(1)...
             && (estPos(2)-2*covAxes(2))<=gantryPos(2) &&   (estPos(2)+2*covAxes(2))>=gantryPos(2))
-        collisionFlag = 1;
+        plotStruct.collisionFlag = 1;
     end
-elseif collisionFlag == 1
+elseif plotStruct.collisionFlag == 1
         txt = ('Potential Collision Has Occurred!');
         t2 = annotation('textbox');
         t2.String = txt;
