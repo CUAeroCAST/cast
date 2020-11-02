@@ -4,18 +4,24 @@ importCast;
 datapath = open_logging();
 
 %% CONFIG
-scalingFactor = 222; %Distance scaling factor for testbed
+makeSensorPlot = false;
+loadFile = true;
 
 gmatParams = struct;
-estimatorParams = struct;
- estimatorParams.stepSize = 1;
 guidanceParams = struct;
 plotStruct = struct;
 recv = struct;
 
-%Sensor parameters
-makeSensorPlot = false;
+%Simulation parameters
+simulationParams.stepSize = 1;
+simulationParams.sampleRate = 1e3;
+simulationParams.scalingFactor = 222; %Distance scaling factor for testbed
 
+%Estimator parameters
+estimatorParams.llsSeeding = true;
+estimatorParams.batchSamples = 10;
+
+%Sensor parameters
 sensorParams.samplingRate = 1e3;
 sensorParams.maxRange = 4e3;
 sensorParams.beamDivergence = 0.9; %deg
@@ -54,30 +60,29 @@ log_struct(guidanceParams, [datapath, filesep, 'guidanceParams'])
 %Temp creation of relative orbit for init_sensor_model
 load('relativeOrbitExample.mat');
 relativeOrbit = align_orbit(relativeOrbit);
-relativeOrbit = relativeOrbit.*(1/scalingFactor);
+relativeOrbit = relativeOrbit./simulationParams.scalingFactor;
 %Trim values outside sensor range
 [~,I] = min(abs(relativeOrbit(:,1) - sensorParams.maxRange));
 relativeOrbit(1:I,:) = [];
-
 n = length(relativeOrbit);
-%This needs to be corrected
-timeVec = linspace(0,n/1000,n)';
+timeVec = linspace(0,n/simulationParams.sampleRate,n)';
 %% SENSOR MODEL
-
-sensorScenario = init_sensor_model(relativeOrbit, timeVec, sensorParams,...
+if(loadFile)
+    load('sensorReadings.mat');
+else
+    sensorScenario = init_sensor_model(relativeOrbit, timeVec, sensorParams,...
                                    targetParams);
-sensorReadings = sensor_model(sensorScenario, makeSensorPlot);
-% load sensorReadings
+    sensorReadings = sensor_model(sensorScenario, makeSensorPlot);
+end
 
 %% STATE ESTIMATION
 %Determine how many sensor readings to use for batch LLS estimate
-initialReadings = sensorReadings(1:10,:);
-[offset, estimatorParams] = init_estimator(initialReadings, estimatorParams);
+[offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams);
 estimatorParams.currentTime = timeVec(offset);
 
 
 %% MAIN LOOP
-for i = offset : estimatorParams.stepSize : length(timeVec)
+for i = offset : simulationParams.stepSize : length(timeVec)
  % STATE ESTIMATION
  sensorReading = sensorReadings(i,:);
  time = timeVec(i);
@@ -86,7 +91,7 @@ for i = offset : estimatorParams.stepSize : length(timeVec)
  [estimate, estimatorParams] = state_estimator(sensorReading, time,...
                                                       estimatorParams);
  
- %This needs to be set when the covariance elipse is within bounds, only
+ %Forward prediction when collision time can be predicted
  if(estimate.corrState(2)<0)
   collisionTime = -estimate.corrState(1)/estimate.corrState(2) + ...
                   estimatorParams.currentTime;
