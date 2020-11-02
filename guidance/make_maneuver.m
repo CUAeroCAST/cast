@@ -3,6 +3,6 @@
 function [maneuver, delay] = make_maneuver(estimate, guidanceParams)
  fprintf('make_maneuver is not implemented\n')
  doSomething = {estimate, guidanceParams};
- maneuver = 0;
+ maneuver = rand(2,1)*20;
  delay = 0;
 end

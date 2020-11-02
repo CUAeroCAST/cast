@@ -47,7 +47,7 @@ else
             %If there are nan values, take the middle reading
             sensorReadings(i,:) = temp(median(1:length(temp(:,1))),:);
         else
-            sensorReadings(i,:) = temp;
+            sensorReadings(i,:) = mean(temp);
         end
     end
 end

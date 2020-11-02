@@ -16,7 +16,7 @@ recv = struct;
 %Sensor parameters
 makeSensorPlot = false;
 
-sensorParams.samplingRate = 4e3;
+sensorParams.samplingRate = 1e3;
 sensorParams.maxRange = 4e3;
 sensorParams.beamDivergence = 0.9; %deg
 sensorParams.rangeAccuracy = 0.025; %m
@@ -47,7 +47,6 @@ plotStruct.collisionFlag = 0;   %flag for if covariance has intersected with gan
 log_struct(gmatParams, [datapath, filesep, 'gmatParams'])
 log_struct(estimatorParams, [datapath, filesep, 'estimatorParams'])
 log_struct(guidanceParams, [datapath, filesep, 'guidanceParams'])
-log_struct(plotStruct, [datapath, filesep, 'plotStruct'])
 %% GMAT
 
 [chiefOrbit, deputyOrbit, timeVec] = make_gmat_orbits(gmatParams);
@@ -55,19 +54,20 @@ log_struct(plotStruct, [datapath, filesep, 'plotStruct'])
 %Temp creation of relative orbit for init_sensor_model
 load('relativeOrbitExample.mat');
 relativeOrbit = align_orbit(relativeOrbit);
-relativeOrbit = relativeOrbit.*(1000/scalingFactor);
+relativeOrbit = relativeOrbit.*(1/scalingFactor);
 %Trim values outside sensor range
 [~,I] = min(abs(relativeOrbit(:,1) - sensorParams.maxRange));
 relativeOrbit(1:I,:) = [];
 
 n = length(relativeOrbit);
 %This needs to be corrected
-timeVec = linspace(0,n/10,n)';
+timeVec = linspace(0,n/1000,n)';
 %% SENSOR MODEL
 
 sensorScenario = init_sensor_model(relativeOrbit, timeVec, sensorParams,...
                                    targetParams);
 sensorReadings = sensor_model(sensorScenario, makeSensorPlot);
+% load sensorReadings
 
 %% STATE ESTIMATION
 %Determine how many sensor readings to use for batch LLS estimate
