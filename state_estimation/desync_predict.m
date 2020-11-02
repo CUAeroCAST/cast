@@ -6,7 +6,8 @@ function [estimate] = desync_predict(time,estimatorParams)
  if(stepSize < 0)
      error("State estimation is receiving request for invalid time")
  end
+ copyFilter = clone(estimatorParams.filter);
  
  %Estimate the requested state and correct based on sensor reading
- [estimate.predState, estimate.Ppred] = predict(estimatorParams.filter, stepSize);
+ [estimate.predState, estimate.Ppred] = predict(copyFilter, stepSize);
 end
