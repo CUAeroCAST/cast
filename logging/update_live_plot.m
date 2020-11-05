@@ -9,13 +9,13 @@ estPos = [estimate.corrState(1),estimate.corrState(3)];    %x and y estimated po
 gantryPos = [recv.state(1),recv.state(2)];         %assume for now that recv.state is [xpos,ypos]
 
 %% Append New Data into PlotStruct
-
-if i>1
+if isfield(plotStruct,'covEllipses')%test if this field has been created yet
     %structure fields: 'covEllipses', 'incomingPositions', 'incomingEstPositions', 'gantryPositions'
     plotStruct.covEllipses = [plotStruct.covEllipses;covAxes]; %covAxes must be 1x2 where first el is yrad, second is zrad
     plotStruct.incomingPositions = [plotStruct.incomingPositions;estPos]; %est pos is 1x2
     plotStruct.gantryPositions = [plotStruct.gantryPositions;gantryPos]; %gantryPos is 1x2
     %Delete plots from previous step
+    set(groot,'defaultLegendAutoUpdate','off')
     for i = 1:length(plotStruct.plots2Delete)
         delete(plotStruct.plots2Delete(i)) 
     end
@@ -23,7 +23,7 @@ else
     plotStruct.covEllipses = covAxes; %covAxes must be 1x2 where first el is yrad, second is zrad
     plotStruct.incomingPositions = estPos; %est pos is 1x2
     plotStruct.gantryPositions = gantryPos; %gantryPos is 1x2
-    legend('Incoming Object Covariance','Incoming Object Path','Gantry Path','Gantry Position','Estimated Incoming Object Position','location','northwest')
+    %legend('Incoming Object Covariance','Incoming Object Path','Gantry Path','Gantry Position','Estimated Incoming Object Position','location','northwest')
     title('2D Collision Live Scenario')
     xlabel('X distance(m)')
     ylabel('Y distance(m)')
@@ -38,17 +38,19 @@ plot(plotStruct.incomingPositions(:,1),plotStruct.incomingPositions(:,2),'color'
 plot(plotStruct.gantryPositions(:,1),plotStruct.gantryPositions(:,2),'color','b','linewidth',2);
 plotDel2 = plot(gantryPos(1),gantryPos(2),'b*','linewidth',2);
 plotDel3 = plot(estPos(1),estPos(2),'r*','linewidth',2);
-hold off
 %delete elements 4,5,1 each step
-
+hold off
+if length(plotStruct.gantryPositions(:,1))==1
+    legend('Incoming Object Covariance','Incoming Object Path','Gantry Path','Gantry Position','Estimated Incoming Object Position','location','northwest','AutoUpdate','off')
+end
 % Add warning to show when manuevor starts
-if i>1
+if length(plotStruct.gantryPositions(:,1))>1
     if ((gantryPos(1)~=plotStruct.gantryPositions(end-1,1)) || (gantryPos(2)~=plotStruct.gantryPositions(end-1,2)))
         txt = ('Spacecraft is Maneuvering');
         t1 = annotation('textbox');
         t1.String = txt;
         t1.BackgroundColor = [0.4660 0.6740 0.1880];
-        t1.Position = [.5 .25 .34 .07];
+        t1.Position = [.7 .15 .12 .04];
     end
 end
 % Add confirmation if object has been avoided
@@ -62,13 +64,13 @@ elseif plotStruct.collisionFlag == 1
         t2 = annotation('textbox');
         t2.String = txt;
         t2.BackgroundColor = [1 0 0];
-        t2.Position = [.5 .4 .4 .07];
+        t2.Position = [.7 .25 .15 .04];
 end
 
 %% Save frame to video
 
 frame = getframe(gcf);
-legend(gca, 'off');
+%legend(gca, 'off');
 writeVideo(videoObj, frame);
 %cla(gca);
 plotStruct.plots2Delete = [plotDel1;plotDel2;plotDel3];
