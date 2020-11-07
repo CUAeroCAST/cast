@@ -46,10 +46,9 @@ plotStruct.vobj = VideoWriter(plotStruct.filename, 'MPEG-4');
 plotStruct.vobj.Quality = 100;
 open(plotStruct.vobj);
 plotStruct.videoFig = figure;
-plotStruct.axis = [-1,20,-1,20];
 plotStruct.collisionFlag = 0;   %flag for if covariance has intersected with gantry pos
 set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);
-plotStruct.interval = 500; %how often the plot is updated... if equals 0, then it plots every iteration
+plotStruct.interval = 50; %how often the plot is updated... if equals 0, then it plots every iteration
 
 %Save parameter structs
 log_struct(gmatParams, [datapath, filesep, 'gmatParams'])
@@ -66,6 +65,7 @@ relativeOrbit = relativeOrbit./simulationParams.scalingFactor;
 %Trim values outside sensor range
 [~,I] = min(abs(relativeOrbit(:,1) - sensorParams.maxRange));
 relativeOrbit(1:I,:) = [];
+plotStruct.axis = [-1.1*min(abs(relativeOrbit(:,1))),1.1*max(relativeOrbit(:,1)),-1.1*min(abs(relativeOrbit(:,1))),1.1*max(relativeOrbit(:,1))];
 n = length(relativeOrbit);
 timeVec = linspace(0,n/simulationParams.sampleRate,n)';
 %% SENSOR MODEL
@@ -108,17 +108,19 @@ for i = offset : simulationParams.stepSize : length(timeVec)
  recv = run_io(maneuver, delay);
  
  % Visualization
- if plotCount == 0 %plot if count == 0, increment until reaches plotInterval, then reset to 0
-    plotStruct = update_live_plot(plotStruct,estimate,recv,i);
-    plotCount = plotCount + 1;
- elseif plotCount == plotStruct.interval
-    plotCount = 0;
- else
-    plotCount = plotCount + 1;
+ if ~isnan(estimate.corrState) %plot if count == 0, increment until reaches plotInterval, then reset to 0
+    if plotCount == 0
+        plotStruct = update_live_plot(plotStruct,estimate,recv);
+        plotCount = plotCount + 1;
+    elseif plotCount == plotStruct.interval
+        plotCount = 0;
+    else
+        plotCount = plotCount+1;
+    end
+    
  end
-
+ 
  pause(real_time_delay)
-
 end
 %% CLEANUP
 close_logging(plotStruct);

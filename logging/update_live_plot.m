@@ -1,12 +1,12 @@
 % This function updates a live plot during runtime
 
-function plotStruct = update_live_plot(plotStruct,estimate,recv,i)
+function plotStruct = update_live_plot(plotStruct,estimate,recv)
 videoObj = plotStruct.vobj;
 axis_ = plotStruct.axis;
 %% Extract information from estimate struct and recv struct
-covAxes = [estimate.Pcorr(1,1),estimate.Pcorr(3,3)]; %This may need refining if off-axes tilt for ellipse is present
 estPos = [estimate.corrState(1),estimate.corrState(3)];    %x and y estimated position for incoming object
 gantryPos = [recv.state(1),recv.state(2)];         %assume for now that recv.state is [xpos,ypos]
+covAxes = [estimate.Pcorr(1,1)*estPos(1),estimate.Pcorr(3,3)*estPos(2)]; %This may need refining if off-axes tilt for ellipse is present
 
 %% Append New Data into PlotStruct
 if isfield(plotStruct,'covEllipses')%test if this field has been created yet
@@ -33,7 +33,7 @@ end
 %% Plot updated path with current positional and covariance information
 
 hold on
-plotDel1 = ellipse(estPos(1),estPos(2),2*covAxes(1),2*covAxes(2),'color','r','linewidth',2);
+plotDel1 = ellipse(estPos(1),estPos(2),2*covAxes(1),2*covAxes(2)+100,'color','r','linewidth',2);
 plot(plotStruct.incomingPositions(:,1),plotStruct.incomingPositions(:,2),'color','r','linewidth',2);
 plot(plotStruct.gantryPositions(:,1),plotStruct.gantryPositions(:,2),'color','b','linewidth',2);
 plotDel2 = plot(gantryPos(1),gantryPos(2),'b*','linewidth',2);
