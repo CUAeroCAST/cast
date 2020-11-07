@@ -48,6 +48,8 @@ open(plotStruct.vobj);
 plotStruct.videoFig = figure;
 plotStruct.axis = [-1,20,-1,20];
 plotStruct.collisionFlag = 0;   %flag for if covariance has intersected with gantry pos
+set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);
+plotStruct.interval = 500; %how often the plot is updated... if equals 0, then it plots every iteration
 
 %Save parameter structs
 log_struct(gmatParams, [datapath, filesep, 'gmatParams'])
@@ -80,7 +82,7 @@ end
 [offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams);
 estimatorParams.currentTime = timeVec(offset);
 
-
+plotCount = 0;
 %% MAIN LOOP
 for i = offset : simulationParams.stepSize : length(timeVec)
  % STATE ESTIMATION
@@ -106,9 +108,15 @@ for i = offset : simulationParams.stepSize : length(timeVec)
  recv = run_io(maneuver, delay);
  
  % Visualization
- 
- plotStruct = update_live_plot(plotStruct,estimate,recv,i);
- 
+ if plotCount == 0 %plot if count == 0, increment until reaches plotInterval, then reset to 0
+    plotStruct = update_live_plot(plotStruct,estimate,recv,i);
+    plotCount = plotCount + 1;
+ elseif plotCount == plotStruct.interval
+    plotCount = 0;
+ else
+    plotCount = plotCount + 1;
+ end
+
  pause(real_time_delay)
 
 end
