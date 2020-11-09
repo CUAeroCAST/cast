@@ -6,6 +6,8 @@ datapath = open_logging();
 %% CONFIG
 makeSensorPlot = false;
 loadFile = true;
+isOrbitalScenario = false;
+isTestbedScenario = true;
 
 gmatParams = struct;
 guidanceParams = struct;
@@ -14,16 +16,21 @@ recv = struct;
 
 %Simulation parameters
 simulationParams.stepSize = 1;
-simulationParams.sampleRate = 1e3;
-simulationParams.scalingFactor = 222; %Distance scaling factor for testbed
+simulationParams.sampleRate = 4e3;
+simulationParams.scalingFactor = 1; %Distance scaling factor for testbed
+simulationParams.initPos = [2,0.5,0]; %m, starting point of object
+simulationParams.finalPos = [0,0,0]; %m, final point of object
+simulationParams.collisionTime = 2; %s, time it takes to get from initial 
+%to final position
 
 %Estimator parameters
 estimatorParams.llsSeeding = true;
 estimatorParams.batchSamples = 10;
+estimatorParams.sensorCovariance = [0.025^2,0,0;0,0.2^2,0;0,0,0.2^2];
 
 %Sensor parameters
-sensorParams.samplingRate = 1e3;
-sensorParams.maxRange = 4e3;
+sensorParams.samplingRate = 4e3;
+sensorParams.maxRange = 15;
 sensorParams.beamDivergence = 0.9; %deg
 sensorParams.rangeAccuracy = 0.025; %m
 sensorParams.beamLimits = [-1.35,1.35];
@@ -32,9 +39,9 @@ sensorParams.scanRate = 10; %Hz
 
 %Target parameters
 targetParams.Mesh = extendedObjectMesh('sphere');
-targetParams.Dimensions.Length = 40e-3; 
-targetParams.Dimensions.Width = 40e-3;
-targetParams.Dimensions.Height = 40e-3;
+targetParams.Dimensions.Length = 50e-3; 
+targetParams.Dimensions.Width = 50e-3;
+targetParams.Dimensions.Height = 50e-3;
 targetParams.Dimensions.OriginOffset = [0,0,0];
 
 %Avoidance Parameters
@@ -55,24 +62,40 @@ log_struct(gmatParams, [datapath, filesep, 'gmatParams'])
 log_struct(estimatorParams, [datapath, filesep, 'estimatorParams'])
 log_struct(guidanceParams, [datapath, filesep, 'guidanceParams'])
 %% GMAT
+if(isOrbitalScenario && ~loadFile)
+ [chiefOrbit, deputyOrbit, timeVec] = make_gmat_orbits(gmatParams);
+ relativePath = align_orbit(chiefOrbit-deputyOrbit);
+ relativePath = relativePath./simulationParams.scalingFactor;
+ [~,I] = min(abs(relativePath(:,1) - sensorParams.maxRange));
+ relativePath(1:I,:) = [];
+ n = length(relativePath);
+ %timeVec = linspace(0,n/simulationParams.sampleRate,n)';
+end
 
-[chiefOrbit, deputyOrbit, timeVec] = make_gmat_orbits(gmatParams);
-
-%Temp creation of relative orbit for init_sensor_model
-load('relativeOrbitExample.mat');
-relativeOrbit = align_orbit(relativeOrbit);
-relativeOrbit = relativeOrbit./simulationParams.scalingFactor;
-%Trim values outside sensor range
-[~,I] = min(abs(relativeOrbit(:,1) - sensorParams.maxRange));
-relativeOrbit(1:I,:) = [];
-plotStruct.axis = [-1.1*min(abs(relativeOrbit(:,1))),1.1*max(relativeOrbit(:,1)),-1.1*min(abs(relativeOrbit(:,1))),1.1*max(relativeOrbit(:,1))];
-n = length(relativeOrbit);
-timeVec = linspace(0,n/simulationParams.sampleRate,n)';
+%% TESTBED COLLISION
+if (isTestbedScenario && ~loadFile)
+    x_rel = linspace(simulationParams.initPos(1),...
+                     simulationParams.finalPos(1),...
+                     simulationParams.collisionTime*simulationParams.sampleRate);
+    y_rel = linspace(simulationParams.initPos(2),...
+                     simulationParams.finalPos(2),...
+                     simulationParams.collisionTime*simulationParams.sampleRate);
+    z_rel = linspace(simulationParams.initPos(3),...
+                     simulationParams.finalPos(3),...
+                     simulationParams.collisionTime*simulationParams.sampleRate);
+    relativePath = [x_rel', y_rel', z_rel'];
+    clear x_rel y_rel z_rel
+    timeVec = linspace(0,simulationParams.collisionTime, ...
+              simulationParams.collisionTime*simulationParams.sampleRate);
+end
 %% SENSOR MODEL
+%If sensor readings/time vec is saved, can load that to save time
 if(loadFile)
-    load('sensorReadings.mat');
+    [file,path] = uigetfile('..\data\precomputed_sensors\*.mat',...
+                            'Select a sensor reading file');
+    load("" + path + file);
 else
-    sensorScenario = init_sensor_model(relativeOrbit, timeVec, sensorParams,...
+    sensorScenario = init_sensor_model(relativePath, timeVec, sensorParams,...
                                    targetParams);
     sensorReadings = sensor_model(sensorScenario, makeSensorPlot);
 end
