@@ -25,18 +25,14 @@ X = [x(:) y(:)];
 pdf = mvnpdf(X,mu,sigma);
 pdf = reshape(pdf,length(x),length(y));
 % probability the debris is in a 3 m box around the satellite
-indx = [];
-indy = [];
-indxMax = find(xrange<3,1,'last'); % the 3s might need to be an input for size of objects
-indxMin = find(xrange>-3, 1);
-indyMax = find(yrange<3, 1, 'last' );
-indyMin = find(yrange>-3, 1);
-indx = [indxMin indxMax];
-indy = [indyMin indyMax];
+indxMax = find(xrange<.1011,1,'last'); % the 3s might need to be an input for size of objects
+indxMin = find(xrange>-.1011, 1);
+indyMax = find(yrange<.1011, 1, 'last' );
+indyMin = find(yrange>-.1011, 1);
 % If the satellie is not in the range of the pdf, probabilty is 0, else
 % calculate the probability
 if isempty(indxMax) && inempty(indy)
     probability=0;
 else
-    probability = mvncdf([x(indxMin) x(indxMax)],[y(indyMin) y(indyMax)],mu,sigma);
+    probability = mvncdf([x(indxMin) y(indyMin)],[x(indxMax) y(indyMax)],mu,sigma);
 end

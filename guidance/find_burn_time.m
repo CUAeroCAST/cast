@@ -13,6 +13,12 @@ function [burnTime,tAfter,stateAfter] = find_burn_time(estimate,satelliteState,d
 % https://www.youtube.com/watch?v=VDeZyRtPJvI&ab_channel=AnatollD. :p
 % Get the position of the debris
 relPositionHill = [estimate.corrState(1) estimate.corrState(3) estimate.corrState(5)]';
+% Convert to orbital scale
+maxVel = .5;
+maxOrbitVel = 14.50512e3;
+scalingFactor = maxOrbitVel/maxVel;
+estimate.corrState = estimate.corrState*scalingFactor;
+estimate.Pcorr = estimate.Pcorr*scalingFactor^2; 
 % Calculating the pdf
 mu = [estimate.corrState(1) estimate.corrState(3)];
 sigma = [estimate.Pcorr(1,1) estimate.Pcorr(1,3);estimate.Pcorr(1,3) estimate.Pcorr(3,3)];

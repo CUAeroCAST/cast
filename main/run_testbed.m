@@ -99,7 +99,8 @@ for i = offset : estimatorParams.stepSize : length(timeVec)
  [maneuver,tAfter,stateAfter] = make_maneuver(collisionEstimate,chiefOrbit(i),...
      collisionTime);
  indForward = i+length(stateAfter);
- maneuverRelPos = stateAfter-chiefOrbit(i:indForward,:);
+ tMove = timeVec(i:indForward);
+ [tMove,maneuverPos] = convert_2d(tMove,chiefOrbit(i:indForward,:),stateAfter);
  
  recv = run_io(maneuver, delay);
  
