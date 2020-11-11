@@ -56,6 +56,8 @@ plotStruct.videoFig = figure;
 plotStruct.collisionFlag = 0;   %flag for if covariance has intersected with gantry pos
 set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);
 plotStruct.interval = 50; %how often the plot is updated... if equals 0, then it plots every iteration
+plotCount = 0; %initial count value for iterating inside main loop
+plotCorrCount = 50; %starting value for corr state plot count
 
 %Save parameter structs
 log_struct(gmatParams, [datapath, filesep, 'gmatParams'])
@@ -73,21 +75,30 @@ if(isOrbitalScenario && ~loadFile)
 end
 
 %% TESTBED COLLISION
-if (isTestbedScenario && ~loadFile)
-    x_rel = linspace(simulationParams.initPos(1),...
+if (isTestbedScenario)
+    % Initialize very large collision estimation, represents no knowledge of
+    % collision before test starts
+    collisionEstimate.Ppred = [10 0 0 0 0 0;0 0 0 0 0 0;0 0 10 0 0 0;...
+    0 0 0 0 0 0;0 0 0 0 0 0;0 0 0 0 0 0];%x and y radius, initially, 10x10
+    collisionEstimate.predState = [0 0 0 0 0 0];
+    collisionEstimate.collisionTime = 100; %dummy value
+    if ~loadFile
+        x_rel = linspace(simulationParams.initPos(1),...
                      simulationParams.finalPos(1),...
                      simulationParams.collisionTime*simulationParams.sampleRate);
-    y_rel = linspace(simulationParams.initPos(2),...
+        y_rel = linspace(simulationParams.initPos(2),...
                      simulationParams.finalPos(2),...
                      simulationParams.collisionTime*simulationParams.sampleRate);
-    z_rel = linspace(simulationParams.initPos(3),...
+        z_rel = linspace(simulationParams.initPos(3),...
                      simulationParams.finalPos(3),...
                      simulationParams.collisionTime*simulationParams.sampleRate);
-    relativePath = [x_rel', y_rel', z_rel'];
-    clear x_rel y_rel z_rel
-    timeVec = linspace(0,simulationParams.collisionTime, ...
-              simulationParams.collisionTime*simulationParams.sampleRate);
+        relativePath = [x_rel', y_rel', z_rel'];
+        clear x_rel y_rel z_rel
+        timeVec = linspace(0,simulationParams.collisionTime, ...
+                simulationParams.collisionTime*simulationParams.sampleRate);
+    end
 end
+
 %% SENSOR MODEL
 %If sensor readings/time vec is saved, can load that to save time
 if(loadFile)
@@ -99,13 +110,12 @@ else
                                    targetParams);
     sensorReadings = sensor_model(sensorScenario, makeSensorPlot);
 end
-
+plotStruct.axis = [-.5 2 -1 1];
 %% STATE ESTIMATION
 %Determine how many sensor readings to use for batch LLS estimate
 [offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams);
 estimatorParams.currentTime = timeVec(offset);
 
-plotCount = 0;
 %% MAIN LOOP
 for i = offset : simulationParams.stepSize : length(timeVec)
  % STATE ESTIMATION
@@ -115,13 +125,13 @@ for i = offset : simulationParams.stepSize : length(timeVec)
  
  [estimate, estimatorParams] = state_estimator(sensorReading, time,...
                                                       estimatorParams);
- 
+
  %Forward prediction when collision time can be predicted
  if(estimate.corrState(2)<0)
-  collisionTime = -estimate.corrState(1)/estimate.corrState(2) + ...
+  collisionEstimate.collisionTime = -estimate.corrState(1)/estimate.corrState(2) + ...
                   estimatorParams.currentTime;
   %need to calculate it when we can avoid
-  collisionEstimate = desync_predict(collisionTime, estimatorParams); 
+  collisionEstimate = desync_predict(collisionEstimate.collisionTime, estimatorParams); 
  end
  
  % GUIDANCE
@@ -131,19 +141,21 @@ for i = offset : simulationParams.stepSize : length(timeVec)
  recv = run_io(maneuver, delay);
  
  % Visualization
- if ~isnan(estimate.corrState) %plot if count == 0, increment until reaches plotInterval, then reset to 0
-    if plotCount == 0
-        plotStruct = update_live_plot(plotStruct,estimate,recv);
-        plotCount = plotCount + 1;
-    elseif plotCount == plotStruct.interval
-        plotCount = 0;
-    else
-        plotCount = plotCount+1;
-    end
-    
+ if ~(isnan(estimate.corrState(1))) && (plotCorrCount >= plotStruct.interval)%plot if count == 0, increment until reaches plotInterval, then reset to 0
+     plotStruct = update_live_plot(plotStruct,estimate,collisionEstimate,recv);
+     plotCorrCount = 0; %reset count so at least plotStruct.interval steps have to pass before another plot update
+     plotCount = 1;%reset count so plotCount.interval iterations need to pass before another update
+ elseif plotCount == 0 %plotCount has reached and count has been set to 0, update plot
+     plotCount = plotCount + 1; 
+     plotStruct = update_live_plot(plotStruct,estimate,collisionEstimate,recv);
+ elseif plotCount == plotStruct.interval 
+     plotCount = 0; %reset to 0 so that plot can update next iteration
+ else
+     plotCount = plotCount+1; 
  end
- 
- pause(real_time_delay)
+plotCorrCount = plotCorrCount + 1; %increment no matter what
+
+pause(real_time_delay)
 end
 %% CLEANUP
 close_logging(plotStruct);
