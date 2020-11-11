@@ -3,7 +3,7 @@
 function sensorReadings = sensor_model(scenario, makePlot)
 n_steps = floor(scenario.UpdateRate*(scenario.StopTime - scenario.SimulationTime));
 %Store sensor readings in cell matrix as we don't know the # of channels
-sensorReadings = zeros(n_steps,3);
+sensorReadings = zeros(n_steps,2);
 
 
 if(length(scenario.Platforms) > 2)
@@ -33,9 +33,9 @@ if(makePlot)
         temp = sensor(tgtmeshes,ps,scenario.SimulationTime);
         if any(isnan(temp),'all')
             %If there are nan values, take the middle reading
-            sensorReadings(i,:) = temp(median(1:length(temp(:,1))),:);
+            sensorReadings(i,1) = temp(median(1:length(temp(:,1))),1);
         else
-            sensorReadings(i,:) = temp;
+            sensorReadings(i,1) = temp(1);
         end
     end
 else
@@ -43,11 +43,8 @@ else
         advance(scenario);
         tgtmeshes = targetMeshes(ego);
         temp = sensor(tgtmeshes,pose(ego),scenario.SimulationTime);
-        if any(isnan(temp),'all')
-            %If there are nan values, take the middle reading
-            sensorReadings(i,:) = temp(median(1:length(temp(:,1))),:);
-        else
-            sensorReadings(i,:) = mean(temp);
-        end
+        %Take the middle reading (should be center beam)
+        sensorReadings(i,1) = temp(median(1:length(temp(:,1))),1);
+        sensorReadings(i,2) = deg2rad(ego.Orientation(1));
     end
 end

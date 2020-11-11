@@ -8,7 +8,7 @@ if(estimatorParams.llsSeeding)
 
   % Batch LLS seeding
   %Measurement matrix H, takes state x, to measurement vector, y
-  H = [1,0,0,0,0,0;0,0,1,0,0,0;0,0,0,0,1,0];
+  H = eye(2);
   [r,c] = size(batchReadings);
   %Reshape measurement vector to have dimensions 3*Nx1
   y = reshape(batchReadings', [r*c,1]);

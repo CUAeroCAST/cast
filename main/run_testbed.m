@@ -5,7 +5,7 @@ datapath = open_logging();
 
 %% CONFIG
 makeSensorPlot = false;
-loadFile = true;
+loadFile = false;
 isOrbitalScenario = false;
 isTestbedScenario = true;
 
