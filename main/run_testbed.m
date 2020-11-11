@@ -25,7 +25,7 @@ simulationParams.collisionTime = 2; %s, time it takes to get from initial
 
 %Estimator parameters
 estimatorParams.llsSeeding = true;
-estimatorParams.batchSamples = 10;
+estimatorParams.batchSamples = 0;
 estimatorParams.sensorCovariance = [0.025^2,0,0;0,0.2^2,0;0,0,0.2^2];
 
 %Sensor parameters
@@ -127,8 +127,8 @@ for i = offset : simulationParams.stepSize : length(timeVec)
                                                       estimatorParams);
 
  %Forward prediction when collision time can be predicted
- if(estimate.corrState(2)<0)
-  collisionEstimate.collisionTime = -estimate.corrState(1)/estimate.corrState(2) + ...
+ if(estimate.predState(2)<0)
+  collisionEstimate.collisionTime = -estimate.predState(1)/estimate.predState(2) + ...
                   estimatorParams.currentTime;
   %need to calculate it when we can avoid
   collisionEstimate = desync_predict(collisionEstimate.collisionTime, estimatorParams); 
