@@ -18,15 +18,15 @@ recv = struct;
 simulationParams.stepSize = 1;
 simulationParams.sampleRate = 4e3;
 simulationParams.scalingFactor = 1; %Distance scaling factor for testbed
-simulationParams.initPos = [2,0.5,0]; %m, starting point of object
+simulationParams.initPos = [2,0,0]; %m, starting point of object
 simulationParams.finalPos = [0,0,0]; %m, final point of object
 simulationParams.collisionTime = 2; %s, time it takes to get from initial 
 %to final position
 
 %Estimator parameters
-estimatorParams.llsSeeding = true;
-estimatorParams.batchSamples = 10;
-estimatorParams.sensorCovariance = [0.025^2,0,0;0,0.2^2,0;0,0,0.2^2];
+estimatorParams.llsSeeding = false;
+estimatorParams.batchSamples = 0;
+estimatorParams.sensorCovariance = [0.025^2,0;0,0.45^2,];
 
 %Sensor parameters
 sensorParams.samplingRate = 4e3;
@@ -101,6 +101,12 @@ else
     sensorReadings = sensor_model(sensorScenario, makeSensorPlot);
 end
 
+%Convert measurement to cartesian
+lam = lam_vals(estimatorParams.sensorCovariance);
+for i=1:length(sensorReadings)
+    mu = conv_meas_bias(lam, sensorReadings(i,:));
+    sensorReadings(i,:) = meas2cart(sensorReadings(i,:), mu);
+end
 %% STATE ESTIMATION
 %Determine how many sensor readings to use for batch LLS estimate
 [offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams);
@@ -114,11 +120,18 @@ for i = offset : simulationParams.stepSize : length(timeVec)
  time = timeVec(i);
  real_time_delay = 0;
  
+ %Account for conversion bias
+ R_conv = get_conv_cov(estimatorParams.sensorCovariance, lam, sensorReading);
+ if(~any(isnan(R_conv)))
+  estimatorParams.filter.MeasurementNoise = R_conv;
+ end
+ 
+ %Estimate the state
  [estimate, estimatorParams] = state_estimator(sensorReading, time,...
                                                       estimatorParams);
  
  %Forward prediction when collision time can be predicted
- if(estimate.corrState(2)<0)
+ if(estimate.corrState(2)<0 && estimate.corrState(1) > 0)
   collisionTime = -estimate.corrState(1)/estimate.corrState(2) + ...
                   estimatorParams.currentTime;
   %need to calculate it when we can avoid

@@ -1,7 +1,8 @@
 % This function initializes the estimator, may be a noop for some estimators.
 function [offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams)
 %Index of any rows without NaNs
-idx = find(~any(isnan(sensorReadings),2)); 
+idx = find(~any(isnan(sensorReadings),2));
+A = [1,0; 0,0; 0,1; 0,0]; %takes xy measurement to xy state
 if(estimatorParams.llsSeeding)
   batchReadings = sensorReadings(idx(1:estimatorParams.batchSamples),:);
   offset = idx(estimatorParams.batchSamples)+1;
@@ -17,15 +18,28 @@ if(estimatorParams.llsSeeding)
   %Use batch LLS to estimate the initial state
   x_LS = H_blc\y;
   %Set initial state to batch LLS output
-  estimatorParams.initState = x_LS;
- else
-  estimatorParams.initState = sensorReadings(idx(1),:);
+  estimatorParams.initState = A*x_LS;
+else
+  estimatorParams.initState = A*sensorReadings(idx(1),:)';
   offset = idx(1) + 1;
 end
- 
+
  %Initialize Kalman Filter
- estimatorParams.filter=trackingKF('MotionModel','3D Constant Velocity',...
-                                   'State', estimatorParams.initState,...
-                                   'MeasurementNoise',...
-                                   estimatorParams.sensorCovariance);
+ kfOpts = {'MotionModel','2D Constant Velocity',...
+           'State', estimatorParams.initState,...
+           'MeasurementNoise',estimatorParams.sensorCovariance};
+ 
+ ekfOpts = {'StateTransitionFcn', @statetransitionfcn,...
+            'StateTransitionJacobianFcn', @statejacobianfcn,...
+            'State', estimatorParams.initState,...
+            'MeasurementNoise', estimatorParams.sensorCovariance,...
+            'MeasurementFcn', @measurementfcn,...
+            'MeasurementJacobianFcn',@(x) [0,1,0,0;1,0,0,0]};
+        
+ ukfOpts = {'StateTransitionFcn', @statetransitionfcn,...
+            'State', estimatorParams.initState,...
+            'MeasurementNoise', estimatorParams.sensorCovariance,...
+            'MeasurementFcn', @measurementfcn};
+        
+ estimatorParams.filter=trackingKF(kfOpts{:});
 end

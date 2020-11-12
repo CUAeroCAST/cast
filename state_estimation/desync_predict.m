@@ -9,5 +9,6 @@ function [estimate] = desync_predict(time,estimatorParams)
  copyFilter = clone(estimatorParams.filter);
  
  %Estimate the requested state and correct based on sensor reading
+%  m = [0;0;0;0];
  [estimate.predState, estimate.Ppred] = predict(copyFilter, stepSize);
 end
