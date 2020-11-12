@@ -18,7 +18,7 @@ recv = struct;
 simulationParams.stepSize = 1;
 simulationParams.sampleRate = 4e3;
 simulationParams.scalingFactor = 1; %Distance scaling factor for testbed
-simulationParams.initPos = [2,0,0]; %m, starting point of object
+simulationParams.initPos = [2,0.5,0]; %m, starting point of object
 simulationParams.finalPos = [0,0,0]; %m, final point of object
 simulationParams.collisionTime = 2; %s, time it takes to get from initial 
 %to final position
@@ -26,7 +26,7 @@ simulationParams.collisionTime = 2; %s, time it takes to get from initial
 %Estimator parameters
 estimatorParams.llsSeeding = false;
 estimatorParams.batchSamples = 0;
-estimatorParams.sensorCovariance = [0.025^2,0;0,0.45^2,];
+estimatorParams.sensorCovariance = [0.025^2,0;0,deg2rad(0.45)^2]; %Range, bearing
 
 %Sensor parameters
 sensorParams.samplingRate = 4e3;
@@ -141,7 +141,7 @@ for i = offset : simulationParams.stepSize : length(timeVec)
                                                       estimatorParams);
 
  %Forward prediction when collision time can be predicted
- if(estimate.predState(2)<0)
+ if(estimate.predState(2)<0 && estimate.predState(1) > 0)
   collisionEstimate.collisionTime = -estimate.predState(1)/estimate.predState(2) + ...
                   estimatorParams.currentTime;
   %need to calculate it when we can avoid
