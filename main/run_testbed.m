@@ -131,8 +131,8 @@ for i = offset : simulationParams.stepSize : length(timeVec)
  real_time_delay = 0;
  
  %Account for conversion bias
- R_conv = get_conv_cov(estimatorParams.sensorCovariance, lam, sensorReading);
- if(~any(isnan(R_conv)))
+ if(~any(isnan(sensorReading)))
+  R_conv = get_conv_cov(estimatorParams.sensorCovariance, lam, sensorReading);
   estimatorParams.filter.MeasurementNoise = R_conv;
  end
  
