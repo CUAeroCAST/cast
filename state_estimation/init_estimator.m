@@ -2,7 +2,7 @@
 function [offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams)
 %Index of any rows without NaNs
 idx = find(~any(isnan(sensorReadings),2)); 
-if(estimatorParams.llsSeeding)
+if(estimatorParams.llsSeeding && (estimatorParams.batchSamples > 0))
   batchReadings = sensorReadings(idx(1:estimatorParams.batchSamples),:);
   offset = idx(estimatorParams.batchSamples)+1;
 
@@ -18,8 +18,9 @@ if(estimatorParams.llsSeeding)
   x_LS = H_blc\y;
   %Set initial state to batch LLS output
   estimatorParams.initState = x_LS;
- else
-  estimatorParams.initState = sensorReadings(idx(1),:);
+else
+  A = [1,0,0;0,0,0;0,1,0;0,0,0;0,0,1;0,0,0]; %matrix to take xyz to state
+  estimatorParams.initState = A*sensorReadings(idx(1),:)';
   offset = idx(1) + 1;
 end
  

@@ -10,4 +10,5 @@ function [estimate] = desync_predict(time,estimatorParams)
  
  %Estimate the requested state and correct based on sensor reading
  [estimate.predState, estimate.Ppred] = predict(copyFilter, stepSize);
+ estimate.collisionTime = time;
 end
