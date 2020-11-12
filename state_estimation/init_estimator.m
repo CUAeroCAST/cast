@@ -3,7 +3,7 @@ function [offset, estimatorParams] = init_estimator(sensorReadings, estimatorPar
 %Index of any rows without NaNs
 idx = find(~any(isnan(sensorReadings),2));
 A = [1,0; 0,0; 0,1; 0,0]; %takes xy measurement to xy state
-if(estimatorParams.llsSeeding)
+if(estimatorParams.llsSeeding && (estimatorParams.batchSamples > 0))
   batchReadings = sensorReadings(idx(1:estimatorParams.batchSamples),:);
   offset = idx(estimatorParams.batchSamples)+1;
 
