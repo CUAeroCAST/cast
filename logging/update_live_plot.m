@@ -6,18 +6,25 @@ axis_ = plotStruct.axis;
 %% Extract information from estimate struct and recv struct
 if ~isnan(estimate.corrState(1))
     estPos = [estimate.corrState(1),estimate.corrState(3)];    %x and y estimated position for incoming object
-    covAxes = [estimate.Pcorr(1,1),estimate.Pcorr(3,3)]; %This may need refining if off-axes tilt for ellipse is present
+    [v,lam] = eig([estimate.Pcorr(1,1) estimate.Pcorr(1,3);estimate.Pcorr(3,1) estimate.Pcorr(3,3)]); %getting eigenstuff from the 2D position state matrix
+    %covAxes = [estimate.Pcorr(1,1),estimate.Pcorr(3,3)]; %This may need refining if off-axes tilt for ellipse is present
+    covAxes = [2*sqrt(lam(1,1)), 2*sqrt(lam(2,2))]; %major and minor axis of cov
+    covTilt = atan(v(2,1)/v(1,1)); %tilt of ellipse in radians
 else
     estPos = [estimate.predState(1),estimate.predState(3)];    %x and y estimated position for incoming object
-    covAxes = [estimate.Ppred(1,1),estimate.Ppred(3,3)]; %This may need refining if off-axes tilt for ellipse is present
+    [v,lam] = eig([estimate.Ppred(1,1) estimate.Ppred(1,3);estimate.Ppred(3,1) estimate.Ppred(3,3)]); %getting eigenstuff from the 2D position state matrix    
+    %covAxes = [estimate.Ppred(1,1),estimate.Ppred(3,3)]; %This may need refining if off-axes tilt for ellipse is present    covAxes = [2*sqrt(5.991*lam(1,1)), 2*sqrt(5.991*lam(2,2))]; %5.991 is s value for 2 sigma
+    covAxes = [2*sqrt(lam(1,1)), 2*sqrt(lam(2,2))]; %major and minor axis of cov
+    covTilt = atan(v(2,1)/v(1,1)); %tilt of ellipse in radians
 end
 gantryPos = [recv.state(1),recv.state(2)];         %assume for now that recv.state is [xpos,ypos]
 
 %% Append New Data into PlotStruct
 if isfield(plotStruct,'covEllipsesCorr')%test if this field has been created yet
     %structure fields: 'covEllipses', 'incomingPositions', 'incomingEstPositions', 'gantryPositions'
-    plotStruct.covEllipsesCorr = [plotStruct.covEllipsesCorr;[estimate.Pcorr(1,1),estimate.Pcorr(3,3)]]; %covAxes must be 1x2 where first el is yrad, second is zrad
-    plotStruct.covEllipsesPred = [plotStruct.covEllipsesPred;[estimate.Ppred(1,1),estimate.Ppred(3,3)]]; %covAxes must be 1x2 where first el is yrad, second is zrad
+    plotStruct.covEllipsesCorr = [plotStruct.covEllipsesCorr;[2*sqrt(estimate.Pcorr(1,1)),2*sqrt(estimate.Pcorr(3,3))]]; %covAxes must be 1x2 where first el is yrad, second is zrad
+    plotStruct.covEllipsesPred = [plotStruct.covEllipsesPred;[2*sqrt(estimate.Ppred(1,1)),2*sqrt(estimate.Ppred(3,3))]]; %covAxes must be 1x2 where first el is yrad, second is zrad
+    plotStruct.covEllipseTilt = [plotStruct.covEllipseTilt;covTilt];
     plotStruct.incomingPositions = [plotStruct.incomingPositions;estPos]; %est pos is 1x2
     plotStruct.gantryPositions = [plotStruct.gantryPositions;gantryPos]; %gantryPos is 1x2
     %Delete plots from previous step
@@ -27,9 +34,10 @@ if isfield(plotStruct,'covEllipsesCorr')%test if this field has been created yet
     end
 else
     plotStruct.covEllipsesCorr = covAxes; %covAxes must be 1x2 where first el is yrad, second is zrad
-    plotStruct.covEllipsesPred = [estimate.Ppred(1,1),estimate.Ppred(3,3)];
+    plotStruct.covEllipsesPred = [2*sqrt(estimate.Ppred(1,1)),2*sqrt(estimate.Ppred(3,3))];
     plotStruct.incomingPositions = estPos; %est pos is 1x2
     plotStruct.gantryPositions = gantryPos; %gantryPos is 1x2
+    plotStruct.covEllipseTilt = covTilt;
     %legend('Incoming Object Covariance','Incoming Object Path','Gantry Path','Gantry Position','Estimated Incoming Object Position','location','northwest')
     title('2D Collision Live Scenario')
     xlabel('X distance(m)')
@@ -40,7 +48,7 @@ end
 %% Plot updated path with current positional and covariance information
 
 hold on
-plotDel1 = ellipse(estPos(1),estPos(2),2*sqrt(covAxes(1)),2*sqrt(covAxes(2)),'color','m','linewidth',2);
+plotDel1 = ellipse(estPos(1),estPos(2),covAxes(1),covAxes(2),covTilt,'color','m','linewidth',2);
 plot(plotStruct.incomingPositions(:,1),plotStruct.incomingPositions(:,2),'color','r','linewidth',2);
 plot(plotStruct.gantryPositions(:,1),plotStruct.gantryPositions(:,2),'color','b','linewidth',2);
 plotDel2 = plot(gantryPos(1),gantryPos(2),'b*','linewidth',2);
@@ -49,10 +57,10 @@ plotDel4 = ellipse(collisionEstimate.predState(1),collisionEstimate.predState(3)
     2*sqrt((collisionEstimate.Ppred(1,1))),2*sqrt((collisionEstimate.Ppred(3,3))),'linewidth',2,'color','c');%plot 2sig predicted collision cov
 
 I = ~isnan(plotStruct.covEllipsesCorr(:,2)); %index where corr states exist
-plot(plotStruct.incomingPositions(I,1),plotStruct.incomingPositions(I,2)+2*sqrt(plotStruct.covEllipsesCorr(I,2)),'--','color','m','linewidth',1)
-plot(plotStruct.incomingPositions(:,1),plotStruct.incomingPositions(:,2)-2*sqrt(plotStruct.covEllipsesPred(:,2)),'--','color','k','linewidth',1)
-plot(plotStruct.incomingPositions(:,1),plotStruct.incomingPositions(:,2)+2*sqrt(plotStruct.covEllipsesPred(:,2)),'--','color','k','linewidth',1)
-plot(plotStruct.incomingPositions(I,1),plotStruct.incomingPositions(I,2)-2*sqrt(plotStruct.covEllipsesCorr(I,2)),'--','color','m','linewidth',1)
+plot(plotStruct.incomingPositions(I,1),plotStruct.incomingPositions(I,2)+(plotStruct.covEllipsesCorr(I,2)),'--','color','m','linewidth',1)
+plot(plotStruct.incomingPositions(:,1),plotStruct.incomingPositions(:,2)-(plotStruct.covEllipsesPred(:,2)),'--','color','k','linewidth',1)
+plot(plotStruct.incomingPositions(:,1),plotStruct.incomingPositions(:,2)+(plotStruct.covEllipsesPred(:,2)),'--','color','k','linewidth',1)
+plot(plotStruct.incomingPositions(I,1),plotStruct.incomingPositions(I,2)-(plotStruct.covEllipsesCorr(I,2)),'--','color','m','linewidth',1)
 
 %delete elements 4,5,1 each step
 hold off
@@ -71,8 +79,8 @@ if length(plotStruct.gantryPositions(:,1))>1
 end
 % Add confirmation if object has been avoided
 if  plotStruct.collisionFlag == 0
-    if ((estPos(1)-2*sqrt(covAxes(1)))<=gantryPos(1) &&   (estPos(1)+2*sqrt(covAxes(1)))>=gantryPos(1)...
-            && (estPos(2)-2*sqrt(covAxes(2)))<=gantryPos(2) &&   (estPos(2)+2*sqrt(covAxes(2)))>=gantryPos(2))...
+    if ((estPos(1)-(covAxes(1)))<=gantryPos(1) &&   (estPos(1)+(covAxes(1)))>=gantryPos(1)...
+            && (estPos(2)-(covAxes(2)))<=gantryPos(2) &&   (estPos(2)+(covAxes(2)))>=gantryPos(2))...
             && collisionEstimate.collisionTime<50
         plotStruct.collisionFlag = 1;
     end
