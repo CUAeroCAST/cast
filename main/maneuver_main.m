@@ -1,5 +1,5 @@
 clear;close all;clc
-% If this makes it into a pull request, it doesn't need to go in main
+% Tests the maneuver determination
 importCast
 load('positionData2.mat');
 covMat = [.000000014 9.9998e-8 0 0 0 0;
