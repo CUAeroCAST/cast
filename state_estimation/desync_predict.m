@@ -8,6 +8,7 @@ function [estimate] = desync_predict(time,estimatorParams)
  end
  copyFilter = clone(estimatorParams.filter);
  copyFilter.MotionModel = 'Custom';
+ %Process noise model used in matlab for 2D constant velocity
  copyFilter.ProcessNoise = [(stepSize^3)/3, (stepSize^2)/2,0,0;
                             (stepSize^2)/2, stepSize,0,0;
                             0,0,(stepSize^3)/3, (stepSize^2)/2;
