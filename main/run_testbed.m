@@ -82,7 +82,7 @@ if (isTestbedScenario)
     collisionEstimate.Ppred = [10 0 0 0 0 0;0 0 0 0 0 0;0 0 10 0 0 0;...
     0 0 0 0 0 0;0 0 0 0 0 0;0 0 0 0 0 0];%x and y radius, initially, 10x10
     collisionEstimate.predState = [0 0 0 0 0 0];
-    collisionEstimate.collisionTime = 100; %dummy value
+    collisionEstimate.collisionTime = 1; %dummy value
     if ~loadFile
         x_rel = linspace(simulationParams.initPos(1),...
                      simulationParams.finalPos(1),...
@@ -112,12 +112,8 @@ else
     sensorReadings = sensor_model(sensorScenario, makeSensorPlot);
 end
 
-%Convert measurement to cartesian
+%Constants for converting measurement to cartesian
 lam = lam_vals(estimatorParams.sensorCovariance);
-for i=1:length(sensorReadings)
-    mu = conv_meas_bias(lam, sensorReadings(i,:));
-    sensorReadings(i,:) = meas2cart(sensorReadings(i,:), mu);
-end
 plotStruct.axis = [-.5 2 -1 1];
 %% STATE ESTIMATION
 %Determine how many sensor readings to use for batch LLS estimate
@@ -130,6 +126,10 @@ for i = offset : simulationParams.stepSize : length(timeVec)
  sensorReading = sensorReadings(i,:);
  time = timeVec(i);
  real_time_delay = 0;
+ 
+ %Convert range-bearing to xy
+ mu = conv_meas_bias(lam, sensorReading);
+ sensorReading = meas2cart(sensorReading, mu);
  
  %Account for conversion bias
  if(~any(isnan(sensorReading)))
