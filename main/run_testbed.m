@@ -5,7 +5,7 @@ datapath = open_logging();
 
 %% CONFIG
 makeSensorPlot = false;
-loadFile = false;
+loadFile = true;
 isOrbitalScenario = false;
 isTestbedScenario = true;
 
@@ -27,6 +27,7 @@ simulationParams.collisionTime = 1.5; %s, time it takes to get from initial
 estimatorParams.llsSeeding = false;
 estimatorParams.batchSamples = 0;
 estimatorParams.sensorCovariance = [0.025^2,0;0,deg2rad(0.45)^2]; %Range, bearing
+estimatorParams.qGain = 4; %Process noise gain for forward prediction
 
 %Sensor parameters
 sensorParams.samplingRate = 4e3;
@@ -140,13 +141,7 @@ for i = offset : simulationParams.stepSize : length(timeVec)
  [estimate, estimatorParams] = state_estimator(sensorReading, time,...
                                                       estimatorParams);
 
- %Forward prediction when collision time can be predicted
- if(estimate.predState(2)<0 && estimate.predState(1) > 0)
-  collisionEstimate.collisionTime = -estimate.predState(1)/estimate.predState(2) + ...
-                  estimatorParams.currentTime;
-  %need to calculate it when we can avoid
-  collisionEstimate = desync_predict(collisionEstimate.collisionTime, estimatorParams); 
- end
+ collisionEstimate = collision_prediction(estimate, estimatorParams, collisionEstimate);
  
  % GUIDANCE
 
