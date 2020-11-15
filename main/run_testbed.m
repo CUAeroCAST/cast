@@ -18,9 +18,9 @@ recv = struct;
 simulationParams.stepSize = 1;
 simulationParams.sampleRate = 4e3;
 simulationParams.scalingFactor = 1; %Distance scaling factor for testbed
-simulationParams.initPos = [0,2,0]; %m, starting point of object
+simulationParams.initPos = [1.5,0.5,0]; %m, starting point of object
 simulationParams.finalPos = [0,0,0]; %m, final point of object
-simulationParams.collisionTime = 2; %s, time it takes to get from initial 
+simulationParams.collisionTime = 1.5; %s, time it takes to get from initial 
 %to final position
 
 %Estimator parameters
