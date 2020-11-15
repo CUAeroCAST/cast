@@ -12,15 +12,22 @@ function [maneuver,tAfter,stateAfter] = make_maneuver(propogation,satelliteState
 % Calculate the probability of collision 
 [pdf,probability,xrange,yrange] = calculate_probability(propogation);
 % If probability is too great, impliment maneuver
- if probability>.00000001
+ if probability>.0227
      % Calculate the gradient of the pdf to find the maneuver direction
      [gradx,grady] = gradient(pdf);
      [satellitex,satellitey] = find_sat_position(propogation);
      maneuverx = gradx(satellitex(1));
      maneuvery = grady(satellitey(1));
+     unit_rad = satelliteState(1:3)/norm(satelliteState(1:3));
+     unit_along = satelliteState(4:6)/norm(satelliteState(4:6));
+     unit_cross = cross(unit_rad,unit_along);
+     Q = [unit_rad';
+         unit_along';
+         unit_cross'];
+     burnDirection = Q'*[maneuverx;maneuvery;0];
      % Salculate the burn time
      [burnTime,tAfter,stateAfter] = find_burn_time(propogation,satelliteState,...
-         [maneuverx,maneuvery],xrange,yrange,timeToCol);
+         burnDirection,xrange,yrange,timeToCol);
      % Output the maneuver
      maneuver = [maneuverx,maneuvery,burnTime];
  else
