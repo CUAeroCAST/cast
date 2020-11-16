@@ -12,10 +12,17 @@ function [pdf,probability,sigx,sigy] = calculate_probability(estimate)
 % Author: Jason Balke | Project: CAST | Date: 10/29/20
 %----------------------------------------------------------------------------------------%
 % Set the range of the pdf calculations to 4 times the variances
+
+%%%%%%%%%%%%%%%%%%%
+%error where corrected state is not passed in, predicted used instead
+estimate.Pcorr = estimate.Ppred;
+estimate.corrState = estimate.predState;
+%%%%%%%%%%%%%%%%%%%
+
 Pcorr = sqrt(estimate.Pcorr);
 rSensor = .1011;
-xrange=estimate.corrState(1)-3*Pcorr(1,1):1e-6:estimate.corrState(1)+3*Pcorr(1,1);
-yrange=estimate.corrState(3)-3*Pcorr(3,3):1e-6:estimate.corrState(3)+3*Pcorr(3,3);
+xrange=estimate.corrState(1)-3*Pcorr(1,1):1e-1:estimate.corrState(1)+3*Pcorr(1,1);
+yrange=estimate.corrState(3)-3*Pcorr(3,3):1e-1:estimate.corrState(3)+3*Pcorr(3,3);
 % Get the mean and sigma for the pdf
 mu = [estimate.corrState(1) estimate.corrState(3)];
 sigma = [estimate.Pcorr(1,1) estimate.Pcorr(1,3);estimate.Pcorr(1,3) estimate.Pcorr(3,3)];

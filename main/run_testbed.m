@@ -1,14 +1,16 @@
 %% HOUSEKEEPING
 clear; clc; close all
 importCast;
-datapath = open_logging();
 
 %% CONFIG
+log_data = false;
 scalingFactor = 222; %Distance scaling factor for testbed
 makeSensorPlot = false;
 loadFile = true;
 isOrbitalScenario = false;
 isTestbedScenario = true;
+
+datapath = open_logging(log_data);
 
 gmatParams = struct;
 guidanceParams = struct;
@@ -32,7 +34,7 @@ estimatorParams.qGain = 4; %Process noise gain for forward prediction
 
 %Sensor parameters
 sensorParams.samplingRate = 4e3;
-sensorParams.maxRange = 15;
+sensorParams.maxRange = 4e3;
 sensorParams.beamDivergence = 0.9; %deg
 sensorParams.rangeAccuracy = 0.025; %m
 sensorParams.beamLimits = [-1.35,1.35];
@@ -74,9 +76,11 @@ n = length(relativeOrbit);
 timeVec = linspace(0,n/10,n)';
 %% SENSOR MODEL
 %Save parameter structs
-log_struct(gmatParams, [datapath, filesep, 'gmatParams'])
-log_struct(estimatorParams, [datapath, filesep, 'estimatorParams'])
-log_struct(guidanceParams, [datapath, filesep, 'guidanceParams'])
+if log_data
+ log_struct(gmatParams, [datapath, filesep, 'gmatParams'])
+ log_struct(estimatorParams, [datapath, filesep, 'estimatorParams'])
+ log_struct(guidanceParams, [datapath, filesep, 'guidanceParams'])
+end
 %% GMAT
 if(isOrbitalScenario && ~loadFile)
  [chiefOrbit, deputyOrbit, timeVec] = make_gmat_orbits(gmatParams);
@@ -140,6 +144,7 @@ for i = offset : simulationParams.stepSize : length(timeVec)
  sensorReading = sensorReadings(i,:);
  time = timeVec(i);
  real_time_delay = 0;
+ delay = 0;
  
  %Convert range-bearing to xy
  mu = conv_meas_bias(lam, sensorReading);
@@ -158,13 +163,18 @@ for i = offset : simulationParams.stepSize : length(timeVec)
  collisionEstimate = collision_prediction(estimate, estimatorParams, collisionEstimate);
  
  % GUIDANCE
-
- [maneuver,tAfter,stateAfter] = make_maneuver(collisionEstimate,chiefOrbit(i),...
-     collisionTime);
- indForward = i+length(stateAfter);
- tMove = timeVec(i:indForward);
- [tMove,maneuverPos] = convert_2d(tMove,chiefOrbit(i:indForward,:),stateAfter);
- 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%make_maneuver and convert_2d currently have undefined behavior, both assume the second
+%input is the chief orbit, which is not generated in the current code, the relative orbit
+%has been substituted to enable full code execution, remove this comment block and
+%bounding comments when fixed.
+%  [maneuver,tAfter,stateAfter] = make_maneuver(collisionEstimate,relativeOrbit(i),...
+%      collisionEstimate.collisionTime);
+%  indForward = i+length(stateAfter);
+%  tMove = timeVec(i:indForward);
+%  [tMove,maneuverPos] = convert_2d(tMove,relativeOrbit(i:indForward,:),stateAfter);
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ maneuver = [0 0];
  recv = run_io(maneuver, delay);
  
  % Visualization

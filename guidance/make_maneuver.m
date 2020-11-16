@@ -33,5 +33,7 @@ function [maneuver,tAfter,stateAfter] = make_maneuver(propogation,satelliteState
  else
      % All 0 maneuver if the probability of collision is low enough
      maneuver = [0,0,0];
+     tAfter = 0;
+     stateAfter = 0;
  end
 end
