@@ -6,7 +6,7 @@ datapath = open_logging();
 %% CONFIG
 scalingFactor = 222; %Distance scaling factor for testbed
 makeSensorPlot = false;
-loadFile = false;
+loadFile = true;
 isOrbitalScenario = false;
 isTestbedScenario = true;
 
@@ -19,15 +19,16 @@ recv = struct;
 simulationParams.stepSize = 1;
 simulationParams.sampleRate = 4e3;
 simulationParams.scalingFactor = 1; %Distance scaling factor for testbed
-simulationParams.initPos = [2,0.5,0]; %m, starting point of object
+simulationParams.initPos = [1.5,0.5,0]; %m, starting point of object
 simulationParams.finalPos = [0,0,0]; %m, final point of object
-simulationParams.collisionTime = 2; %s, time it takes to get from initial 
+simulationParams.collisionTime = 1.5; %s, time it takes to get from initial 
 %to final position
 
 %Estimator parameters
-estimatorParams.llsSeeding = true;
+estimatorParams.llsSeeding = false;
 estimatorParams.batchSamples = 0;
-estimatorParams.sensorCovariance = [0.025^2,0,0;0,0.2^2,0;0,0,0.2^2];
+estimatorParams.sensorCovariance = [0.025^2,0;0,deg2rad(0.45)^2]; %Range, bearing
+estimatorParams.qGain = 4; %Process noise gain for forward prediction
 
 %Sensor parameters
 sensorParams.samplingRate = 4e3;
@@ -94,7 +95,7 @@ if (isTestbedScenario)
     collisionEstimate.Ppred = [10 0 0 0 0 0;0 0 0 0 0 0;0 0 10 0 0 0;...
     0 0 0 0 0 0;0 0 0 0 0 0;0 0 0 0 0 0];%x and y radius, initially, 10x10
     collisionEstimate.predState = [0 0 0 0 0 0];
-    collisionEstimate.collisionTime = 100; %dummy value
+    collisionEstimate.collisionTime = 1; %dummy value
     if ~loadFile
         x_rel = linspace(simulationParams.initPos(1),...
                      simulationParams.finalPos(1),...
@@ -123,6 +124,9 @@ else
                                    targetParams);
     sensorReadings = sensor_model(sensorScenario, makeSensorPlot);
 end
+
+%Constants for converting measurement to cartesian
+lam = lam_vals(estimatorParams.sensorCovariance);
 plotStruct.axis = [-.5 2 -1 1];
 %% STATE ESTIMATION
 %Determine how many sensor readings to use for batch LLS estimate
@@ -137,16 +141,21 @@ for i = offset : simulationParams.stepSize : length(timeVec)
  time = timeVec(i);
  real_time_delay = 0;
  
+ %Convert range-bearing to xy
+ mu = conv_meas_bias(lam, sensorReading);
+ sensorReading = meas2cart(sensorReading, mu);
+ 
+ %Account for conversion bias
+ if(~any(isnan(sensorReading)))
+  R_conv = get_conv_cov(estimatorParams.sensorCovariance, lam, sensorReading);
+  estimatorParams.filter.MeasurementNoise = R_conv;
+ end
+ 
+ %Estimate the state
  [estimate, estimatorParams] = state_estimator(sensorReading, time,...
                                                       estimatorParams);
 
- %Forward prediction when collision time can be predicted
- if(estimate.predState(2)<0)
-  collisionEstimate.collisionTime = -estimate.predState(1)/estimate.predState(2) + ...
-                  estimatorParams.currentTime;
-  %need to calculate it when we can avoid
-  collisionEstimate = desync_predict(collisionEstimate.collisionTime, estimatorParams); 
- end
+ collisionEstimate = collision_prediction(estimate, estimatorParams, collisionEstimate);
  
  % GUIDANCE
 
