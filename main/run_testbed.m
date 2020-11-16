@@ -4,6 +4,7 @@ importCast;
 datapath = open_logging();
 
 %% CONFIG
+scalingFactor = 222; %Distance scaling factor for testbed
 makeSensorPlot = false;
 loadFile = false;
 isOrbitalScenario = false;
@@ -59,6 +60,18 @@ plotStruct.interval = 50; %how often the plot is updated... if equals 0, then it
 plotCount = 0; %initial count value for iterating inside main loop
 plotCorrCount = 50; %starting value for corr state plot count
 
+%Temp creation of relative orbit for init_sensor_model
+load('relativeOrbitExample.mat');
+relativeOrbit = align_orbit(relativeOrbit);
+relativeOrbit = relativeOrbit.*(1000/scalingFactor);
+%Trim values outside sensor range
+[~,I] = min(abs(relativeOrbit(:,1) - sensorParams.maxRange));
+relativeOrbit(1:I,:) = [];
+
+n = length(relativeOrbit);
+%This needs to be corrected
+timeVec = linspace(0,n/10,n)';
+%% SENSOR MODEL
 %Save parameter structs
 log_struct(gmatParams, [datapath, filesep, 'gmatParams'])
 log_struct(estimatorParams, [datapath, filesep, 'estimatorParams'])
@@ -116,6 +129,7 @@ plotStruct.axis = [-.5 2 -1 1];
 [offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams);
 estimatorParams.currentTime = timeVec(offset);
 
+
 %% MAIN LOOP
 for i = offset : simulationParams.stepSize : length(timeVec)
  % STATE ESTIMATION
@@ -136,7 +150,11 @@ for i = offset : simulationParams.stepSize : length(timeVec)
  
  % GUIDANCE
 
- [maneuver, delay] = make_maneuver(estimate, guidanceParams);
+ [maneuver,tAfter,stateAfter] = make_maneuver(collisionEstimate,chiefOrbit(i),...
+     collisionTime);
+ indForward = i+length(stateAfter);
+ tMove = timeVec(i:indForward);
+ [tMove,maneuverPos] = convert_2d(tMove,chiefOrbit(i:indForward,:),stateAfter);
  
  recv = run_io(maneuver, delay);
  
