@@ -10,4 +10,11 @@ function [estimate, estimatorParams] = state_estimator(sensorReading, time,...
  
  %Estimate the requested state and correct based on sensor reading
  [estimate.predState, estimate.Ppred] = predict(estimatorParams.filter, stepSize);
- [estimat
+ if(~any(isnan(sensorReading)))
+    [estimate.corrState, estimate.Pcorr] = correct(estimatorParams.filter,sensorReading);
+ else
+    estimate.corrState = NaN(1,6);
+    estimate.Pcorr = NaN(6,6);
+ end
+
+end
