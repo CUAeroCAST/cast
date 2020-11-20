@@ -87,14 +87,14 @@ if length(plotStruct.gantryPositions(:,1))>1
         t1 = annotation('textbox');
         t1.String = txt;
         t1.BackgroundColor = [0.4660 0.6740 0.1880];
-        t1.Position = [.7 .15 .12 .04];
+        t1.Position = [.5 .15 .12 .04];
     end
 end
 % Add confirmation if object has been avoided
 if  plotStruct.collisionFlag == 0
     if ((estPos(1)-(covAxesIn(1)))<=gantryPos(1) &&   (estPos(1)+(covAxesIn(1)))>=gantryPos(1)...
             && (estPos(2)-(covAxesIn(2)))<=gantryPos(2) &&   (estPos(2)+(covAxesIn(2)))>=gantryPos(2))...
-            && collisionEstimate.collisionTime<5
+            && collisionEstimate.collisionTime<.5
         plotStruct.collisionFlag = 1;
     end
 elseif plotStruct.collisionFlag == 1
@@ -102,7 +102,7 @@ elseif plotStruct.collisionFlag == 1
         t2 = annotation('textbox');
         t2.String = txt;
         t2.BackgroundColor = [1 0 0];
-        t2.Position = [.7 .25 .15 .04];
+        t2.Position = [.5 .25 .15 .04];
 end
 % Add confirmation if gantry can manuever outside predicted covariance
 if (-2*sqrt((collisionEstimate.Ppred(1,1)))>-.5 ||   2*sqrt((collisionEstimate.Ppred(1,1)))<.5... %is cov small enough to fit within gantry
@@ -112,7 +112,7 @@ if (-2*sqrt((collisionEstimate.Ppred(1,1)))>-.5 ||   2*sqrt((collisionEstimate.P
             t1 = annotation('textbox');
             t1.String = txt;
             t1.BackgroundColor = [.1615 0.3807 0.7346];
-            t1.Position = [.7 .35 .15 .08];
+            t1.Position = [.5 .35 .15 .065];
         end
 end
 

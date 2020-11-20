@@ -4,6 +4,7 @@ importCast;
 
 %% CONFIG
 log_data = false;
+hideFig = false;
 scalingFactor = 222; %Distance scaling factor for testbed
 makeSensorPlot = false;
 loadFile = true;
@@ -56,7 +57,11 @@ plotStruct.filename = [datapath, filesep, '2D_collision_avoid'];
 plotStruct.vobj = VideoWriter(plotStruct.filename, 'MPEG-4');
 plotStruct.vobj.Quality = 100;
 open(plotStruct.vobj);
-plotStruct.videoFig = figure;
+if hideFig
+    plotStruct.videoFig = figure('visible','off');
+else
+    plotStruct.videoFig = figure;    
+end
 plotStruct.collisionFlag = 0;   %flag for if covariance has intersected with gantry pos
 set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);
 plotStruct.interval = 50; %how often the plot is updated... if equals 0, then it plots every iteration
@@ -131,7 +136,7 @@ end
 
 %Constants for converting measurement to cartesian
 lam = lam_vals(estimatorParams.sensorCovariance);
-plotStruct.axis = [-.5 2 -1 1];
+plotStruct.axis = [-.5 2 -1.25 1.25];
 %% STATE ESTIMATION
 %Determine how many sensor readings to use for batch LLS estimate
 [offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams);
