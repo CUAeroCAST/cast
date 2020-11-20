@@ -13,8 +13,8 @@ stepSize = deg2rad(1.8/4);
 % clock frequency of micro controller
 frequency = 16e6;
 % target acceleration curve
-t = 0:0.01:1;
-omegaDots = cos(2*pi*t) + 1;% 1.5 - 1./(1+exp(-1*t));
+t = 0:0.1:5;
+omegaDots = 1-0.1*t;% 1.5 - 1./(1+exp(-1*t));
 
 %% INIT
 % generate lookup table with interpolation
