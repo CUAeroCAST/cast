@@ -30,7 +30,7 @@ simulationParams.collisionTime = 1.5; %s, time it takes to get from initial
 estimatorParams.llsSeeding = false;
 estimatorParams.batchSamples = 0;
 estimatorParams.sensorCovariance = [0.025^2,0;0,deg2rad(0.45)^2]; %Range, bearing
-estimatorParams.qGain = 4; %Process noise gain for forward prediction
+estimatorParams.qGain = 1; %Process noise gain for forward prediction
 
 %Sensor parameters
 sensorParams.samplingRate = 4e3;
@@ -136,31 +136,72 @@ plotStruct.axis = [-.5 2 -1 1];
 %Determine how many sensor readings to use for batch LLS estimate
 [offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams);
 estimatorParams.currentTime = timeVec(offset);
-
-
+%  estimatorParams.filter.MotionModel = 'Custom';
+% %  Process noise model used in matlab for 2D constant velocity
+%  stepSize = 2.5004e-04;
+%  estimatorParams.filter.ProcessNoise = [(stepSize^3)/3, (stepSize^2)/2,0,0;
+%                                         (stepSize^2)/2, stepSize,0,0;
+%                                         0,0,(stepSize^3)/3, (stepSize^2)/2;
+%                                         0,0,(stepSize^2)/2, stepSize];
+%  estimatorParams.filter.ProcessNoise = estimatorParams.filter.ProcessNoise./estimatorParams.qGain;
+%  estimatorParams.filter.StateTransitionModel = [1,stepSize,0,0;
+%                                     0,1,0,0;
+%                                     0,0,1,stepSize;
+%                                     0,0,0,1];
+endOffset = 6000;
+syms x
+R_conv = @(r,theta)[- ((8983381526791141*limit(- (r*exp(- 800*r^2 + 1600*r*x - 800*x^2))/1600 - (x*exp(- 800*r^2 + 1600*r*x - 800*x^2))/1600 - (2^(1/2)*pi^(1/2)*erfi(-2^(1/2)*(r - x)*20i)*(r^2 + 1/1600)*1i)/80, x, -Inf))/562949953421312 - (8983381526791141*limit(- (r*exp(- 800*r^2 + 1600*r*x - 800*x^2))/1600 - (x*exp(- 800*r^2 + 1600*r*x - 800*x^2))/1600 - (2^(1/2)*pi^(1/2)*erfi(-2^(1/2)*(r - x)*20i)*(r^2 + 1/1600)*1i)/80, x, Inf))/562949953421312)*int((1787186969586535*exp(-(80000*(theta - x)^2)/pi^2)*cos(x)^2)/35184372088832, x, -Inf, Inf) - (80701143655892331564348236081881*r^2*pi*int((1787186969586535*exp(-(80000*(theta - x)^2)/pi^2)*cos(x))/35184372088832, x, -Inf, Inf)^2)/253530120045645880299340641075200,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            0;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           0, - ((8983381526791141*limit(- (r*exp(- 800*r^2 + 1600*r*x - 800*x^2))/1600 - (x*exp(- 800*r^2 + 1600*r*x - 800*x^2))/1600 - (2^(1/2)*pi^(1/2)*erfi(-2^(1/2)*(r - x)*20i)*(r^2 + 1/1600)*1i)/80, x, -Inf))/562949953421312 - (8983381526791141*limit(- (r*exp(- 800*r^2 + 1600*r*x - 800*x^2))/1600 - (x*exp(- 800*r^2 + 1600*r*x - 800*x^2))/1600 - (2^(1/2)*pi^(1/2)*erfi(-2^(1/2)*(r - x)*20i)*(r^2 + 1/1600)*1i)/80, x, Inf))/562949953421312)*int((1787186969586535*exp(-(80000*(theta - x)^2)/pi^2)*sin(x)^2)/35184372088832, x, -Inf, Inf) - (80701143655892331564348236081881*r^2*pi*int((1787186969586535*exp(-(80000*(theta - x)^2)/pi^2)*sin(x))/35184372088832, x, -Inf, Inf)^2)/253530120045645880299340641075200];
 %% MAIN LOOP
-for i = offset : simulationParams.stepSize : length(timeVec)
- % STATE ESTIMATION
+tic
+x_meas = [];
+x_est = [];
+y_meas = [];
+tt = [];
+sigx = [];
+sigy = [];
+sigvx = [];
+sigvy = [];
+y_est = [];
+vx_est = [];
+vy_est = [];
+c_sigx = [];
+c_sigy = [];
+for i = offset : simulationParams.stepSize : endOffset
+    % STATE ESTIMATION
  sensorReading = sensorReadings(i,:);
+ if ~any(isnan(sensorReadings(i-1,:)))
+     sensorReading(1,1:2) = [nan,nan];
+ end
  time = timeVec(i);
  real_time_delay = 0;
  delay = 0;
  
  %Convert range-bearing to xy
- mu = conv_meas_bias(lam, sensorReading);
- sensorReading = meas2cart(sensorReading, mu);
+ r = sensorReading(1);
+ theta = sensorReading(2);
+ sensorReading = [r*cos(theta), r*sin(theta)];
  
+
+
  %Account for conversion bias
  if(~any(isnan(sensorReading)))
-  R_conv = get_conv_cov(estimatorParams.sensorCovariance, lam, sensorReading);
-  estimatorParams.filter.MeasurementNoise = R_conv;
+     x_meas = [x_meas,sensorReading(1)];
+y_meas = [y_meas,sensorReading(2)];
+tt = [tt, time];
+  estimatorParams.filter.MeasurementNoise = double(R_conv(r,theta));
+ else
+    continue
  end
  
  %Estimate the state
+ 
  [estimate, estimatorParams] = state_estimator(sensorReading, time,...
                                                       estimatorParams);
 
  collisionEstimate = collision_prediction(estimate, estimatorParams, collisionEstimate);
+ c_sigx = [c_sigx, 2*sqrt(collisionEstimate.Ppred(1,1))];
+ c_sigy = [c_sigy, 2*sqrt(collisionEstimate.Ppred(3,3))];
  
  % GUIDANCE
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -193,6 +234,61 @@ for i = offset : simulationParams.stepSize : length(timeVec)
 plotCorrCount = plotCorrCount + 1; %increment no matter what
 
 pause(real_time_delay)
+x_est = [x_est,estimate.predState(1)];
+sigx = [sigx, 2*sqrt(estimate.Ppred(1,1))];
+y_est = [y_est, estimate.predState(3)];
+sigy = [sigy, 2*sqrt(estimate.Ppred(3,3))];
+vx_est = [vx_est, estimate.predState(2)];
+sigvx = [sigvx, 2*sqrt(estimate.Ppred(2,2))];
+vy_est = [vy_est, estimate.predState(4)];
+sigvy = [sigvy, 2*sqrt(estimate.Ppred(4,4))];
 end
+b_time = toc;
 %% CLEANUP
 close_logging(plotStruct);
+t = timeVec(1:endOffset);
+x_rel = 1.5 - 1*tt;
+y_rel = 0.5 - (0.5/1.5)*tt;
+vx = -1;
+vy = -0.5/1.5;
+figure
+subplot(2,1,1)
+hold on
+plot(tt, x_est - x_rel)
+plot(tt, sigx, '--k')
+plot(tt, -sigx, '--k')
+ylim([-0.5,0.5])
+xlim([0, 1.2])
+xlabel('Time [s]')
+ylabel('X-Position Estimate Error [m/s]')
+subplot(2,1,2)
+hold on
+plot(tt, y_est - y_rel)
+plot(tt, sigy, '--k')
+plot(tt, -sigy, '--k')
+ylim([-0.5,0.5])
+xlim([0, 1.2])
+xlabel('Time [s]')
+ylabel('Y-Position Estimate Error [m/s]')
+legend('Estimate Error', '2\sigma Bound')
+
+figure
+subplot(2,1,1)
+hold on
+plot(tt, vx_est - vx)
+plot(tt, sigvx, '--k')
+plot(tt, -sigvx, '--k')
+ylim([-0.5,0.5])
+xlim([0, 1.2])
+xlabel('Time [s]')
+ylabel('X-Velocity Estimate Error [m/s]')
+subplot(2,1,2)
+hold on
+plot(tt, vy_est - vy)
+plot(tt, sigvy, '--k')
+plot(tt, -sigvy, '--k')
+ylim([-0.5,0.5])
+xlim([0, 1.2])
+xlabel('Time [s]')
+ylabel('Y-Velocity Estimate Error [m/s]')
+legend('Estimate Error', '2\sigma Bound')
