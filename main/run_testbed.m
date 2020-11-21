@@ -150,23 +150,24 @@ for i = offset : simulationParams.stepSize : length(timeVec)
  time = timeVec(i);
  real_time_delay = 0;
  delay = 0;
- 
- %Convert range-bearing to xy
- mu = conv_meas_bias(lam, sensorReading);
- sensorReading = meas2cart(sensorReading, mu);
- 
- %Account for conversion bias
  if(~any(isnan(sensorReading)))
-  R_conv = get_conv_cov(estimatorParams.sensorCovariance, lam, sensorReading);
-  estimatorParams.filter.MeasurementNoise = R_conv;
- end
- 
- %Estimate the state
- [estimate, estimatorParams] = state_estimator(sensorReading, time,...
-                                                      estimatorParams);
+     %Convert range-bearing to xy
+     mu = conv_meas_bias(lam, sensorReading);
+     sensorReading = meas2cart(sensorReading, mu);
 
- collisionEstimate = collision_prediction(estimate, estimatorParams, collisionEstimate);
- 
+     %Account for conversion bias
+     if(~any(isnan(sensorReading)))
+      R_conv = get_conv_cov(estimatorParams.sensorCovariance, lam, sensorReading);
+      estimatorParams.filter.MeasurementNoise = R_conv;
+     end
+
+     %Estimate the state
+     [estimate, estimatorParams] = state_estimator(sensorReading, time,...
+                                                          estimatorParams);
+
+     collisionEstimate = collision_prediction(estimate, estimatorParams, collisionEstimate);
+ end
+
  % GUIDANCE
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %make_maneuver and convert_2d currently have undefined behavior, both assume the second
