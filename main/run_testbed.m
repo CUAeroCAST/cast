@@ -3,7 +3,7 @@ clear; clc; close all
 importCast;
 
 %% CONFIG
-log_data = false;
+log_data = true;
 scalingFactor = 222; %Distance scaling factor for testbed
 makeSensorPlot = false;
 loadFile = true;
@@ -131,7 +131,7 @@ end
 
 %Constants for converting measurement to cartesian
 lam = lam_vals(estimatorParams.sensorCovariance);
-plotStruct.axis = [-.5 2 -1 1];
+plotStruct.axis = [-.5 2 -1.25 1.25];
 %% STATE ESTIMATION
 %Determine how many sensor readings to use for batch LLS estimate
 [offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams);
@@ -182,9 +182,9 @@ if ~moving
     if maneuver
         [tChief, chiefOrbit] = ode45(@(t, y) orbit_prop(t, y, muE), tAfter, chiefState);
         [tAfter,maneuverPos] = convert_2d(tAfter,chiefOrbit,stateAfter(:,1:6));
-        tAfter = tAfter+time;
         divideTimes = maneuver(end)/(timeVec(end)-time);
         tAfter = tAfter/divideTimes;
+        tAfter = tAfter+time;
         reduceLength = length(tAfter)/(length(timeVec)-i);
         tIndex = 1;
         tMove = [];
@@ -198,7 +198,7 @@ if ~moving
     end
 end
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+disp(i)
  % Visualization
  if moving
      plotIndex = find(time<tMove,1);

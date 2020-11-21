@@ -12,12 +12,12 @@ function [maneuver,tAfter,stateAfter] = make_maneuver(propogation,satelliteState
 % Calculate the probability of collision 
 [pdf,probability,xrange,yrange] = calculate_probability(propogation);
 % If probability is too great, impliment maneuver
- if probability>.0035   %Initial probability of a near miss scenerio
+ if probability>.25   %Initial probability of a near miss scenerio
      % Calculate the gradient of the pdf to find the maneuver direction
      [gradx,grady] = gradient(pdf);
      [satellitex,satellitey] = find_sat_position(propogation);
-     maneuverx = gradx(satellitex(1));
-     maneuvery = grady(satellitey(1));
+     maneuverx = -gradx(satellitex(1));
+     maneuvery = -grady(satellitey(1));
      unit_rad = satelliteState(1:3)/norm(satelliteState(1:3));
      unit_along = satelliteState(4:6)/norm(satelliteState(4:6));
      unit_cross = cross(unit_rad,unit_along);
