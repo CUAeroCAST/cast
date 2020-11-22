@@ -1,4 +1,4 @@
-function [burnTime,tAfter,stateAfter] = find_burn_time(estimate,satelliteState,direction,xrange,yrange,timeToCol,burnTimesteps)
+function [burnTime,tAfter,stateAfter] = find_burn_time(estimate,satelliteState,direction,timeToCol,burnTimesteps)
 % Determines the burn time. 
 % Maps the pdf onto the collision plane then uses plans a maneuver to move
 % the satellite outside the pdf
@@ -13,71 +13,65 @@ function [burnTime,tAfter,stateAfter] = find_burn_time(estimate,satelliteState,d
 % https://www.youtube.com/watch?v=VDeZyRtPJvI&ab_channel=AnatollD. :p
 estimate.Pcorr = estimate.Ppred;
 estimate.corrState = estimate.predState;
+scaling = 222;
+estimate.corrState = estimate.corrState*scaling;
+estimate.Pcorr = estimate.Pcorr*scaling^2;
 % Get the position of the debris
-relPositionHill = [estimate.corrState(1) estimate.corrState(3) 0]';
+relPositionHill = [estimate.corrState(1) estimate.corrState(2) 0]';
+colState = [217.547021908829,0,7574.87672106969,7.24957465758464,0,-0.208204291222004];
 % Convert to orbital scale
 %5 Oct 2020 00:26:51.325 434.915387 0.000000 12.490366 -14.481090 -0.000000 -0.832453 
-maxVel = .5;
-maxDist = 1.5;
-maxOrbitVel = 14.50512e3;
-maxOrbitDist = 434.915387;
-scalingFactorVel = maxOrbitVel/maxVel;
-scalingFactorDist = maxOrbitDist/maxDist;
-estimate.corrState(1) = estimate.corrState(1)*scalingFactorDist;
-estimate.corrState(3) = estimate.corrState(3)*scalingFactorDist;
-estimate.corrState(2) = estimate.corrState(2)*scalingFactorVel;
-estimate.corrState(4) = estimate.corrState(4)*scalingFactorVel;
-estimate.Pcorr(1,1) = estimate.Pcorr(1,1)*scalingFactorDist^2;
-estimate.Pcorr(3,3) = estimate.Pcorr(3,3)*scalingFactorDist^2;
-estimate.Pcorr(2,2) = estimate.Pcorr(2,2)*scalingFactorVel^2;
-estimate.Pcorr(4,4) = estimate.Pcorr(4,4)*scalingFactorVel^2;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% maxVel = .5;
+% maxDist = 1.5;
+% maxOrbitVel = 14.50512e3;
+% maxOrbitDist = 434.915387;
+% scalingFactorVel = maxOrbitVel/maxVel;
+% scalingFactorDist = maxOrbitDist/maxDist;
+% estimate.corrState(1) = estimate.corrState(1)*scalingFactorDist;
+% estimate.corrState(3) = estimate.corrState(3)*scalingFactorDist;
+% estimate.corrState(2) = estimate.corrState(2)*scalingFactorVel;
+% estimate.corrState(4) = estimate.corrState(4)*scalingFactorVel;
+% estimate.Pcorr(1,1) = estimate.Pcorr(1,1)*scalingFactorDist^2;
+% estimate.Pcorr(3,3) = estimate.Pcorr(3,3)*scalingFactorDist^2;
+% estimate.Pcorr(2,2) = estimate.Pcorr(2,2)*scalingFactorVel^2;
+% estimate.Pcorr(4,4) = estimate.Pcorr(4,4)*scalingFactorVel^2;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Calculating the pdf
-mu = [estimate.corrState(1) estimate.corrState(3)];
-sigma = [estimate.Pcorr(1,1) estimate.Pcorr(1,3);estimate.Pcorr(1,3) estimate.Pcorr(3,3)];
-[x,y] = meshgrid(xrange,yrange);
-X = [x(:) y(:)];
-pdf = mvnpdf(X,mu,sigma);
-pdf = reshape(pdf,length(x),length(y));
+xmax = estimate.corrState(1)+2*sqrt(estimate.Pcorr(1,1));
+xmin =  estimate.corrState(1)-2*sqrt(estimate.Pcorr(1,1));
+ymax = estimate.corrState(3)+2*sqrt(estimate.Pcorr(3,3));
+ymin =  estimate.corrState(3)-2*sqrt(estimate.Pcorr(3,3));
 % Transform the debris position
 unitRad = satelliteState(1:3)/norm(satelliteState(1:3));
 unitAlong = satelliteState(4:6)/norm(satelliteState(4:6));
 unitCross = cross(unitRad,unitAlong);
-Q = [unitRad';unitAlong';unitCross']';  % make sure this Q goes the right way
+Q = [unitRad';unitAlong';unitCross'];  % make sure this Q goes the right way
 relPositionCart = Q'*relPositionHill;
 cartState = satelliteState(1:3)+relPositionCart;
 %Transform pdf coordinates into cartesian coordiantes
-xcart = zeros(3,length(xrange));
-ycart = zeros(3,length(yrange));
-for i = 1:length(xrange)
-   xvec = [xrange(i);0;0];
-   xcart(:,i) = Q*xvec;
-   xcart(:,i) = xcart(:,i)+satelliteState(1:3); %do more to fix dimensions
-end
-for i = 1:length(yrange)
-    yvec = [0;yrange(i);0];
-    ycart(:,i) = Q*yvec;
-    ycart(:,i) = ycart(:,i)+satelliteState(1:3);
-end
+xmaxCart = Q'*[0;xmax;0]+colState(1);
+xminCart = Q'*[0;xmin;0]+colState(1);
+ymaxCart = Q'*[0;0;ymax]+colState(2);
+yminCart = Q'*[0;0;ymin]+colState(2);
 burnTime = 30;
 miss = true;
 while miss && burnTime>0
+%     colTimeFull = sqrt(relPositionCart(1)^2+relPositionCart(2)^2)/...
+%         sqrt(estimate.corrState(2)^2+estimate.corrState(4)^2);
     [maneuverPos,tAfter,stateAfter] = find_maneuver_position(satelliteState,burnTime,...
         direction,30,burnTimesteps);
-    maneuuverPosRel = maneuverPos-satelliteState(1:3);
-    maneuverPosHill = Q'*maneuuverPosRel';
-    if maneuverPosHill(1)>min(xrange) || maneuverPos(1)<max(xrange)
-        if maneuverPosHill(2)>min(yrange) || maneuverPosHill(2)<max(yrange)
-            xind = find(xcart==maneuverPos(1));
-            yind = find(ycart==maneuverPos(2));
-            miss = false;
-            burnTime = burnTime+.01;
-            break
-        else
-            miss = true;
-        end
+%     maneuuverPosRel = maneuverPos-satelliteState(1:3);
+%     maneuverPosHill = Q'*maneuuverPosRel';
+    if (maneuverPos(1)>xminCart(1) && maneuverPos(1)<xmaxCart(1)) && (maneuverPos(2)>yminCart(2) && maneuverPos(2)<ymaxCart(2))
+        miss = false;
+        burnTime = burnTime+1;
+        break
     else
         miss = true;
     end
-    burnTime = burnTime-.01;
+    burnTime = burnTime-1;
 end
 end

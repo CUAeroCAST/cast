@@ -182,7 +182,7 @@ if ~moving
     if maneuver
         [tChief, chiefOrbit] = ode45(@(t, y) orbit_prop(t, y, muE), tAfter, chiefState);
         [tAfter,maneuverPos] = convert_2d(tAfter,chiefOrbit,stateAfter(:,1:6));
-        divideTimes = maneuver(end)/(timeVec(end)-time);
+        divideTimes = tAfter(end)/(timeVec(end)-time);
         tAfter = tAfter/divideTimes;
         tAfter = tAfter+time;
         reduceLength = length(tAfter)/(length(timeVec)-i);
@@ -198,7 +198,7 @@ if ~moving
     end
 end
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-disp(i)
+% disp(i)
  % Visualization
  if moving
      plotIndex = find(time<tMove,1);

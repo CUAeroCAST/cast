@@ -28,7 +28,7 @@ function [maneuver,tAfter,stateAfter] = make_maneuver(propogation,satelliteState
 %      burnDirection = [.0041;.0011;0]; 
      % Salculate the burn time
      [burnTime,tAfter,stateAfter] = find_burn_time(propogation,satelliteState,...
-         burnDirection,xrange,yrange,timeToCol,burnTimesteps);
+         burnDirection,timeToCol,burnTimesteps);
      % Output the maneuver
      maneuver = [maneuverx,maneuvery,burnTime];
  else
