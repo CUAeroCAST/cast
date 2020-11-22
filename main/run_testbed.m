@@ -260,7 +260,7 @@ plot(tt, -sigx, '--k')
 ylim([-0.5,0.5])
 xlim([0, 1.2])
 xlabel('Time [s]')
-ylabel('X-Position Estimate Error [m/s]')
+ylabel('X-Position Estimate Error [m]')
 subplot(2,1,2)
 hold on
 plot(tt, y_est - y_rel)
@@ -269,7 +269,7 @@ plot(tt, -sigy, '--k')
 ylim([-0.5,0.5])
 xlim([0, 1.2])
 xlabel('Time [s]')
-ylabel('Y-Position Estimate Error [m/s]')
+ylabel('Y-Position Estimate Error [m]')
 legend('Estimate Error', '2\sigma Bound')
 
 figure
