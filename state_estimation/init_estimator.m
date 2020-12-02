@@ -1,5 +1,45 @@
 % This function initializes the estimator, may be a noop for some estimators.
 function [offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams)
- fprintf('init_estimator is not implemented')
- offset = 1;
+%Index of any rows without NaNs
+idx = find(~any(isnan(sensorReadings),2));
+A = [1,0; 0,0; 0,1; 0,0]; %takes xy measurement to xy state
+if(estimatorParams.llsSeeding && (estimatorParams.batchSamples > 0))
+  batchReadings = sensorReadings(idx(1:estimatorParams.batchSamples),:);
+  offset = idx(estimatorParams.batchSamples)+1;
+
+  % Batch LLS seeding
+  %Measurement matrix H, takes state x, to measurement vector, y
+  H = eye(2);
+  [r,c] = size(batchReadings);
+  %Reshape measurement vector to have dimensions 3*Nx1
+  y = reshape(batchReadings', [r*c,1]);
+  %Make H block matrix with H tiled down the number of measurements
+  H_blc = repmat(H,[r,1]);
+  %Use batch LLS to estimate the initial state
+  x_LS = H_blc\y;
+  %Set initial state to batch LLS output
+  estimatorParams.initState = A*x_LS;
+else
+  estimatorParams.initState = A*sensorReadings(idx(1),:)';
+  offset = idx(1) + 1;
+end
+
+ %Initialize Kalman Filter
+ kfOpts = {'MotionModel','2D Constant Velocity',...
+           'State', estimatorParams.initState,...
+           'MeasurementNoise',estimatorParams.sensorCovariance};
+ 
+ ekfOpts = {'StateTransitionFcn', @statetransitionfcn,...
+            'StateTransitionJacobianFcn', @statejacobianfcn,...
+            'State', estimatorParams.initState,...
+            'MeasurementNoise', estimatorParams.sensorCovariance,...
+            'MeasurementFcn', @measurementfcn,...
+            'MeasurementJacobianFcn',@(x) [0,1,0,0;1,0,0,0]};
+        
+ ukfOpts = {'StateTransitionFcn', @statetransitionfcn,...
+            'State', estimatorParams.initState,...
+            'MeasurementNoise', estimatorParams.sensorCovariance,...
+            'MeasurementFcn', @measurementfcn};
+        
+ estimatorParams.filter=trackingKF(kfOpts{:});
 end
