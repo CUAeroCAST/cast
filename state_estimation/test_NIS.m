@@ -1,4 +1,4 @@
-function [  ] = test_NIS( eyk, yk_minus, Pk_minus,H,R, tvec, N )
+function [  ] = test_NIS( eyk, yk_minus, Pk_minus,H,R, tvec, N, alpha )
 % This function runs the NIS dynamic consistency test
 
 for i=1:length(tvec)
@@ -6,8 +6,6 @@ for i=1:length(tvec)
     eyk(:,i) = eyk(:,i) - yk_minus(:,i);
     NIS(i) = eyk(:,i)' * inv(S{i}) * eyk(:,i);
 end
-
-alpha=0.05;
 
 n=length(tvec);
 

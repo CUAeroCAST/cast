@@ -1,12 +1,10 @@
-function [  ] = test_NEES( xktrue, xk_plus, Pk_plus, tvec, N )
+function [  ] = test_NEES( xktrue, xk_plus, Pk_plus, tvec, N ,alpha )
 % This function runs the NEES dynamic consistency test
 
 for i=1:length(tvec)
     exk(:,i) = xktrue(:,i) - xk_plus(:,i);
     NEES(i) = exk(:,i)' * inv(Pk_plus{i}) * exk(:,i);
 end
-
-alpha=0.05;
 
 n=length(tvec);
 
