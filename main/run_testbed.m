@@ -166,6 +166,11 @@ for i = offset : simulationParams.stepSize : length(timeVec)
                                                           estimatorParams);
 
      collisionEstimate = collision_prediction(estimate, estimatorParams, collisionEstimate);
+ else
+    estimate.predState = nan(4,1);
+    estimate.Ppred = nan(4,4);
+    estimate.corrState = nan(4,1);
+    estimate.Pcorr = nan(4,4);
  end
 
  % GUIDANCE
