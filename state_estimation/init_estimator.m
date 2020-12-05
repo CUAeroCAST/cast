@@ -20,8 +20,7 @@ if(estimatorParams.llsSeeding && (estimatorParams.batchSamples > 0))
   %Set initial state to batch LLS output
   estimatorParams.initState = A*x_LS;
 else
-  estimatorParams.initState = A*sensorReadings(idx(1),:)';
-  offset = idx(1) + 1;
+    offset = 1;
 end
 
  %Initialize Kalman Filter

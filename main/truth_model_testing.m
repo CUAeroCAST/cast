@@ -10,6 +10,7 @@ simulationParams.Q = (1/100).*eye(4); %True value of process noise, used for add
 
 estimatorParams.sensorCovariance = [0.025^2,0;0,deg2rad(0.45)^2]; %Range, bearing
 estimatorParams.qGain = 1; %Process noise gain for forward prediction
+estimatorParams.initState = [1.5;-1;0;0]; %Constant x-vel init state
 
 %% OTHER CONFIG (Don't Tweak)
 %Simulation parameters (for sensor model)
@@ -79,10 +80,7 @@ lam = lam_vals(estimatorParams.sensorCovariance);
 estimatorParams.currentTime = timeVec(offset);
 
 %% MAIN LOOP
-timeVec(1:offset) = [];
-x_true(:,1:offset) = [];
-sensorReadings(1:offset,:) = [];
-for i = 1 : simulationParams.stepSize : length(timeVec)
+for i = 2 : simulationParams.stepSize : length(timeVec)
     % STATE ESTIMATION
     sensorReading = sensorReadings(i,:);
     time = timeVec(i);
