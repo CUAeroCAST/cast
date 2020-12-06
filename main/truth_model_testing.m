@@ -10,6 +10,7 @@ simulationParams.Q = (1/100).*eye(4); %True value of process noise, used for add
 
 estimatorParams.sensorCovariance = [0.025^2,0;0,deg2rad(0.45)^2]; %Range, bearing
 estimatorParams.qGain = 1; %Process noise gain for forward prediction
+estimatorParams.initState = [1.5;-1;0;0]; %Constant x-vel init state
 
 %% OTHER CONFIG (Don't Tweak)
 %Simulation parameters (for sensor model)
@@ -55,6 +56,24 @@ timeVec = linspace(0,simulationParams.collisionTime, ...
 %% STASTICAL STUFF
 simulationParams.xvel = (simulationParams.finalPos(1) - simulationParams.initPos(1))/simulationParams.collisionTime;
 simulationParams.yvel = (simulationParams.finalPos(2) - simulationParams.initPos(2))/simulationParams.collisionTime;
+
+
+
+N=1;
+% ykrec=zeros(2,130);
+% yk_minusrec=zeros(2,130);
+xktruerec=zeros(4,6000);
+xk_plusrec=zeros(4,6000);
+Pk_plusrec=cell(N,6000);
+% Pk_minusrec=zeros(4,520);
+% Rrec=zeros(2,2);
+
+c=1;
+
+
+
+for j=1:N
+
 x_true = [x_rel;
           simulationParams.xvel*ones(1,length(timeVec));
           y_rel;
@@ -79,10 +98,7 @@ lam = lam_vals(estimatorParams.sensorCovariance);
 estimatorParams.currentTime = timeVec(offset);
 
 %% MAIN LOOP
-timeVec(1:offset) = [];
-x_true(:,1:offset) = [];
-sensorReadings(1:offset,:) = [];
-for i = 1 : simulationParams.stepSize : length(timeVec)
+for i = 2 : simulationParams.stepSize : length(timeVec)
     % STATE ESTIMATION
     sensorReading = sensorReadings(i,:);
     time = timeVec(i);
@@ -106,7 +122,99 @@ for i = 1 : simulationParams.stepSize : length(timeVec)
     
     Pp{i} = estimate.Ppred;
     Pc{i} = estimate.Pcorr;
+    
+    %     if ~any(isnan(sensorReading'))
+%     yki(:,c)=sensorReading';
+%     vartest=[xp(1,c);xp(3,c)];
+%     ykmi(:,c)=vartest;
+%     Ri{c}=R_conv;
+%     Ppi{c} = estimate.Ppred;
+%     Pci{c} = estimate.Pcorr;
+%     x_truei(:,c)=x_true(:,i);
+%     
+%     c=c+1;
+%     end
+
+x_truei(:,i)=x_true(:,i);
+Ppi{i} = estimate.Ppred;
+Pk_plusrec{j,i}=Ppi{i};
 end
+
+%     R{j}=Ri{:};
+    xktrue{j}=x_truei;
+    Pk_plus{j}=Ppi;
+    xk_plus{j}=xp;
+%     Pk_minus{j}=cell2mat(Ppi);
+%     yk{j}=yki;
+%     yk_minus{j}=ykmi;
+%     
+% ykrec=ykrec+yk{j};
+% yk_minusrec=yk_minusrec+yk_minus{j};
+% Pk_minusrec=Pk_minusrec+Pk_minus{j};
+xktruerec=xktruerec+xktrue{j};
+xk_plusrec=xk_plusrec+xk_plus{j};
+
+
+% Rrec=Rrec+R{j};
+
+if j<N
+    
+    clear xktrue
+    clear Pk_plus
+    clear xk_plus
+%     clear Ri
+%     clear Pk_minus
+%     clear yk
+end
+end
+
+Pk_plusrec{1,1}=zeros(4,4); %%%% Shouldn't need to do this ... hacky ...
+Pk_plusadd=cell(1,length(Pk_plusrec));
+Nf=N;
+for j=1:length(Pk_plusrec)
+    
+    Pk_plusadd{j}=zeros(4,4);
+    
+    
+    for i=1:N
+        
+    if isempty(Pk_plusrec{i,j})==1
+        
+        Pk_plusrec{i,j}=zeros(4,4);
+        
+    end
+    
+    Pk_plusadd{j}=Pk_plusadd{j}+Pk_plusrec{i,j};
+    
+    end
+    
+    Pk_plusMean{j}=Pk_plusadd{j}./Nf;
+end
+xktrue=xktruerec./N;
+xk_plus=xk_plusrec./N;
+
+tvec=timeVec;
+
+H=[1,0,0,0;0,0,1,0];
+
 %Use these variables for each trial
 %xtrue, timeVec, xp,xc,Pp,Pc, sensorReadings
-%test_NIS( eyk, yk_minus, Pk_minus,H,R, tvec, N, alpha )
+%test_NIS( yk, yk_minus, Pk_minus,H,R, tvec, N, alpha )
+%test_NEES( xktrue, xk_plus, Pk_plus, tvec, N ,alpha )
+
+%% Calling NEES and NIS tests
+
+n=4;
+p=2;
+
+% For 70 % confidence
+alpha=0.3;
+% test_NIS( yk, yk_minus, Pk_minus,H,R, tvec, N, n, alpha )
+%figure;
+test_NEES( xktrue, xk_plus, Pk_plusMean, tvec, N, p, alpha )
+
+% For 95 % confidence
+alpha=0.05;
+% test_NIS( yk, yk_minus, Pk_minus,H,R, tvec, N,n, alpha )
+%figure;
+test_NEES( xktrue, xk_plus, Pk_plusMean, tvec, N ,p,alpha )
