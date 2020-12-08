@@ -3,10 +3,9 @@ clear; clc; close all
 importCast;
 
 %% VALUES TO CHANGE FOR TMT
-simulationParams.initPos = [1.5,0.5,0]; %m, starting point of object
-simulationParams.finalPos = [0,0,0]; %m, final point of object
-simulationParams.collisionTime = 1.5; %s, time it takes to get from initial 
-simulationParams.Q = (1/100).*eye(4); %True value of process noise, used for adding noise to truth states
+simulationParams.initState = [1.5,-1,0.5,-0.5/1.5]; %m, starting state of object
+simulationParams.collisionTime = 1.5; %s, time to simulate
+simulationParams.Q = (1/10).*eye(4); %True value of process noise, used for adding noise to truth states
 
 estimatorParams.sensorCovariance = [0.025^2,0;0,deg2rad(0.45)^2]; %Range, bearing
 estimatorParams.qGain = 1; %Process noise gain for forward prediction
@@ -40,36 +39,17 @@ targetParams.Dimensions.Height = 50e-3;
 targetParams.Dimensions.OriginOffset = [0,0,0];
 
 %% TESTBED COLLISION
-x_rel = linspace(simulationParams.initPos(1),...
-             simulationParams.finalPos(1),...
-             simulationParams.collisionTime*simulationParams.sampleRate);
-y_rel = linspace(simulationParams.initPos(2),...
-             simulationParams.finalPos(2),...
-             simulationParams.collisionTime*simulationParams.sampleRate);
-z_rel = linspace(simulationParams.initPos(3),...
-             simulationParams.finalPos(3),...
-             simulationParams.collisionTime*simulationParams.sampleRate);
-relativePath = [x_rel', y_rel', z_rel'];
 timeVec = linspace(0,simulationParams.collisionTime, ...
         simulationParams.collisionTime*simulationParams.sampleRate);
-
-%% STASTICAL STUFF
-simulationParams.xvel = (simulationParams.finalPos(1) - simulationParams.initPos(1))/simulationParams.collisionTime;
-simulationParams.yvel = (simulationParams.finalPos(2) - simulationParams.initPos(2))/simulationParams.collisionTime;
-
-
-c=1;
-
-x_true = [x_rel;
-          simulationParams.xvel*ones(1,length(timeVec));
-          y_rel;
-          simulationParams.yvel*ones(1,length(timeVec))];
 process_noise = mvnrnd([0,0,0,0], simulationParams.Q, length(timeVec))';
-x_true = x_true + process_noise;
-%add x-dir process noise to relative path
-relativePath(:,1) = relativePath(:,1) + process_noise(1,:)';
-%add y-dire process noise to relative path
-relativePath(:,2) = relativePath(:,3) + process_noise(3,:)';
+x_true(:,1) = simulationParams.initState';
+for i = 1:(length(timeVec) - 1)
+    tspan = [timeVec(i), timeVec(i+1)];
+    [t_ode, x_ode] = ode45(@(t,x) linear_ode(t,x,process_noise(:,i)), tspan, x_true(:,i));
+    x_true(:,i+1) = x_ode(end,:)';
+end
+%relative path is just x,y,z
+relativePath = [x_true(1,:)', x_true(3,:)', zeros(length(timeVec),1)];
 %% SENSOR MODEL
 %If sensor readings/time vec is saved, can load that to save time
 sensorScenario = init_sensor_model(relativePath, timeVec, sensorParams,...
@@ -84,6 +64,9 @@ lam = lam_vals(estimatorParams.sensorCovariance);
 estimatorParams.currentTime = timeVec(offset);
 
 %% MAIN LOOP
+y = nan(length(timeVec),2);
+x_p(:,1) = simulationParams.initState';
+x_c(:,1) = nan(4,1);
 for i = 2 : simulationParams.stepSize : length(timeVec)
     % STATE ESTIMATION
     sensorReading = sensorReadings(i,:);
@@ -92,12 +75,14 @@ for i = 2 : simulationParams.stepSize : length(timeVec)
         %Convert range-bearing to xy
         mu = conv_meas_bias(lam, sensorReading);
         sensorReading = meas2cart(sensorReading, mu);
-
+        y(i,:) = sensorReading;
         %Account for conversion bias
         if(~any(isnan(sensorReading)))
             R_conv = get_conv_cov(estimatorParams.sensorCovariance, lam, sensorReading);
             estimatorParams.filter.MeasurementNoise = R_conv;
         end
+    else
+        y(i,:) = nan(1,2);
     end
     %Estimate the state
     [estimate, estimatorParams] = state_estimator(sensorReading, time,...
@@ -108,22 +93,12 @@ for i = 2 : simulationParams.stepSize : length(timeVec)
     
     Pp{i} = estimate.Ppred;
     Pc{i} = estimate.Pcorr;
-    
-    if ~any(isnan(sensorReading'))
-    yki(:,c)=sensorReading';
-    x_truei(:,c)=x_true(:,i);
-    tvec(:,c)=timeVec(i);
-    
-    c=c+1;
-    end
-
 end
-
 figure;
 sgtitle('x and y States vs Time','fontsize',24)
 subplot(2,1,1)
 hold on
-scatter(tvec,yki(1,:),'o','LineWidth',3)
+scatter(timeVec,y(:,1),'o','LineWidth',3)
 plot(timeVec,x_true(1,:),'LineWidth',3)
 title('x vs Time','Interpreter','latex')
 xlabel('Time [s]','fontsize',22,'Interpreter','latex')
@@ -136,7 +111,7 @@ grid minor;
 
 subplot(2,1,2)
 hold on
-scatter(tvec,yki(2,:),'o','LineWidth',3)
+scatter(timeVec,y(:,2),'o','LineWidth',3)
 plot(timeVec,x_true(3,:),'LineWidth',3)
 title('y vs Time','Interpreter','latex')
 xlabel('Time [s]','fontsize',22,'Interpreter','latex')
