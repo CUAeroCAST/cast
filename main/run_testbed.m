@@ -3,7 +3,9 @@ clear; clc; close all
 importCast;
 
 %% CONFIG
-log_data = true;
+
+log_data = false;
+hideFig = false;
 scalingFactor = 222; %Distance scaling factor for testbed
 makeSensorPlot = false;
 loadFile = true;
@@ -56,7 +58,11 @@ plotStruct.filename = [datapath, filesep, '2D_collision_avoid'];
 plotStruct.vobj = VideoWriter(plotStruct.filename, 'MPEG-4');
 plotStruct.vobj.Quality = 100;
 open(plotStruct.vobj);
-plotStruct.videoFig = figure;
+if hideFig
+    plotStruct.videoFig = figure('visible','off');
+else
+    plotStruct.videoFig = figure;    
+end
 plotStruct.collisionFlag = 0;   %flag for if covariance has intersected with gantry pos
 set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);
 plotStruct.interval = 50; %how often the plot is updated... if equals 0, then it plots every iteration
@@ -146,23 +152,24 @@ for i = offset : simulationParams.stepSize : length(timeVec)
  time = timeVec(i);
  real_time_delay = 0;
  delay = 0;
- 
- %Convert range-bearing to xy
- mu = conv_meas_bias(lam, sensorReading);
- sensorReading = meas2cart(sensorReading, mu);
- 
- %Account for conversion bias
  if(~any(isnan(sensorReading)))
-  R_conv = get_conv_cov(estimatorParams.sensorCovariance, lam, sensorReading);
-  estimatorParams.filter.MeasurementNoise = R_conv;
- end
- 
- %Estimate the state
- [estimate, estimatorParams] = state_estimator(sensorReading, time,...
-                                                      estimatorParams);
+     %Convert range-bearing to xy
+     mu = conv_meas_bias(lam, sensorReading);
+     sensorReading = meas2cart(sensorReading, mu);
 
- collisionEstimate = collision_prediction(estimate, estimatorParams, collisionEstimate);
- 
+     %Account for conversion bias
+     if(~any(isnan(sensorReading)))
+      R_conv = get_conv_cov(estimatorParams.sensorCovariance, lam, sensorReading);
+      estimatorParams.filter.MeasurementNoise = R_conv;
+     end
+
+     %Estimate the state
+     [estimate, estimatorParams] = state_estimator(sensorReading, time,...
+                                                          estimatorParams);
+
+     collisionEstimate = collision_prediction(estimate, estimatorParams, collisionEstimate);
+ end
+
  % GUIDANCE
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %make_maneuver and convert_2d currently have undefined behavior, both assume the second
