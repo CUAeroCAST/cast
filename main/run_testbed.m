@@ -3,6 +3,7 @@ clear; clc; close all
 importCast;
 
 %% CONFIG
+
 log_data = false;
 hideFig = false;
 scalingFactor = 222; %Distance scaling factor for testbed
@@ -22,8 +23,8 @@ recv = struct;
 simulationParams.stepSize = 1;
 simulationParams.sampleRate = 4e3;
 simulationParams.scalingFactor = 1; %Distance scaling factor for testbed
-simulationParams.initPos = [1.5,0.5,0]; %m, starting point of object
-simulationParams.finalPos = [0,0,0]; %m, final point of object
+simulationParams.initPos = [1.5,0.1061,0]; %m, starting point of object
+simulationParams.finalPos = [0,.1061,0]; %m, final point of object
 simulationParams.collisionTime = 1.5; %s, time it takes to get from initial 
 %to final position
 
@@ -153,6 +154,7 @@ estimatorParams.currentTime = timeVec(offset);
 % sigvy = [];
 % t = [];
 %% MAIN LOOP
+moving = 0;
 for i = offset : simulationParams.stepSize : length(timeVec)
  % STATE ESTIMATION
  sensorReading = sensorReadings(i,:);
@@ -188,11 +190,34 @@ for i = offset : simulationParams.stepSize : length(timeVec)
 %input is the chief orbit, which is not generated in the current code, the relative orbit
 %has been substituted to enable full code execution, remove this comment block and
 %bounding comments when fixed.
-%  [maneuver,tAfter,stateAfter] = make_maneuver(collisionEstimate,relativeOrbit(i),...
-%      collisionEstimate.collisionTime);
-%  indForward = i+length(stateAfter);
-%  tMove = timeVec(i:indForward);
-%  [tMove,maneuverPos] = convert_2d(tMove,relativeOrbit(i:indForward,:),stateAfter);
+if ~moving
+    maneuver = [0 0];
+    recv = run_io(maneuver, delay);
+end
+if ~moving
+    chiefState = [0;0;7578;7.25256299066873;0;0];
+    muE = 398600;
+    tstep = timeVec(2)-timeVec(1);
+    [maneuver,tAfter,stateAfter] = make_maneuver(collisionEstimate,chiefState,...
+        1.5-time,length(timeVec)-i);
+    if maneuver
+        [tChief, chiefOrbit] = ode45(@(t, y) orbit_prop(t, y, muE), tAfter, chiefState);
+        [tAfter,maneuverPos] = convert_2d(tAfter,chiefOrbit,stateAfter(:,1:6));
+        divideTimes = tAfter(end)/(timeVec(end)-time);
+        tAfter = tAfter/divideTimes;
+        tAfter = tAfter+time;
+        reduceLength = length(tAfter)/(length(timeVec)-i);
+        tIndex = 1;
+        tMove = [];
+        movementPos = [];
+        for j = 1:length(timeVec)-i
+            tMove = [tMove; tAfter(tIndex)];
+            movementPos = [movementPos maneuverPos(1:2,tIndex)];
+            tIndex = tIndex+floor(reduceLength);
+        end
+        moving = 1;
+    end
+end
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  maneuver = [0 0];
  %recv = run_io(maneuver, delay);

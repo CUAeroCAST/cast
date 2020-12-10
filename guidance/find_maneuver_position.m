@@ -1,4 +1,4 @@
-function [position,t,state] = find_maneuver_position(satelliteState,burnTime,direction,timeToCol)
+function [position,t,state] = find_maneuver_position(satelliteState,burnTime,direction,timeToCol,burnTimesteps)
 % Determines the satellite position after the maneuver
 % Calls the ode function to integrate the acceleration of the spacecraft
 % to get the state after the burn
@@ -10,9 +10,9 @@ function [position,t,state] = find_maneuver_position(satelliteState,burnTime,dir
 % Outputs:
 % position: satellite position at the collision time after the burn
 mSat = 850; %Initial mass of satellite
-tspan = 0:.001:timeToCol;
+tspan = linspace(0,timeToCol,burnTimesteps);
 mu = 398600;
-satelliteState = [satelliteState mSat];
+satelliteState = [satelliteState' mSat];
 [t,state] =  ode45(@(t, state) orbit_prop_maneuver(t,state,mu,direction,burnTime),...
     tspan,satelliteState);
 position = state(end,1:3);
