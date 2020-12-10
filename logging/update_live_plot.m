@@ -14,10 +14,17 @@ if ~isnan(estimate.corrState(1))
     covTiltPred = atan(v(2,1)/v(1,1));
 else
     estPos = [estimate.predState(1),estimate.predState(3)];    %x and y estimated position for incoming object
-    [v,lamPred] = eig([estimate.Ppred(1,1) estimate.Ppred(1,3);estimate.Ppred(3,1) estimate.Ppred(3,3)]); %getting eigenstuff from the 2D position state matrix    
-    covAxesIn = [2*sqrt(lamPred(1,1)), 2*sqrt(lamPred(2,2))]; %major and minor axis of cov
-    covTilt = atan(v(2,1)/v(1,1)); %tilt of ellipse in radians 
-    covTiltPred = covTilt;
+    if ~isnan(estimate.Ppred(1,1))
+        [v,lamPred] = eig([estimate.Ppred(1,1) estimate.Ppred(1,3);estimate.Ppred(3,1) estimate.Ppred(3,3)]); %getting eigenstuff from the 2D position state matrix    
+        covAxesIn = [2*sqrt(lamPred(1,1)), 2*sqrt(lamPred(2,2))]; %major and minor axis of cov
+        covTilt = atan(v(2,1)/v(1,1)); %tilt of ellipse in radians 
+        covTiltPred = covTilt;
+    else
+        lamPred = [nan nan;nan nan];
+        covAxesIn = [nan, nan]; %major and minor axis of cov
+        covTilt = 0; %tilt of ellipse in radians 
+        covTiltPred = covTilt;
+    end
     covTiltCorr = nan; %tilt of ellipse in radians
     lamCorr = [nan,nan;nan,nan];
 
@@ -56,11 +63,13 @@ end
 %% Plot updated path with current positional and covariance information
 
 hold on
-plotDel1 = ellipse(estPos(1),estPos(2),covAxesIn(1),covAxesIn(2),covTilt,'color','m','linewidth',2);
-plot(plotStruct.incomingPositions(:,1),plotStruct.incomingPositions(:,2),'color','r','linewidth',2);
-plot(plotStruct.gantryPositions(:,1),plotStruct.gantryPositions(:,2),'color','b','linewidth',2);
-plotDel2 = plot(gantryPos(1),gantryPos(2),'b*','linewidth',2);
-plotDel3 = plot(estPos(1),estPos(2),'r*','linewidth',2);
+plotDel1 = ellipse(estPos(1),estPos(2),covAxesIn(1),covAxesIn(2),covTilt,'color','m','linewidth',2); %cov ellipse of incoming object
+
+[rows, ~] = find(~isnan(plotStruct.incomingPositions(:,1))); %remove NAN's from incoming path
+plot(plotStruct.incomingPositions(rows,1),plotStruct.incomingPositions(rows,2),'color','r','linewidth',2); %path of incoming object
+plot(plotStruct.gantryPositions(:,1),plotStruct.gantryPositions(:,2),'color','b','linewidth',2); %gantry path
+plotDel2 = plot(gantryPos(1),gantryPos(2),'b*','linewidth',2);%gantry position
+plotDel3 = plot(estPos(1),estPos(2),'r*','linewidth',2);%incoming object estimated position
 
 % Plot cyan ellipse around predicted collision
 [v,lam] = eig([collisionEstimate.Ppred(1,1) collisionEstimate.Ppred(1,3);collisionEstimate.Ppred(3,1) collisionEstimate.Ppred(3,3)]); %getting eigenstuff from the 2D position state matrix
