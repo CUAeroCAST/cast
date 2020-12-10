@@ -32,7 +32,8 @@ simulationParams.collisionTime = 1.5; %s, time it takes to get from initial
 estimatorParams.llsSeeding = false;
 estimatorParams.batchSamples = 0;
 estimatorParams.sensorCovariance = [0.025^2,0;0,deg2rad(0.45)^2]; %Range, bearing
-estimatorParams.qGain = 4; %Process noise gain for forward prediction
+estimatorParams.qGain = 1; %Process noise gain for forward prediction
+estimatorParams.initState = [1.5,-1,0,0]; %Constant x-vel init state
 
 %Sensor parameters
 sensorParams.samplingRate = 4e3;
@@ -142,8 +143,16 @@ plotStruct.axis = [-.5 2 -1.25 1.25];
 %Determine how many sensor readings to use for batch LLS estimate
 [offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams);
 estimatorParams.currentTime = timeVec(offset);
-
-
+%Additional KF Plotting
+% x = [];
+% sigx = [];
+% y = [];
+% sigy = [];
+% vx = [];
+% sigvx = [];
+% vy = [];
+% sigvy = [];
+% t = [];
 %% MAIN LOOP
 moving = 0;
 for i = offset : simulationParams.stepSize : length(timeVec)
@@ -168,6 +177,11 @@ for i = offset : simulationParams.stepSize : length(timeVec)
                                                           estimatorParams);
 
      collisionEstimate = collision_prediction(estimate, estimatorParams, collisionEstimate);
+ else
+    estimate.predState = nan(4,1);
+    estimate.Ppred = nan(4,4);
+    estimate.corrState = nan(4,1);
+    estimate.Pcorr = nan(4,4);
  end
 
  % GUIDANCE
@@ -205,31 +219,35 @@ if ~moving
     end
 end
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% disp(i)
+ maneuver = [0 0];
+ %recv = run_io(maneuver, delay);
+ 
  % Visualization
- if moving
-     plotIndex = find(time<tMove,1);
-     if isempty(plotIndex)
-         recv.state = prevState;
-     else
-         prevState = movementPos(:,plotIndex);
-         recv.state = movementPos(:,plotIndex);
-     end
- end
- if ~(isnan(estimate.corrState(1))) && (plotCorrCount >= plotStruct.interval)%plot if count == 0, increment until reaches plotInterval, then reset to 0
-     plotStruct = update_live_plot(plotStruct,estimate,collisionEstimate,recv);
-     plotCorrCount = 0; %reset count so at least plotStruct.interval steps have to pass before another plot update
-     plotCount = 1;%reset count so plotCount.interval iterations need to pass before another update
- elseif plotCount == 0 %plotCount has reached and count has been set to 0, update plot
-     plotCount = plotCount + 1; 
-     plotStruct = update_live_plot(plotStruct,estimate,collisionEstimate,recv);
- elseif plotCount == plotStruct.interval 
-     plotCount = 0; %reset to 0 so that plot can update next iteration
- else
-     plotCount = plotCount+1; 
- end
-plotCorrCount = plotCorrCount + 1; %increment no matter what
-pause(real_time_delay)
+%  if ~(isnan(estimate.corrState(1))) && (plotCorrCount >= plotStruct.interval)%plot if count == 0, increment until reaches plotInterval, then reset to 0
+%      plotStruct = update_live_plot(plotStruct,estimate,collisionEstimate,recv);
+%      plotCorrCount = 0; %reset count so at least plotStruct.interval steps have to pass before another plot update
+%      plotCount = 1;%reset count so plotCount.interval iterations need to pass before another update
+%  elseif plotCount == 0 %plotCount has reached and count has been set to 0, update plot
+%      plotCount = plotCount + 1; 
+%      plotStruct = update_live_plot(plotStruct,estimate,collisionEstimate,recv);
+%  elseif plotCount == plotStruct.interval 
+%      plotCount = 0; %reset to 0 so that plot can update next iteration
+%  else
+%      plotCount = plotCount+1; 
+%  end
+% plotCorrCount = plotCorrCount + 1; %increment no matter what
+
+%Additonal KF Plotting
+% t = [t, time];
+% x = [x, estimate.predState(1)];
+% y = [y, estimate.predState(3)];
+% vx = [vx, estimate.predState(2)];
+% vy = [vy, estimate.predState(4)];
+% sigx = [sigx, 2*sqrt(estimate.Pcorr(1,1))];
+% sigy = [sigy, 2*sqrt(estimate.Pcorr(3,3))];
+% sigvx = [sigvx, 2*sqrt(estimate.Pcorr(2,2))];
+% sigvy = [sigvy, 2*sqrt(estimate.Pcorr(4,4))];
+% pause(real_time_delay)
 end
 %% CLEANUP
 close_logging(plotStruct);
