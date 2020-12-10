@@ -33,7 +33,7 @@ estimatorParams.llsSeeding = false;
 estimatorParams.batchSamples = 0;
 estimatorParams.sensorCovariance = [0.025^2,0;0,deg2rad(0.45)^2]; %Range, bearing
 estimatorParams.qGain = 1; %Process noise gain for forward prediction
-estimatorParams.initState = [1.5,-1,0,0]; %Constant x-vel init state
+estimatorParams.initState = [1.5;-1;0;0]; %Constant x-vel init state
 
 %Sensor parameters
 sensorParams.samplingRate = 4e3;
