@@ -7,8 +7,8 @@ function ydot = orbit_prop_maneuver(t, y, mu, direction, burnTime)
  Isp = 225;
  g0 = 9.81;
  Tslope = -5.29496953160763;
- direction = [direction 0];
- thrustUnitVec = direction'/norm(direction);
+%  direction = [direction 0];
+ thrustUnitVec = direction/norm(direction);
  rdot = v;
  if t>burnTime
      vdot = -mu*r/norm(r)^3;
