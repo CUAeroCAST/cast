@@ -12,10 +12,12 @@ clear; clc; close all
 stepSize = deg2rad(1.8/4);
 % clock frequency of micro controller
 frequency = 16e6;
+tmax = 2;
 % target acceleration curve
-t = 0:0.1:5;
-omegaDots = 1-0.1*t;% 1.5 - 1./(1+exp(-1*t));
-
+% t = 0:0.1:10;
+% omegaDots = cos(2*pi*t)+1;
+load thrusterData
+omegaDots = omegaDots/10;
 %% INIT
 % generate lookup table with interpolation
 interpolant = griddedInterpolant(t, omegaDots);
@@ -35,14 +37,16 @@ thetas = [];
 times = [];
 accels = [];
 
+delays = [];
+
 %% MAIN LOOP
-while tau < t(end)
+while (tau < t(end)) && (tau < tmax)
  % increment step number and get statistics from previous step
  stepNum = stepNum + 1;
  timeDelay = time_delay(stepDelay, frequency);
  omegai = angular_velocity(timeDelay, stepSize);
  omegaDot = interpolant(tau);
- 
+ delays = [delays, stepDelay];
  % get target acceleration and calculate step delay and actual acceleration
  omegaDotNext = interpolant(tau + timeDelay);
  stepDelayNext = step_delay(stepDelay, omegaDotNext, stepSize, frequency);
@@ -68,20 +72,26 @@ subplot(1,3,1)
 plot(t, omegaDots, times, accels)
 hold on
 grid minor
+xlim([0,times(end)])
 xlabel('Time (s)')
 ylabel('Angular Acceleration')
 legend('Target','Response')
 
 subplot(1,3,2)
-plot(t, cumtrapz(t, omegaDots), taus, omegas)
+plot(taus, cumtrapz(taus, interpolant(taus)), taus, omegas)
 hold on
 grid minor
+xlim([0,taus(end)])
 xlabel('Time (s)')
 ylabel('Angular Velocity')
 
 subplot(1,3,3)
-plot(t, cumtrapz(t, cumtrapz(t, omegaDots)), taus, thetas)
+plot(taus, cumtrapz(taus, cumtrapz(taus, interpolant(taus))), taus, thetas)
 hold on
 grid minor
+xlim([0,taus(end)])
 xlabel('Time (s)')
 ylabel('Angular Position')
+
+figure
+plot(delays)
