@@ -1,4 +1,4 @@
-function [burnTime,tAfter,stateAfter] = find_burn_time(estimate,satelliteState,direction,timeToCol,burnTimesteps)
+function [burnTime,tAfter,stateAfter,a] = find_burn_time(estimate,satelliteState,direction,timeToCol,burnTimesteps)
 % Determines the burn time. 
 % Maps the pdf onto the collision plane then uses plans a maneuver to move
 % the satellite outside the pdf
@@ -68,6 +68,12 @@ while miss && burnTime>0
     if (maneuverPos(1)>xminCart(1) && maneuverPos(1)<xmaxCart(1)) && (maneuverPos(2)>yminCart(2) && maneuverPos(2)<ymaxCart(2))
         miss = false;
         burnTime = burnTime+1;
+        a = zeros(3,length(tAfter));
+        mu = 398600;
+        for i = 1:length(tAfter)
+            [~,avec] = orbit_prop_maneuver(tAfter(i),stateAfter(i,:)',mu,direction,burnTime);
+            a(:,i) = avec;
+        end
         break
     else
         miss = true;

@@ -1,6 +1,9 @@
 %% HOUSEKEEPING
 clear; clc; close all
 importCast;
+load('burnTable.mat');
+load('positionTable.mat');
+load('timeTable.mat')
 
 %% CONFIG
 log_data = true;
@@ -177,8 +180,8 @@ if ~moving
     chiefState = [0;0;7578;7.25256299066873;0;0];
     muE = 398600;
     tstep = timeVec(2)-timeVec(1);
-    [maneuver,tAfter,stateAfter] = make_maneuver(collisionEstimate,chiefState,...
-        1.5-time,length(timeVec)-i);
+    [maneuver,tAfter,stateAfter,a] = make_maneuver(collisionEstimate,chiefState,...
+        1.5-time,length(timeVec)-i,burnTable,positionTable,timeTable);
     if maneuver
         [tChief, chiefOrbit] = ode45(@(t, y) orbit_prop(t, y, muE), tAfter, chiefState);
         [tAfter,maneuverPos] = convert_2d(tAfter,chiefOrbit,stateAfter(:,1:6));

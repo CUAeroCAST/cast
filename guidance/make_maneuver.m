@@ -1,5 +1,5 @@
 % This function MUST be rate limited such that the estimator operates in real time.
-function [maneuver,tAfter,stateAfter] = make_maneuver(propogation,satelliteState,timeToCol,burnTimesteps)
+function [maneuver,tAfter,stateAfter,a] = make_maneuver(propogation,satelliteState,timeToCol,burnTimesteps,burnTable,positionTable,timeTable)
 % This function implements a guidance algorithm to generate a maneuver and timing. 
 % Calculates the probability of collision and then plans appropriate
 % maneuver using the pdf gradient if probability is too high.
@@ -27,8 +27,10 @@ function [maneuver,tAfter,stateAfter] = make_maneuver(propogation,satelliteState
      burnDirection = Q'*[0;maneuverx;maneuvery];
 %      burnDirection = [.0041;.0011;0]; 
      % Salculate the burn time
-     [burnTime,tAfter,stateAfter] = find_burn_time(propogation,satelliteState,...
-         burnDirection,timeToCol,burnTimesteps);
+     [burnTime,tAfter,stateAfter,a] = lookup_burn_time(propogation,satelliteState,...
+         burnDirection,timeToCol,burnTimesteps,burnTable,positionTable,timeTable);
+%      [burnTime,tAfter,stateAfter,a] = find_burn_time(propogation,satelliteState,...
+%          burnDirection,timeToCol,burnTimesteps);
      % Output the maneuver
      maneuver = [maneuverx,maneuvery,burnTime];
  else
@@ -36,5 +38,6 @@ function [maneuver,tAfter,stateAfter] = make_maneuver(propogation,satelliteState
      maneuver = [0,0,0];
      tAfter = 0;
      stateAfter = 0;
+     a = 0;
  end
 end
