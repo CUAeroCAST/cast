@@ -1,4 +1,4 @@
-function [tRef,relScaledHill] = convert_2d(tRef,refOrbit,conjOrbit)
+function [tRef,relAscaledHill] = convert_2d_accel(tRef,refOrbit,conjOrbit,refAccel,conjAccel)
 % Convert 3D orbit to 2D testbed plane
 % This function converts the state vectors of two orbits in earth cartesian
 % frame to a relitive hill frame on the 2D testbed
@@ -28,6 +28,11 @@ for j = 1:length(refOrbit)
         (dot(ref2colPoint(j,4:6),planeNormalVec)/norm(planeNormalVec)^2)*planeNormalVec;
     conj2dVel(j,:) = conj2colPoint(j,4:6)-...
         (dot(conj2colPoint(j,4:6),planeNormalVec)/norm(planeNormalVec)^2)*planeNormalVec;
+    % Project the vectors onto the 2D plane
+    ref2dAccel(j,:) = refAccel(j,:)-...
+        (dot(refAccel(j,:),planeNormalVec)/norm(planeNormalVec)^2)*planeNormalVec;
+    conj2dAccel(j,:) = conjAccel(j,:)-...
+        (dot(conjAccel(j,:),planeNormalVec)/norm(planeNormalVec)^2)*planeNormalVec;
 end
 % Combine position and velocity into the full state vector
 ref2d = [ref2dPos(:,1:2) ref2dVel(:,1:2)];
@@ -35,8 +40,11 @@ conj2d = [conj2dPos(:,1:2) conj2dVel(:,1:2)];
 % Scale to testbed size
 refScaled = ref2d/222;
 conjScaled = conj2d/222;
+refAscaled = ref2dAccel(:,1:2)/222;
+conjAscaled = conj2dAccel(:,1:2)/222;
 % Get relitive position
 relScaledCart = conjScaled-refScaled;
+relAscaledCart = conjAscaled-refAscaled;
 % Convert to the 2D Hill frame
 for k = 1:length(tRef)
     % Get Hill frame unit vectors
@@ -50,5 +58,6 @@ for k = 1:length(tRef)
     % Convert state vectors to Hill frame
     relScaledHill(1:2,k) = Q*relScaledCart(k,1:2)';
     relScaledHill(3:4,k) = Q*relScaledCart(k,3:4)';
+    relAscaledHill(:,k) = Q*relAscaledCart(k,:)';
 end
 end
