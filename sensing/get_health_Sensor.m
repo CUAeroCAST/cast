@@ -10,11 +10,9 @@ time=toc;
 healthy = [165, 90,  3, 0, 0, 0, 6, 0, 0, 0];
 Prot_Stop=0;
 
-get_health_output=[165, 90,  3, 0, 2, 0, 6, 0, 0, 0];
-
 if time>1
     
-    fprintf("Connection issue  \n")
+    error("Connection issue  \n")
     
 end
 
