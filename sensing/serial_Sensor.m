@@ -11,10 +11,11 @@
 % Start Motor: a5f0029402c1
 % Stop Motor:  a5f002000057
 %run_sensor();
-function serial_Sensor
+function sensorObj = serial_Sensor
 %serialportlist("all")
+readsize = 16;
 sensorObj = serialport("/dev/tty.usbserial-0001",115200);
-cleanup = onCleanup(@()stop_Motor(sensorObj));
+sensorObj.UserData = struct('dataReady', false, 'scan', zeros(1,readsize));
 flush(sensorObj)
 
 %% Get health status
@@ -43,24 +44,17 @@ end
 % write(sensorObj,82,"uint8")
 % read(sensorObj,10,"uint8")
 
-%% Scan Request
-start_Motor(sensorObj);
-
-data = struct;
-data.scan = zeros(1,16);
-data.readyFlag = false;
-data.running = true;
-set(0, 'userdata', data);
-
-%while(data.running)
-for i=1:1000
-  data = get(0, 'userdata');
-  if ~data.readyFlag
-   data.scan = read(sensorObj, 16, 'uint8');
-   data.readyFlag = true;
+ function sensorInterrupt
+  if sensorObj.UserData.dataReady
+   sensorObj.UserData.scan = [sensorObj.UserData.scan; read(sensorObj, readsize, uint8)];
+  else
+   sensorObj.UserData = struct('dataReady', true, 'scan', read(sensorObj, readsize, uint8));
   end
-  set(0, 'userdata', data);
-end
+ end
+
+ sensorObj.BytesAvailableFcnMode = "byte";
+ sensorObj.BytesAvailableFcnCount = readsize;
+ sensorObj.BytesAvailableFcn = @()sensorInterrupt;
 
 end
 %% Start Motor

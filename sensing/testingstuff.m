@@ -1,20 +1,18 @@
 clear
 clc
 close all
-prog = matlabroot;
-%!matlab -batch serial_Sensor &
-!/Applications/MATLAB_R2020b.app/bin/matlab -batch serial_Sensor &
 
-pause(10)
+sensorObj = serial_Sensor();
+cleanup = onCleanup(@()clean_up(sensorObj));
 %%
-for i=1:10
- data = get(0, 'userdata');
- if data.readyFlag
-  fprintf(data)
-  data.readyFlag = false;
-  set(0, 'userdata', data);
+while true
+ if sensorObj.UserData.dataReady
+  fprintf(sensorObj.UserData.scan)
+  sensorObj.UserData.dataReady = false;
  end
 end
 
-data.running = false;
-set(0, 'userdata', data);
+function clean_up(sensorObj)
+ stop_Motor(sensorObj);
+ delete(sensorObj);
+end
