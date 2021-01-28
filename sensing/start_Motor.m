@@ -12,6 +12,8 @@ function [] = start_Motor(sensorObj)
 % write(sensorObj,193,"uint8")
 
 write(sensorObj,[165, 240, 2, 148, 2, 193], "uint8")
+%Sample = read(sensorObj,10,"uint8");
+%write(sensorObj,[165, 32], "uint8")
 
 end
 
