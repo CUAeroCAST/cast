@@ -27,6 +27,12 @@ if Prot_Stop==1
    
   end
 end
+
+if Prot_Stop==1 && count>3
+    
+    error("Error: Sensor in Protection Stop State and is not responding to RESET")
+    
+end
 % write(sensorObj,165,"uint8")
 % write(sensorObj,82,"uint8")
 % read(sensorObj,10,"uint8")
