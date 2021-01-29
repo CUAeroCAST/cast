@@ -13,9 +13,9 @@
 %run_sensor();
 function sensorObj = serial_Sensor
 %serialportlist("all")
-readsize = 16;
+readsize = 2000;
 sensorObj = serialport("/dev/tty.usbserial-0001",115200);
-sensorObj.UserData = struct('dataReady', false, 'scan', zeros(1,readsize));
+sensorObj.UserData = struct('dataReady', false, 'scan', zeros(1,5), 'totalRead', 0);
 flush(sensorObj)
 
 %% Get health status
@@ -44,17 +44,26 @@ end
 % write(sensorObj,82,"uint8")
 % read(sensorObj,10,"uint8")
 
- function sensorInterrupt
-  if sensorObj.UserData.dataReady
-   sensorObj.UserData.scan = [sensorObj.UserData.scan; read(sensorObj, readsize, uint8)];
+ function sensorInterrupt(sensorObj,info)
+     %disp(sensorObj)
+  totalRead = sensorObj.UserData.totalRead;
+  if sensorObj.UserData.totalRead >= 7
+      readsize_actual = readsize;
   else
-   sensorObj.UserData = struct('dataReady', true, 'scan', read(sensorObj, readsize, uint8));
+      readsize_actual = 7;
   end
+  if sensorObj.UserData.dataReady && sensorObj.UserData.totalRead >=7
+   sensorObj.UserData.scan = [sensorObj.UserData.scan, read(sensorObj, readsize_actual, "uint8")'];
+  else
+   sensorObj.UserData = struct('dataReady', true, 'scan', read(sensorObj, readsize_actual, "uint8")', 'totalRead', totalRead);
+  end
+  sensorObj.UserData.totalRead = sensorObj.UserData.totalRead + readsize_actual;
  end
 
- sensorObj.BytesAvailableFcnMode = "byte";
- sensorObj.BytesAvailableFcnCount = readsize;
- sensorObj.BytesAvailableFcn = @()sensorInterrupt;
+configureCallback(sensorObj,"byte",readsize,@ sensorInterrupt);
+%  sensorObj.BytesAvailableFcnMode = "byte";
+%  sensorObj.BytesAvailableFcnCount = readsize;
+%  sensorObj.BytesAvailableFcn = @()sensorInterrupt;
 
 end
 %% Start Motor
