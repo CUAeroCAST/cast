@@ -4,6 +4,9 @@ importCast;
 
 %% CONFIG
 
+% arduinoObj = 20;    %dummy variable to get into the function
+arduinoObj = serialport('COM4',9600);   %ADJUST THIS FOR PORT AND DESIRED BAUD RATE
+
 log_data = false;
 hideFig = false;
 scalingFactor = 222; %Distance scaling factor for testbed
@@ -215,6 +218,13 @@ if ~moving
             movementPos = [movementPos maneuverPos(1:2,tIndex)];
             tIndex = tIndex+floor(reduceLength);
         end
+        % Check the format of movementPos to make sure the right data is
+        % used
+        xPolynomial = polyfit(tMove,maneuverPos(1,:),4);
+        yPolynomial = polyfit(tMove,maneuverPos(2,:),4);
+        vxPolynomial = polyfit(tMove,maneuverPos(3,:),4);
+        vyPolynomial = polyfit(tMove,maneuverPos(4,:),4);
+        sendData(arduinoObj,xPolynomial,yPolynomial,vxPolynomial,vyPolynomial,tMove(1))
         moving = 1;
     end
 end
