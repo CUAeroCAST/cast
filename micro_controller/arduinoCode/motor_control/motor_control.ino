@@ -1,116 +1,89 @@
 #include <math.h>
 
-union {
-    byte asBytes[4];
-    float asNum;
- } floatPointNum;
- 
-void setup() {
-  // put your setup code here, to run once:
+  // Defining Pins
   int xDriverPUL = 7;
   int xDriverDIR = 6;
   int yDriverPUL = 5;
   int yDriverDIR = 4;
+  
+  // Defining Variables
+  union {
+      byte asBytes[4];
+      float asNum;
+  } floatPointNum;
+  int xSpeed;
+  int ySpeed;
+  int xNumSteps;
+  int yNumSteps;
+  
+  // Initialize accelerations to 0
+  float a4x = 0;
+  float a4y = 0;
+  float a4vx = 0;
+  float a4vy = 0;
+  float a3x = 0;
+  float a3y = 0;
+  float a3vx = 0;
+  float a3vy = 0;
+  float a2x = 0;
+  float a2y = 0;
+  float a2vx = 0;
+  float a2vy = 0;
+  float a1x = 0;
+  float a1y = 0;
+  float a1vx = 0;
+  float a1vy = 0;
+  float a0x = 0;
+  float a0y = 0;
+  float a0vx = 0;
+  float a0vy = 0;
+
+  // Current time
   float currentTime;
-  float timeStart;
+  
+  // Constants
   float timestep = 2.5004e-4;
   float ratio = 2.7929e-4; // Ratio of m/step, need to get real number and make sure its the same for both axis
+
+
+
+void setup() {
+  // put your setup code here, to run once:
   Serial.begin(9600);
-  if (Serial.available()>0){
-    float a4x = readInFloat();
-    float a4y = readInFloat();
-    float a4vx = readInFloat();
-    float a4vy = readInFloat();
-    
-    float a3x = readInFloat();
-    float a3y = readInFloat();
-    float a3vx = readInFloat();
-    float a3vy = readInFloat();
-    
-    float a2x = readInFloat();
-    float a2y = readInFloat();
-    float a2vx = readInFloat();
-    float a2vy = readInFloat();
-     
-    float a1x = readInFloat();
-    float a1y = readInFloat();
-    float a1vx = readInFloat();
-    float a1vy = readInFloat();
-    
-    float a0x = readInFloat();
-    float a0y = readInFloat();
-    float a0vx = readInFloat();
-    float a0vy = readInFloat();
-    
-    timeStart = readInFloat();
-    currentTime = readInFloat();
-  }
 }
 
 
 
 void loop() {
   // put your main code here, to run repeatedly:
-  int xDriverPUL = 7;
-  int xDriverDIR = 6;
-  int yDriverPUL = 5;
-  int yDriverDIR = 4;
-  int xSpeed;
-  int ySpeed;
-  int xNumSteps;
-  int yNumSteps;
-
-  float a4x;
-  float a4y;
-  float a4vx;
-  float a4vy;
-
-  float a3x;
-  float a3y;
-  float a3vx;
-  float a3vy;
-
-  float a2x;
-  float a2y;
-  float a2vx;
-  float a2vy;
-
-  float a1x;
-  float a1y;
-  float a1vx;
-  float a1vy;
-
-  float a0x;
-  float a0y;
-  float a0vx;
-  float a0vy;
-  float currentTime;
-  float timestep;
   if (Serial.available()>0){
-    float a4x = readInFloat();
-    float a4y = readInFloat();
-    float a4vx = readInFloat();
-    float a4vy = readInFloat();
+    a4x = readInFloat();
+    a4y = readInFloat();
+    a4vx = readInFloat();
+    a4vy = readInFloat();
     
-    float a3x = readInFloat();
-    float a3y = readInFloat();
-    float a3vx = readInFloat();
-    float a3vy = readInFloat();
+    a3x = readInFloat();
+    a3y = readInFloat();
+    a3vx = readInFloat();
+    a3vy = readInFloat();
     
-    float a2x = readInFloat();
-    float a2y = readInFloat();
-    float a2vx = readInFloat();
-    float a2vy = readInFloat();
+    a2x = readInFloat();
+    a2y = readInFloat();
+    a2vx = readInFloat();
+    a2vy = readInFloat();
      
-    float a1x = readInFloat();
-    float a1y = readInFloat();
-    float a1vx = readInFloat();
-    float a1vy = readInFloat();
+    a1x = readInFloat();
+    a1y = readInFloat();
+    a1vx = readInFloat();
+    a1vy = readInFloat();
     
-    float a0x = readInFloat();
-    float a0y = readInFloat();
-    float a0vx = readInFloat();
-    float a0vy = readInFloat();
+    a0x = readInFloat();
+    a0y = readInFloat();
+    a0vx = readInFloat();
+    a0vy = readInFloat();
+
+    //Starts the interpolation here...
+    currentTime = 0;
     
     xSpeed = find_speed(a0vx,a1vx,a2vx,a3vx,a4vx,currentTime);
     ySpeed = find_speed(a0vy,a1vy,a2vy,a3vy,a4vy,currentTime);
@@ -118,6 +91,7 @@ void loop() {
     yNumSteps = find_steps(a0y,a1y,a2y,a3y,a4y,currentTime);
     command_motor(xNumSteps,xSpeed,xDriverDIR,xDriverPUL);
     command_motor(yNumSteps,ySpeed,yDriverDIR,yDriverPUL);
+
   }
   else{
     xSpeed = find_speed(a0vx,a1vx,a2vx,a3vx,a4vx,currentTime);
