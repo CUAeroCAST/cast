@@ -1,4 +1,10 @@
 #include <math.h>
+
+union {
+    byte asBytes[4];
+    float asNum;
+ } floatPointNum;
+ 
 void setup() {
   // put your setup code here, to run once:
   int xDriverPUL = 7;
@@ -8,66 +14,103 @@ void setup() {
   float currentTime;
   float timeStart;
   float timestep = 2.5004e-4;
-  float ratio = 0.001; // Ratio of m/step, need to get real number and make sure its the same for both axis
+  float ratio = 2.7929e-4; // Ratio of m/step, need to get real number and make sure its the same for both axis
   Serial.begin(9600);
   if (Serial.available()>0){
-    float a4x = Serial.parseFloat();
-    float a4y = Serial.parseFloat();
-    float a4vx = Serial.parseFloat();
-    float a4vy = Serial.parseFloat();
+    float a4x = readInFloat();
+    float a4y = readInFloat();
+    float a4vx = readInFloat();
+    float a4vy = readInFloat();
     
-    float a3x = Serial.parseFloat();
-    float a3y = Serial.parseFloat();
-    float a3vx = Serial.parseFloat();
-    float a3vy = Serial.parseFloat();
+    float a3x = readInFloat();
+    float a3y = readInFloat();
+    float a3vx = readInFloat();
+    float a3vy = readInFloat();
     
-    float a2x = Serial.parseFloat();
-    float a2y = Serial.parseFloat();
-    float a2vx = Serial.parseFloat();
-    float a2vy = Serial.parseFloat();
+    float a2x = readInFloat();
+    float a2y = readInFloat();
+    float a2vx = readInFloat();
+    float a2vy = readInFloat();
      
-    float a1x = Serial.parseFloat();
-    float a1y = Serial.parseFloat();
-    float a1vx = Serial.parseFloat();
-    float a1vy = Serial.parseFloat();
+    float a1x = readInFloat();
+    float a1y = readInFloat();
+    float a1vx = readInFloat();
+    float a1vy = readInFloat();
     
-    float a0x = Serial.parseFloat();
-    float a0y = Serial.parseFloat();
-    float a0vx = Serial.parseFloat();
-    float a0vy = Serial.parseFloat();
+    float a0x = readInFloat();
+    float a0y = readInFloat();
+    float a0vx = readInFloat();
+    float a0vy = readInFloat();
     
-    timeStart = Serial.parseFloat();
-    currentTime = Serial.parseFloat();
+    timeStart = readInFloat();
+    currentTime = readInFloat();
   }
 }
 
+
+
 void loop() {
   // put your main code here, to run repeatedly:
+  int xDriverPUL = 7;
+  int xDriverDIR = 6;
+  int yDriverPUL = 5;
+  int yDriverDIR = 4;
+  int xSpeed;
+  int ySpeed;
+  int xNumSteps;
+  int yNumSteps;
+
+  float a4x;
+  float a4y;
+  float a4vx;
+  float a4vy;
+
+  float a3x;
+  float a3y;
+  float a3vx;
+  float a3vy;
+
+  float a2x;
+  float a2y;
+  float a2vx;
+  float a2vy;
+
+  float a1x;
+  float a1y;
+  float a1vx;
+  float a1vy;
+
+  float a0x;
+  float a0y;
+  float a0vx;
+  float a0vy;
+  float currentTime;
+  float timestep;
   if (Serial.available()>0){
-    a4x = Serial.parseFloat();
-    a4y = Serial.parseFloat();
-    a4vx = Serial.parseFloat();
-    a4vy = Serial.parseFloat();
+    float a4x = readInFloat();
+    float a4y = readInFloat();
+    float a4vx = readInFloat();
+    float a4vy = readInFloat();
     
-    a3x = Serial.parseFloat();
-    a3y = Serial.parseFloat();
-    a3vx = Serial.parseFloat();
-    a3vy = Serial.parseFloat();
+    float a3x = readInFloat();
+    float a3y = readInFloat();
+    float a3vx = readInFloat();
+    float a3vy = readInFloat();
     
-    a2x = Serial.parseFloat();
-    a2y = Serial.parseFloat();
-    a2vx = Serial.parseFloat();
-    a2vy = Serial.parseFloat();
+    float a2x = readInFloat();
+    float a2y = readInFloat();
+    float a2vx = readInFloat();
+    float a2vy = readInFloat();
      
-    a1x = Serial.parseFloat();
-    a1y = Serial.parseFloat();
-    a1vx = Serial.parseFloat();
-    a1vy = Serial.parseFloat();
+    float a1x = readInFloat();
+    float a1y = readInFloat();
+    float a1vx = readInFloat();
+    float a1vy = readInFloat();
     
-    a0x = Serial.parseFloat();
-    a0y = Serial.parseFloat();
-    a0vx = Serial.parseFloat();
-    a0vy = Serial.parseFloat();
+    float a0x = readInFloat();
+    float a0y = readInFloat();
+    float a0vx = readInFloat();
+    float a0vy = readInFloat();
     
     xSpeed = find_speed(a0vx,a1vx,a2vx,a3vx,a4vx,currentTime);
     ySpeed = find_speed(a0vy,a1vy,a2vy,a3vy,a4vy,currentTime);
@@ -93,19 +136,28 @@ void loop() {
   currentTime = currentTime+timestep;
 }
 
-int find_speed(a0,a1,a2,a3,a4,currentTime){
-  float vel = a4*currentTime^4+a3*currentTime^3+a2*currentTime^2+a1*currentTime^1+a0
+float readInFloat(){
+  for(int i=0;i<4;i++){
+     floatPointNum.asBytes[i] = Serial.read();
+   }
+  return floatPointNum.asNum;
+}
+
+int find_speed(float a0,float a1,float a2,float a3,float a4,float currentTime){
+  float ratio = 2.7929e-4;
+  float vel = a4*pow(currentTime,4)+a3*pow(currentTime,3)+a2*pow(currentTime,2)+a1*currentTime+a0;
   int stepSpeed = round(vel/ratio);
   return stepSpeed;
 }
 
-int find_steps(a0,a1,a2,a3,a4,currentTime){
-  float dist = a4*currentTime^4+a3*currentTime^3+a2*currentTime^2+a1*currentTime^1+a0;
+int find_steps(float a0,float a1,float a2,float a3,float a4,float currentTime){
+  float ratio = 2.7929e-4;
+  float dist = a4*pow(currentTime,4)+a3*pow(currentTime,3)+a2*pow(currentTime,2)+a1*currentTime+a0;
   int numSteps = round(dist/ratio);
   return numSteps;
 }
 
-void command_motor(numSteps,stepSpeed,driverDIR,driverPUL){
+void command_motor(int numSteps,int stepSpeed,int driverDIR,int driverPUL){
   int pulseDelay = 1/abs(stepSpeed);
   boolean dir;
   if (stepSpeed>0){
