@@ -53,7 +53,7 @@ end
       readsize_actual = 7;
   end
   if sensorObj.UserData.dataReady && sensorObj.UserData.totalRead >=7
-   sensorObj.UserData.scan = [sensorObj.UserData.scan, read(sensorObj, readsize_actual, "uint8")'];
+   %sensorObj.UserData.scan = [sensorObj.UserData.scan, read(sensorObj, readsize_actual, "uint8")'];
   else
    sensorObj.UserData = struct('dataReady', true, 'scan', read(sensorObj, readsize_actual, "uint8")', 'totalRead', totalRead);
   end
