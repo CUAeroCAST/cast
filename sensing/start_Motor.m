@@ -3,8 +3,12 @@ function [] = start_Motor(sensorObj)
 %   Detailed explanation goes here
 
 % Start Motor: a5f0029402c1
-
-write(sensorObj,[165, 240, 2, 148, 2, 193], "uint8") % CURRENTLY 5HZ
+writestr = [165, 240, 2, 148, 2, 193];
+if sensorObj.ByteOrder == "little-endian"
+ write(sensorObj, writestr,  "uint8") % CURRENTLY 5HZ
+else
+ write(sensorObj, fliplr(writestr), "uin8")
+end
 
 end
 

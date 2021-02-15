@@ -13,8 +13,14 @@
 %run_sensor();
 function sensorObj = serial_Sensor
 %serialportlist("all")
+portstr = "/dev/tty.usbserial-0001";
 readsize = 2000;
-sensorObj = serialport("/dev/tty.usbserial-0001",115200);
+[str, maxsize, endian] = computer;
+ if endian == 'L'
+sensorObj = serialport(portstr,115200);
+ else
+  sensorObj = serialport(portstr, 115200, "ByteOrder", "big-endian");
+ end
 sensorObj.UserData = struct('dataReady', false, 'scan', zeros(1,5), 'totalRead', 0);
 flush(sensorObj)
 
