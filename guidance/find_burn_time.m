@@ -1,4 +1,4 @@
-function [burnTime,tAfter,stateAfter] = find_burn_time(estimate,satelliteState,direction,timeToCol,burnTimesteps)
+function [burnTime,tAfter,stateAfter] = find_burn_time(est,satelliteState,direction,timeToCol,burnTimesteps)
 % Determines the burn time. 
 % Maps the pdf onto the collision plane then uses plans a maneuver to move
 % the satellite outside the pdf
@@ -11,13 +11,13 @@ function [burnTime,tAfter,stateAfter] = find_burn_time(estimate,satelliteState,d
 % Author: Jason Balke | Project: CAST | Date: 10/29/20
 %----------------------------------------------------------------------------------------%
 % https://www.youtube.com/watch?v=VDeZyRtPJvI&ab_channel=AnatollD. :p
-estimate.Pcorr = estimate.Ppred;
-estimate.corrState = estimate.predState;
+est.Pcorr = est.Ppred;
+est.corrState = est.predState;
 scaling = 222;
-estimate.corrState = estimate.corrState*scaling;
-estimate.Pcorr = estimate.Pcorr*scaling^2;
+est.corrState = est.corrState*scaling;
+est.Pcorr = est.Pcorr*scaling^2;
 % Get the position of the debris
-relPositionHill = [estimate.corrState(1) estimate.corrState(2) 0]';
+relPositionHill = [est.corrState(1) est.corrState(2) 0]';
 colState = [217.547021908829,0,7574.87672106969,7.24957465758464,0,-0.208204291222004];
 % Convert to orbital scale
 %5 Oct 2020 00:26:51.325 434.915387 0.000000 12.490366 -14.481090 -0.000000 -0.832453 
@@ -40,10 +40,10 @@ colState = [217.547021908829,0,7574.87672106969,7.24957465758464,0,-0.2082042912
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Calculating the pdf
-xmax = estimate.corrState(1)+2*sqrt(estimate.Pcorr(1,1));
-xmin =  estimate.corrState(1)-2*sqrt(estimate.Pcorr(1,1));
-ymax = estimate.corrState(3)+2*sqrt(estimate.Pcorr(3,3));
-ymin =  estimate.corrState(3)-2*sqrt(estimate.Pcorr(3,3));
+xmax = est.corrState(1)+2*sqrt(est.Pcorr(1,1));
+xmin =  est.corrState(1)-2*sqrt(est.Pcorr(1,1));
+ymax = est.corrState(3)+2*sqrt(est.Pcorr(3,3));
+ymin =  est.corrState(3)-2*sqrt(est.Pcorr(3,3));
 % Transform the debris position
 unitRad = satelliteState(1:3)/norm(satelliteState(1:3));
 unitAlong = satelliteState(4:6)/norm(satelliteState(4:6));

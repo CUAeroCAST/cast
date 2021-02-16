@@ -16,7 +16,10 @@ failCount = 0;
 assertCount = 0;
 
 test_state_estimation;
+test_guidance;
+
+test_live_plot;
 
 fprintf(file, '%i Assertions: %i Failures', assertCount, failCount);
+pause(1);
 fclose('all');
-
