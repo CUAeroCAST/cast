@@ -4,8 +4,8 @@ importCast;
 
 %% CONFIG
 
-% arduinoObj = 20;    %dummy variable to get into the function
-arduinoObj = serialport('COM4',9600);   %ADJUST THIS FOR PORT AND DESIRED BAUD RATE
+arduinoObj = 20;    %dummy variable to get into the function
+% arduinoObj = serialport('COM4',9600);   %ADJUST THIS FOR PORT AND DESIRED BAUD RATE
 
 log_data = false;
 hideFig = false;
