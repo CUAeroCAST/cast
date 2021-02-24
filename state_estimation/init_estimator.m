@@ -28,7 +28,7 @@ end
            'State', estimatorParams.initState,...
            'MeasurementNoise',estimatorParams.sensorCovariance};
  %2D constant velocity
- estimatorParams.filter.STM = @(dt)[1,dt,0,0;0,1,0,0;0,0,1,dt;0,0,0,1];
+%  estimatorParams.filter.STM = @(dt)[1,dt,0,0;0,1,0,0;0,0,1,dt;0,0,0,1];
  %XY measurement matrix
  estimatorParams.filter.MeasurementModel = [1,0,0,0;0,0,1,0];
  %Initial state
