@@ -12,6 +12,7 @@ loadFile = true;
 isOrbitalScenario = false;
 isTestbedScenario = true;
 
+global datapath;
 datapath = open_logging(log_data);
 
 gmatParams = struct;
@@ -43,6 +44,10 @@ sensorParams.rangeAccuracy = 0.025; %m
 sensorParams.beamLimits = [-1.35,1.35];
 sensorParams.sensorType = 'Lidar';
 sensorParams.scanRate = 10; %Hz
+sensorParams.readsize = 5;
+sensorParams.scanMode = "standard";
+sensorParams.portstr = "COM3";
+sensorParams.sensorObj = serial_Sensor(sensorParams);
 
 %Target parameters
 targetParams.Mesh = extendedObjectMesh('sphere');
@@ -60,7 +65,7 @@ plotStruct.vobj = VideoWriter(plotStruct.filename, 'MPEG-4');
 plotStruct.vobj.Quality = 100;
 open(plotStruct.vobj);
 if hideFig
-    plotStruct.videoFig = figure('visible','off');
+    plotStruct.videoFig = figure('visible', 'off');
 else
     plotStruct.videoFig = figure;    
 end
@@ -155,99 +160,101 @@ estimatorParams.currentTime = timeVec(offset);
 % t = [];
 %% MAIN LOOP
 moving = 0;
-for i = offset : simulationParams.stepSize : length(timeVec)
- % STATE ESTIMATION
- sensorReading = sensorReadings(i,:);
- time = timeVec(i);
- real_time_delay = 0;
- delay = 0;
- if(~any(isnan(sensorReading)))
-     %Convert range-bearing to xy
-     mu = conv_meas_bias(lam, sensorReading);
-     sensorReading = meas2cart(sensorReading, mu);
+try
+ while true
+  % STATE ESTIMATION
+  sensorReading = filter_scan(sensorParams);
 
-     %Account for conversion bias
-     if(~any(isnan(sensorReading)))
-      R_conv = get_conv_cov(estimatorParams.sensorCovariance, lam, sensorReading);
-      estimatorParams.filter.MeasurementNoise = R_conv;
-     end
+  if(~any(isnan(sensorReading)))
+      %Convert range-bearing to xy
+      mu = conv_meas_bias(lam, sensorReading);
+      sensorReading = meas2cart(sensorReading, mu);
 
-     %Estimate the state
-     [estimate, estimatorParams] = state_estimator(sensorReading, time,...
-                                                          estimatorParams);
+      %Account for conversion bias
+      if(~any(isnan(sensorReading)))
+       R_conv = get_conv_cov(estimatorParams.sensorCovariance, lam, sensorReading);
+       estimatorParams.filter.MeasurementNoise = R_conv;
+      end
 
-     collisionEstimate = collision_prediction(estimate, estimatorParams, collisionEstimate);
- else
-    estimate.predState = nan(4,1);
-    estimate.Ppred = nan(4,4);
-    estimate.corrState = nan(4,1);
-    estimate.Pcorr = nan(4,4);
+      %Estimate the state
+      [estimate, estimatorParams] = state_estimator(sensorReading, time,...
+                                                           estimatorParams);
+
+      collisionEstimate = collision_prediction(estimate, estimatorParams, collisionEstimate);
+  else
+     estimate.predState = nan(4,1);
+     estimate.Ppred = nan(4,4);
+     estimate.corrState = nan(4,1);
+     estimate.Pcorr = nan(4,4);
+  end
+
+  % GUIDANCE
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ %make_maneuver and convert_2d currently have undefined behavior, both assume the second
+ %input is the chief orbit, which is not generated in the current code, the relative orbit
+ %has been substituted to enable full code execution, remove this comment block and
+ %bounding comments when fixed.
+ % if ~moving
+ %     maneuver = [0 0];
+ %     recv = run_io(maneuver, delay);
+ % end
+ % if ~moving
+ %     chiefState = [0;0;7578;7.25256299066873;0;0];
+ %     muE = 398600;
+ %     tstep = timeVec(2)-timeVec(1);
+ %     [maneuver,tAfter,stateAfter] = make_maneuver(collisionEstimate,chiefState,...
+ %         1.5-time,length(timeVec)-i);
+ %     if maneuver
+ %         [tChief, chiefOrbit] = ode45(@(t, y) orbit_prop(t, y, muE), tAfter, chiefState);
+ %         [tAfter,maneuverPos] = convert_2d(tAfter,chiefOrbit,stateAfter(:,1:6));
+ %         divideTimes = tAfter(end)/(timeVec(end)-time);
+ %         tAfter = tAfter/divideTimes;
+ %         tAfter = tAfter+time;
+ %         reduceLength = length(tAfter)/(length(timeVec)-i);
+ %         tIndex = 1;
+ %         tMove = [];
+ %         movementPos = [];
+ %         for j = 1:length(timeVec)-i
+ %             tMove = [tMove; tAfter(tIndex)];
+ %             movementPos = [movementPos maneuverPos(1:2,tIndex)];
+ %             tIndex = tIndex+floor(reduceLength);
+ %         end
+ %         moving = 1;
+ %     end
+ % end
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  maneuver = [0 0];
+ % recv = run_io(maneuver, delay, sensorParams);
+
+  % Visualization
+ %  if ~(isnan(estimate.corrState(1))) && (plotCorrCount >= plotStruct.interval)%plot if count == 0, increment until reaches plotInterval, then reset to 0
+ %      plotStruct = update_live_plot(plotStruct,estimate,collisionEstimate,recv);
+ %      plotCorrCount = 0; %reset count so at least plotStruct.interval steps have to pass before another plot update
+ %      plotCount = 1;%reset count so plotCount.interval iterations need to pass before another update
+ %  elseif plotCount == 0 %plotCount has reached and count has been set to 0, update plot
+ %      plotCount = plotCount + 1; 
+ %      plotStruct = update_live_plot(plotStruct,estimate,collisionEstimate,recv);
+ %  elseif plotCount == plotStruct.interval 
+ %      plotCount = 0; %reset to 0 so that plot can update next iteration
+ %  else
+ %      plotCount = plotCount+1; 
+ %  end
+ % plotCorrCount = plotCorrCount + 1; %increment no matter what
+
+ %Additonal KF Plotting
+ % t = [t, time];
+ % x = [x, estimate.predState(1)];
+ % y = [y, estimate.predState(3)];
+ % vx = [vx, estimate.predState(2)];
+ % vy = [vy, estimate.predState(4)];
+ % sigx = [sigx, 2*sqrt(estimate.Pcorr(1,1))];
+ % sigy = [sigy, 2*sqrt(estimate.Pcorr(3,3))];
+ % sigvx = [sigvx, 2*sqrt(estimate.Pcorr(2,2))];
+ % sigvy = [sigvy, 2*sqrt(estimate.Pcorr(4,4))];
+ % pause(real_time_delay)
  end
-
- % GUIDANCE
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%make_maneuver and convert_2d currently have undefined behavior, both assume the second
-%input is the chief orbit, which is not generated in the current code, the relative orbit
-%has been substituted to enable full code execution, remove this comment block and
-%bounding comments when fixed.
-if ~moving
-    maneuver = [0 0];
-    recv = run_io(maneuver, delay);
-end
-if ~moving
-    chiefState = [0;0;7578;7.25256299066873;0;0];
-    muE = 398600;
-    tstep = timeVec(2)-timeVec(1);
-    [maneuver,tAfter,stateAfter] = make_maneuver(collisionEstimate,chiefState,...
-        1.5-time,length(timeVec)-i);
-    if maneuver
-        [tChief, chiefOrbit] = ode45(@(t, y) orbit_prop(t, y, muE), tAfter, chiefState);
-        [tAfter,maneuverPos] = convert_2d(tAfter,chiefOrbit,stateAfter(:,1:6));
-        divideTimes = tAfter(end)/(timeVec(end)-time);
-        tAfter = tAfter/divideTimes;
-        tAfter = tAfter+time;
-        reduceLength = length(tAfter)/(length(timeVec)-i);
-        tIndex = 1;
-        tMove = [];
-        movementPos = [];
-        for j = 1:length(timeVec)-i
-            tMove = [tMove; tAfter(tIndex)];
-            movementPos = [movementPos maneuverPos(1:2,tIndex)];
-            tIndex = tIndex+floor(reduceLength);
-        end
-        moving = 1;
-    end
-end
- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
- maneuver = [0 0];
- %recv = run_io(maneuver, delay);
- 
- % Visualization
-%  if ~(isnan(estimate.corrState(1))) && (plotCorrCount >= plotStruct.interval)%plot if count == 0, increment until reaches plotInterval, then reset to 0
-%      plotStruct = update_live_plot(plotStruct,estimate,collisionEstimate,recv);
-%      plotCorrCount = 0; %reset count so at least plotStruct.interval steps have to pass before another plot update
-%      plotCount = 1;%reset count so plotCount.interval iterations need to pass before another update
-%  elseif plotCount == 0 %plotCount has reached and count has been set to 0, update plot
-%      plotCount = plotCount + 1; 
-%      plotStruct = update_live_plot(plotStruct,estimate,collisionEstimate,recv);
-%  elseif plotCount == plotStruct.interval 
-%      plotCount = 0; %reset to 0 so that plot can update next iteration
-%  else
-%      plotCount = plotCount+1; 
-%  end
-% plotCorrCount = plotCorrCount + 1; %increment no matter what
-
-%Additonal KF Plotting
-% t = [t, time];
-% x = [x, estimate.predState(1)];
-% y = [y, estimate.predState(3)];
-% vx = [vx, estimate.predState(2)];
-% vy = [vy, estimate.predState(4)];
-% sigx = [sigx, 2*sqrt(estimate.Pcorr(1,1))];
-% sigy = [sigy, 2*sqrt(estimate.Pcorr(3,3))];
-% sigvx = [sigvx, 2*sqrt(estimate.Pcorr(2,2))];
-% sigvy = [sigvy, 2*sqrt(estimate.Pcorr(4,4))];
-% pause(real_time_delay)
-end
+catch ME
 %% CLEANUP
-close_logging(plotStruct);
+ close_logging(plotStruct);
+ rethrow(ME)
+end
