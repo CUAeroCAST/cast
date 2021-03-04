@@ -5,7 +5,7 @@ close all
 blah()
 function blah()
 filename = "expressdata.txt";
-writematrix(["data"], filename);
+writematrix(["distance","angle"], filename);
 
 sensorParams = struct;
 sensorParams.readsize = 84;
@@ -20,8 +20,8 @@ SR = sampling_Rate(sensorParams.sensorObj);
 scan_Request(sensorParams);
 while true
  pause(1e-6)
- if sensorParams.sensorObj.UserData.dataReady
-  writematrix(sensorParams.sensorObj.UserData.scan', filename, 'WriteMode', 'append');
+ if sensorParams.sensorObj.UserData.dataReady && isstruct(sensorParams.sensorObj.UserData.scan)
+  writematrix([sensorParams.sensorObj.UserData.scan.distance', sensorParams.sensorObj.UserData.scan.angle'], filename, 'WriteMode', 'append');
   sensorParams.sensorObj.UserData.dataReady = false;
  end
 end
