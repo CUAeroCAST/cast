@@ -10,7 +10,7 @@ writematrix(["time(ms)", "start", "qual", "angle(deg)", "distance(mm)"], filenam
 sensorParams = struct;
 sensorParams.readsize = 2000;
 sensorParams.scanMode = "standard";
-sensorParams.portstr = "COM3";
+sensorParams.portstr = "/dev/tty.usbserial-0001";
 
 sensorParams.sensorObj = serial_Sensor(sensorParams);
 cleanup = onCleanup(@()clean_up(sensorParams.sensorObj));
@@ -27,10 +27,10 @@ while true
    data = sensorParams.sensorObj.UserData.scan;
    datamat = [data.time', data.start', data.qual', double(data.angle'), double(data.distance')];
    writematrix(datamat, filename, 'WriteMode', 'append');
+   sensorParams.sensorObj.UserData.dataReady = false;
   end
-  sensorObj.UserData.dataReady = false;
+  
  end
-end
 end
 
 function clean_up(sensorObj)

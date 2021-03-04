@@ -48,11 +48,12 @@ function sensorObj = serial_Sensor(sensorParams)
  end
 
 
+ 
  function sensorInterrupt(sensorObj,info)
   
-  if sensorObj.UserData.dataReady
+  if ~sensorObj.UserData.dataReady
    sensorObj.UserData = struct('dataReady', true,...
-                                                 'scan', rplidar_decode(read(sensorObj, readsize, "uint8"). sensorParams),...
+                                                 'scan', rplidar_decode(read(sensorObj, readsize, "uint8"), sensorParams),...
                                                  'totalRead', sensorObj.UserData.totalRead);
   end
    sensorObj.UserData.totalRead = sensorObj.UserData.totalRead + readsize;
