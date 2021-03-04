@@ -8,7 +8,7 @@ if sensorParams.scanMode == "standard"
  distanceStart = 3;
  len = sensorParams.readsize / bytesPerSample;
  packet.qual = zeros(1, len);
-elseif sensorParams.scanMode == "express"
+elseif sensorParams.scanMode == "standard"
  len = 0; % NOT IMPLEMENTED YET
 end
 
