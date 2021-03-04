@@ -21,7 +21,7 @@ function sensorObj = serial_Sensor(sensorParams)
   else
    sensorObj = serialport(portstr, 115200, "ByteOrder", "big-endian");
   end
- sensorObj.UserData = struct('dataReady', false, 'scan', zeros(1, readsize), 'totalRead', 0);
+ sensorObj.UserData = struct('dataReady', false, 'scan', nan, 'raw', nan);
  flush(sensorObj)
 
 %% Get health status
@@ -49,14 +49,10 @@ function sensorObj = serial_Sensor(sensorParams)
 
 
  
- function sensorInterrupt(sensorObj,info)
-  
+ function sensorInterrupt(sensorObj,info)  
   if ~sensorObj.UserData.dataReady
-   sensorObj.UserData = struct('dataReady', true,...
-                                                 'scan', rplidar_decode(read(sensorObj, readsize, "uint8"), sensorParams),...
-                                                 'totalRead', sensorObj.UserData.totalRead);
+   sensorObj.UserData = rplidar_decode(read(sensorObj, readsize, "uint8"), sensorParams, sensorObj);
   end
-   sensorObj.UserData.totalRead = sensorObj.UserData.totalRead + readsize;
  end
 
  configureCallback(sensorObj, "byte", readsize, @ sensorInterrupt);

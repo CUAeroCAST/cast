@@ -8,7 +8,7 @@ filename = "expressdata.txt";
 writematrix(["data"], filename);
 
 sensorParams = struct;
-sensorParams.readsize = 128;
+sensorParams.readsize = 84;
 sensorParams.scanMode = "express";
 sensorParams.portstr = "/dev/tty.usbserial-0001";
 

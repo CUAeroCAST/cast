@@ -44,5 +44,4 @@ if length(objMeasurement.distance)>1
        
 end
        
-
 end
