@@ -1,12 +1,11 @@
 function [r12,r13,r24,r43] = sensor_Bounds(Data)
 
 % Load in data
-data_Full=Data.data;
-data.time=data_Full(:,1);
-data.start=data_Full(:,2);
-data.qual=data_Full(:,3);
-data.angle=data_Full(:,4);
-data.distance=data_Full(:,5);
+data.time=Data(:,1);
+data.start=Data(:,2);
+data.qual=Data(:,3);
+data.angle=Data(:,4);
+data.distance=Data(:,5);
 
 % Get x,y from distance/angle
 rangelow = 1;
