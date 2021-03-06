@@ -33,7 +33,7 @@ estimatorParams.llsSeeding = false;
 estimatorParams.batchSamples = 0;
 estimatorParams.sensorCovariance = [0.025^2,0;0,deg2rad(0.45)^2]; %Range, bearing
 estimatorParams.qGain = 1; %Process noise gain for forward prediction
-estimatorParams.initState = [1.5;-1;0;0]; %Constant x-vel init state
+estimatorParams.initState = [1.5;0;-1;0]; %Constant x-vel init state
 
 %Sensor parameters
 sensorParams.samplingRate = 4e3;
@@ -55,20 +55,20 @@ targetParams.Dimensions.OriginOffset = [0,0,0];
 canAvoid = false;
 
 %Live Plot
-plotStruct.filename = [datapath, filesep, '2D_collision_avoid'];
-plotStruct.vobj = VideoWriter(plotStruct.filename, 'MPEG-4');
-plotStruct.vobj.Quality = 100;
-open(plotStruct.vobj);
-if hideFig
-    plotStruct.videoFig = figure('visible','off');
-else
-    plotStruct.videoFig = figure;    
-end
-plotStruct.collisionFlag = 0;   %flag for if covariance has intersected with gantry pos
-set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);
-plotStruct.interval = 50; %how often the plot is updated... if equals 0, then it plots every iteration
-plotCount = 0; %initial count value for iterating inside main loop
-plotCorrCount = 50; %starting value for corr state plot count
+% plotStruct.filename = [datapath, filesep, '2D_collision_avoid'];
+% plotStruct.vobj = VideoWriter(plotStruct.filename, 'MPEG-4');
+% plotStruct.vobj.Quality = 100;
+% open(plotStruct.vobj);
+% if hideFig
+%     plotStruct.videoFig = figure('visible','off');
+% else
+%     plotStruct.videoFig = figure;    
+% end
+% plotStruct.collisionFlag = 0;   %flag for if covariance has intersected with gantry pos
+% set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);
+% plotStruct.interval = 50; %how often the plot is updated... if equals 0, then it plots every iteration
+% plotCount = 0; %initial count value for iterating inside main loop
+% plotCorrCount = 50; %starting value for corr state plot count
 
 %Temp creation of relative orbit for init_sensor_model
 load('relativeOrbitExample.mat');
@@ -139,7 +139,10 @@ end
 %Constants for converting measurement to cartesian
 lam = lam_vals(estimatorParams.sensorCovariance);
 plotStruct.axis = [-.5 2 -1.25 1.25];
-%% STATE ESTIMATION
+%% NIS Loop
+nisSum = zeros(1,14);
+N = 1;
+
 %Determine how many sensor readings to use for batch LLS estimate
 [offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams);
 estimatorParams.currentTime = timeVec(offset);
@@ -159,6 +162,13 @@ t = [];
 %Determine how many sensor readings to use for batch LLS estimate
 [offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams);
 estimatorParams.currentTime = timeVec(offset);
+Hvec = {};
+Pk_minus = {};
+yk = [];
+ykhat = [];
+sensorRecordings = [];
+timeRecordings = [];
+performEstimation = false;
 %% MAIN LOOP
 for i = 2 : simulationParams.stepSize : length(timeVec)
     % STATE ESTIMATION
@@ -168,30 +178,41 @@ for i = 2 : simulationParams.stepSize : length(timeVec)
     real_time_delay = 0;
     delay = 0;
     if(~any(isnan(sensorReading)))
-     %Estimate the state
-     Q = diag([.01 .01]);
-     R = diag([deg2rad(1)  .01]);
-     [estimate,estimatorParams] = ekf(sensorReading, time, estimatorParams, 0, 0);
-     
-     %Additonal KF Plotting
-     t = [t, time];
-     x = [x, estimate.predState(1)];
-     y = [y, estimate.predState(3)];
-     vx = [vx, estimate.predState(2)];
-     vy = [vy, estimate.predState(4)];
-     sigx = [sigx, 2*sqrt(estimate.Pcorr(1,1))];
-     sigy = [sigy, 2*sqrt(estimate.Pcorr(3,3))];
-     sigvx = [sigvx, 2*sqrt(estimate.Pcorr(2,2))];
-     sigvy = [sigvy, 2*sqrt(estimate.Pcorr(4,4))];
-     pause(real_time_delay)
-
- else
-    estimate.predState = nan(4,1);
-    estimate.Ppred = nan(4,4);
-    estimate.corrState = nan(4,1);
-    estimate.Pcorr = nan(4,4);
- end
-
+        sensorRecordings = [sensorRecordings;sensorReading];
+        timeRecordings = [timeRecordings time];
+        performEstimation=true;
+    elseif(performEstimation)
+        %Estimate the state
+        meanReading = mean(sensorRecordings);
+        meanTime = mean(timeRecordings);
+        Q = diag([.05 .05]);
+        R = diag([deg2rad(1)  .01]);
+        [estimate,estimatorParams,H,ymeas,ypred] = ekf(meanReading, timeVec(i-1), estimatorParams, 0, 0);
+        Hvec{end+1} = H;
+        Pk_minus{end+1} = estimate.Ppred;
+        yk = [yk ymeas];
+        ykhat = [ykhat ypred];
+        %Additonal KF Plotting
+        t = [t, time];
+        x = [x, estimate.predState(1)];
+        y = [y, estimate.predState(2)];
+        vx = [vx, estimate.predState(3)];
+        vy = [vy, estimate.predState(4)];
+        sigx = [sigx, 2*sqrt(estimate.Pcorr(1,1))];
+        sigy = [sigy, 2*sqrt(estimate.Pcorr(3,3))];
+        sigvx = [sigvx, 2*sqrt(estimate.Pcorr(2,2))];
+        sigvy = [sigvy, 2*sqrt(estimate.Pcorr(4,4))];
+        pause(real_time_delay)
+        performEstimation = false;
+        sensorRecordings = [];
+        timeRecordings = [];
+    else
+        estimate.predState = nan(4,1);
+        estimate.Ppred = nan(4,4);
+        estimate.corrState = nan(4,1);
+        estimate.Pcorr = nan(4,4);
+    end
+    
     %Save off important values for truth model testing
     xp(:,i) = estimate.predState;
     xc(:,i) = estimate.corrState;
@@ -203,6 +224,20 @@ for i = 2 : simulationParams.stepSize : length(timeVec)
     
     
 end
+nees = NaN(1, length(t));
+nis = NaN(1, length(t));
+S = cell(1,length(t));
+R = estimatorParams.sensorCovariance;
+ey = yk-ykhat;
+for k = 1:length(t)
+    %     nees(k) = ex(:, k)'*inv(Pk{k})*ex(:, k);
+    S{k} = Hvec{k} * Pk_minus{k} * Hvec{k}' + R;
+    nis(k) = ey(:, k)'*inv(S{k})*ey(:, k);
+end
+nisSum = nis+nisSum;
+
+
 %Use these variables for each trial
 %xtrue, timeVec, xp,xc,Pp,Pc, sensorReadings
-%test_NIS( eyk, yk_minus, Pk_minus,H,R, tvec, N, alpha )
+alpha = 0.05;
+test_NIS( nisSum, t, N, alpha )

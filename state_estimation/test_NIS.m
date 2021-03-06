@@ -1,11 +1,6 @@
-function [  ] = test_NIS( eyk, yk_minus, Pk_minus,H,R, tvec, N, alpha )
+function [  ] = test_NIS(nisSum, tvec, N, alpha )
 % This function runs the NIS dynamic consistency test
 
-for i=1:length(tvec)
-    S{i} = H * Pk_minus{i} * H' + R;
-    eyk(:,i) = eyk(:,i) - yk_minus(:,i);
-    NIS(i) = eyk(:,i)' * inv(S{i}) * eyk(:,i);
-end
 
 n=length(tvec);
 
@@ -15,7 +10,7 @@ r2=chi2inv(1-(alpha/2),N*n)./N;
 % Plotting NIS
 figure;
 hold on
-scatter(tvec,NIS,'k','LineWidth',2), hold on
+scatter(tvec,nisSum,'k','LineWidth',2), hold on
 plot(tvec,r1*ones(1,length(tvec)),'m-')
 plot(tvec,r2*ones(1,length(tvec)),'m-')
 xlabel('Time [s]','fontsize',22,'Interpreter','latex')
