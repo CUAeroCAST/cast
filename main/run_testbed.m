@@ -5,7 +5,7 @@ importCast;
 %% CONFIG
 
 log_data = false;
-hideFig = false;
+hideFig = true;
 scalingFactor = 222; %Distance scaling factor for testbed
 makeSensorPlot = false;
 loadFile = true;
@@ -27,13 +27,6 @@ simulationParams.initPos = [1.5,0.1061,0]; %m, starting point of object
 simulationParams.finalPos = [0,.1061,0]; %m, final point of object
 simulationParams.collisionTime = 1.5; %s, time it takes to get from initial 
 %to final position
-
-%Estimator parameters
-estimatorParams.llsSeeding = false;
-estimatorParams.batchSamples = 0;
-estimatorParams.sensorCovariance = [0.025^2,0;0,deg2rad(0.45)^2]; %Range, bearing
-estimatorParams.qGain = 1; %Process noise gain for forward prediction
-estimatorParams.initState = [1.5;-1;0;0]; %Constant x-vel init state
 
 %Sensor parameters
 sensorParams.samplingRate = 4e3;
@@ -137,45 +130,36 @@ else
 end
 
 %Constants for converting measurement to cartesian
-lam = lam_vals(estimatorParams.sensorCovariance);
 plotStruct.axis = [-.5 2 -1.25 1.25];
 %% STATE ESTIMATION
-%Determine how many sensor readings to use for batch LLS estimate
-[offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams);
-estimatorParams.currentTime = timeVec(offset);
-%Additional KF Plotting
-% x = [];
-% sigx = [];
-% y = [];
-% sigy = [];
-% vx = [];
-% sigvx = [];
-% vy = [];
-% sigvy = [];
-% t = [];
+%Estimator parameters
+estimatorParams.currentTime = timeVec(1);
+estimatorParams.filter.MeasurementModel = @(x,xs,y,ys)...
+    [(2*x - 2*xs)/(2*((x - xs)^2 + (y - ys)^2)^(1/2)),...
+    (2*y - 2*ys)/(2*((x - xs)^2 + (y - ys)^2)^(1/2)), 0, 0;
+    -(y - ys)/((x - xs)^2*((y - ys)^2/(x - xs)^2 + 1)),...
+    1/((x - xs)*((y - ys)^2/(x - xs)^2 + 1)), 0, 0]; %Range bearing model
+%Initial state
+estimatorParams.filter.State = [1.5;0;-1;0]; %Constant x-vel init state (x,y,vx,vy)
+%Measurement noise (sensor Covariance)
+estimatorParams.filter.MeasurementNoise = [0.025^2,0;0,deg2rad(0.45)^2]; %Range, bearing
+estimatorParams.filter.ProcessNoise = @(dt) 0.01*eye(4); %constant process noise
+estimatorParams.filter.StateCovariance = eye(4); %Initial estimate covariance
+estimatorParams.filter.STM = @(dt) eye(4) + [0,0,1,0;0,0,0,1;0,0,0,0;0,0,0,0]*dt;
 %% MAIN LOOP
 moving = 0;
-for i = offset : simulationParams.stepSize : length(timeVec)
+for i = 1 : simulationParams.stepSize : length(timeVec)
  % STATE ESTIMATION
- sensorReading = sensorReadings(i,:);
+ %this is ready to be swapped with sensor grabber
+ sensorReading(:,1) = sensorReadings(i,:); %Needs to be column vector of range-bearing
  time = timeVec(i);
  real_time_delay = 0;
  delay = 0;
  if(~any(isnan(sensorReading)))
-     %Convert range-bearing to xy
-     mu = conv_meas_bias(lam, sensorReading);
-     sensorReading = meas2cart(sensorReading, mu);
-
-     %Account for conversion bias
-     if(~any(isnan(sensorReading)))
-      R_conv = get_conv_cov(estimatorParams.sensorCovariance, lam, sensorReading);
-      estimatorParams.filter.MeasurementNoise = R_conv;
-     end
 
      %Estimate the state
      [estimate, estimatorParams] = state_estimator(sensorReading, time,...
                                                           estimatorParams);
-
      collisionEstimate = collision_prediction(estimate, estimatorParams, collisionEstimate);
  else
     estimate.predState = nan(4,1);
@@ -236,18 +220,6 @@ end
 %      plotCount = plotCount+1; 
 %  end
 % plotCorrCount = plotCorrCount + 1; %increment no matter what
-
-%Additonal KF Plotting
-% t = [t, time];
-% x = [x, estimate.predState(1)];
-% y = [y, estimate.predState(3)];
-% vx = [vx, estimate.predState(2)];
-% vy = [vy, estimate.predState(4)];
-% sigx = [sigx, 2*sqrt(estimate.Pcorr(1,1))];
-% sigy = [sigy, 2*sqrt(estimate.Pcorr(3,3))];
-% sigvx = [sigvx, 2*sqrt(estimate.Pcorr(2,2))];
-% sigvy = [sigvy, 2*sqrt(estimate.Pcorr(4,4))];
-% pause(real_time_delay)
 end
 %% CLEANUP
 close_logging(plotStruct);

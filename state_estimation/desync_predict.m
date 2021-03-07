@@ -8,6 +8,6 @@ function [estimate] = desync_predict(time,estimatorParams)
      error("State estimation is receiving request for invalid time")
  end
  
- [estimate.predState, estimate.Ppred] = predict_kf(filter, stepSize);
+ [estimate.predState, estimate.Ppred] = predict_ekf(filter, stepSize);
  estimate.collisionTime = time;
 end
