@@ -45,4 +45,14 @@ end
     %  ylabel('y [mm]','FontSize',24,'Interpreter','latex')
     %  set(gca, 'FontSize', 20)
     %  grid minor;
+    
+    
+%     data=readmatrix("expressdata.txt");
+%     figure;
+%     scatter(data(:,1).*cosd(data(:,2)), data(:,1).*sind(data(:,2)),'LineWidth',3), hold on
+%     title("LiDAR Sensor in Laundry Basket",'fontsize',24,'Interpreter','latex')
+%     xlabel('x [mm]','fontsize',22,'Interpreter','latex')
+%     ylabel('y [mm]','FontSize',24,'Interpreter','latex')
+%     set(gca, 'FontSize', 20)
+%     grid minor;
 

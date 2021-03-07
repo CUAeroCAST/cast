@@ -1,0 +1,1 @@
+time(ms),start,qual,angle(deg),distance(mm)
