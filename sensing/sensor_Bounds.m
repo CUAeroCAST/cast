@@ -6,7 +6,8 @@ rangehigh = length(data.distance);
 x = data.distance(rangelow:rangehigh) .* cosd(data.angle(rangelow:rangehigh));
 y = data.distance(rangelow:rangehigh) .* sind(data.angle(rangelow:rangehigh));
 
-shortside = 1524;
+%shortside = 1524;
+shortside = 1112.52; % 43.8 in
 tolerance = 50;
 
 % Find first corners
@@ -38,7 +39,8 @@ bigpos_vec=bigpos_rel-dot(bigpos_rel,delta_corner1_unit)*delta_corner1_unit;
 bigpos_unit=bigpos_vec/norm(bigpos_vec);
 
 bound_step=100; %mm
-len=(95.37-6.40651)*25.4; % mm (long gantry distance-distance ramp comes into gantry)
+% len=(95.37-6.40651)*25.4; % mm (long gantry distance-distance ramp comes into gantry)
+len=(86.85-6.40651)*25.4; % mm (long gantry distance-distance ramp comes into gantry) 86.85
 
 corner1_bound=corner1+bound_step*(delta_corner1_unit+bigpos_unit);
 corner2_bound=corner2+bound_step*(delta_corner2_unit+bigpos_unit);
