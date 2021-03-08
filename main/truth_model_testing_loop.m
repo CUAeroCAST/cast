@@ -140,13 +140,15 @@ end
 lam = lam_vals(estimatorParams.sensorCovariance);
 plotStruct.axis = [-.5 2 -1.25 1.25];
 %% NIS Loop
-nisSum = zeros(1,6000);
-n = 200;
+n = 500;
 N = 50;
 performEstimation = false;
 sensorRecordings = [];
 timeRecordings = [];
-for j = 1:10
+numStats = zeros(1, length(timeVec));
+neesSum = zeros(1,length(timeVec));
+nisSum = zeros(1, length(timeVec));
+for j = 1:n
     fileNum = num2str(j);
     filename = ['nis_scenario_' fileNum '.mat'];
     load(filename);
@@ -165,8 +167,6 @@ for j = 1:10
     vy = [];
     sigvy = [];
     t = [];
-    numStats = zeros(1, length(timeVec));
-    nisSum = zeros(1, length(timeVec));
     %% STATE ESTIMATION
     %Determine how many sensor readings to use for batch LLS estimate
     [offset, estimatorParams] = init_estimator(sensorReadings, estimatorParams);
@@ -189,14 +189,20 @@ for j = 1:10
             meanTime = mean(timeRecordings);
             Q = diag([.05 .05]);
             [estimate,estimatorParams,H,ymeas,ypred] = ekf(meanReading, timeVec(i-1), estimatorParams, 0, 0);
-            timeIndex = find(timeVec==meanTime);
+            midTimeIndex = ceil(length(timeRecordings)/2);
+            midTime = timeRecordings(midTimeIndex);
+            timeIndex = find(timeVec==midTime);
             if numStats(timeIndex)<N
                 Pk_minus = estimate.Ppred;
                 ey = ymeas-ypred;
+                xtruth = [relativePath(timeIndex,1);relativePath(timeIndex,2);-1;0];
+                ex = xtruth-estimate.corrState;
                 R = estimatorParams.sensorCovariance;
                 S = H * Pk_minus * H' + R;
+                nees = ex'*estimate.Pcorr*ex;
                 nis = ey'*inv(S)*ey;
                 nisSum(timeIndex) = nisSum(timeIndex)+nis;
+                neesSum(timeIndex) = neesSum(timeIndex)+nees;
                 numStats(timeIndex) = numStats(timeIndex)+1;
             end
             %Additonal KF Plotting
@@ -229,12 +235,18 @@ for j = 1:10
     end
 end
 
-for i = length(nisSum):-1:1
-   if numStats(i)<N
-       nisSum(i) = [];
+nisVec = [];
+neesVec = [];
+tVec = [];
+for i = 1:length(nisSum)
+   if numStats(i)==N
+       nisVec = [nisVec nisSum(i)];
+       neesVec = [neesVec neesSum(i)];
+       tVec = [tVec timeVec(i)];
    end
 end
 %Use these variables for each trial
 %xtrue, timeVec, xp,xc,Pp,Pc, sensorReadings
 alpha = 0.05;
-test_NIS( nisSum, t, N, alpha )
+test_NIS( nisVec, tVec, N, alpha )
+test_NEES( neesVec, tVec, N, alpha )
