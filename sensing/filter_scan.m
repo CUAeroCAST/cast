@@ -9,6 +9,10 @@ r24 = sensorParams.boundingbox.r24;
 r43 = sensorParams.boundingbox.r43;
  
 % Filter out object data
+ objMeasurement = struct;
+ objMeasurement.distance = [];
+ objMeasurement.angle = [];
+ objMeasurement.count = 0;
  count = 1;
 for i = 1:length(data.distance)
     
@@ -18,7 +22,8 @@ for i = 1:length(data.distance)
     
    if all(data.distance(i)<rvec)
        
-       objMeasurement(count) = data(i);
+       objMeasurement.distance(count) = data.distance(i);
+       objMeasurement.angle(count) = data.angle(i);
        
        count = count+1;
        
@@ -27,13 +32,14 @@ for i = 1:length(data.distance)
 end
 
 % Taking the mean of two object measurements in one scan
-if length(objMeasurement.distance)>1
+if count > 1
            
        %objMeasurement.time = mean(data.time);
        %objMeasurement.start = mean(data.start);
        %objMeasurement.qual = mean(data.qual);
-       objMeasurement.angle(count) = mean(data.angle);
-       objMeasurement.distance(count) = mean(data.distance(i));
+       objMeasurement.angle = mean(objMeasurement.angle);
+       objMeasurement.distance = mean(objMeasurement.distance);
+       objMeasurement.count = count - 1;
        
 end
        
