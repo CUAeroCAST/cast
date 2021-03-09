@@ -30,7 +30,7 @@ collisionEstimate = nan;
 first_scan = struct;
 first_scan.distance = [];
 first_scan.angle = [];
-
+try
 while length(first_scan.distance) < 800
  pause(1e-6)
  if sensorParams.sensorObj.UserData.dataReady
@@ -39,10 +39,10 @@ while length(first_scan.distance) < 800
   sensorParams.sensorObj.UserData.dataReady = false;
  end
 end
+fprintf("Setup Complete")
 
-[sensorParams.boundingbox.r12, sensorParams.boundingbox.r13,...
- sensorParams.boundingbox.r24, sensorParams.boundingbox.r43]... 
- = sensor_Bounds(first_scan);
+[sensorParams.boundingbox.cornerx, sensorParams.boundingbox.cornery]... 
+ = sensor_Bounds(readings);
 
 n = 1;
 while true
@@ -57,6 +57,7 @@ while true
    collisionEstimate = collision_prediction(estimate, estimatorParams, collisionEstimate);
    est_vec(n) = estimate;
    col_vec(n) = collisionEstimate;
+   m(n) = measurement;
    n = n + 1;
   else
     estimate.predState = nan(4,1);
@@ -65,4 +66,20 @@ while true
     estimate.Pcorr = nan(4,4);
   end
  end
+end
+catch ME
+for j = 1 : length(est_vec)
+ d(j,:) = est_vec(j).corrState(1:2);
+ sigs = diag(est_vec(j).Pcorr);
+ sigsUp(j,:) = d(j,:) + 2*sigs(1:2)'.^0.5;
+ sigsDo(j,:) = d(j,:) - 2*sigs(1:2)'.^0.5;
+ r(j) = m(j).distance*1000;
+ th(j) = m(j).angle;
+end
+scatter(sensorParams.boundingbox.cornerx, sensorParams.boundingbox.cornery)
+hold on
+scatter(r.*cos(-th), r.*sin(-th))
+figure
+plot(d(:,1), d(:,2), sigsUp(:,1), sigsUp(:,2), sigsDo(:,1), sigsDo(:,2))
+rethrow(ME)
 end

@@ -4,15 +4,15 @@ close all
 importCast;
 timestep = 2.5e-4;
 
-file = "expressdata--bigmiss.txt";
+file = "expressdata--nearmiss2.txt";
 
 datum = readmatrix(file);
 
 len = length(datum);
 
 readings = struct;
-readings.distance = datum(:, 1);
-readings.angle = datum(:, 2);
+readings.distance = datum(1:800, 1);
+readings.angle = datum(1:800, 2);
 estimatorParams = struct;
 estimatorParams.currentTime = 0;
 estimatorParams.filter.MeasurementModel = @(x,xs,y,ys)...
@@ -28,20 +28,27 @@ estimatorParams.filter.State = [1.5;0;-1;0];
 collisionEstimate(1) = struct("collisionTime", nan, "predState", nan, "Ppred", nan);
 
 sensorParams = struct;
-[sensorParams.boundingbox.r12, sensorParams.boundingbox.r13,...
- sensorParams.boundingbox.r24, sensorParams.boundingbox.r43]... 
+[sensorParams.boundingbox.cornerx, sensorParams.boundingbox.cornery]... 
  = sensor_Bounds(readings);
 
 n = 1;
+
+seen = false;
 for i = 1  : len/16 - 1
  sensorParams.sensorObj.UserData.scan = struct("distance", datum(16*(i-1) + 1 : 16*i, 1), "angle", datum(16*(i-1) + 1: 16*i, 2));
  measurement = filter_scan(sensorParams);
- time = estimatorParams.currentTime + timestep;
  if measurement.count > 0
-  [estimate, estimatorParams] = state_estimator([measurement.distance, measurement.angle], time, estimatorParams);
+  if ~seen
+   firstUpdate = i;
+   seen = true;
+  end
+  time =  timestep*16*(i - firstUpdate);
+
+  [estimate, estimatorParams] = state_estimator([measurement.distance; measurement.angle], time, estimatorParams);
   collisionEstimate = collision_prediction(estimate, estimatorParams, collisionEstimate);
   est_vec(n) = estimate;
   col_vec(n) = collisionEstimate;
+  m(n) = measurement;
   n = n + 1;
  else
    estimate.predState = nan(4,1);
@@ -50,3 +57,18 @@ for i = 1  : len/16 - 1
    estimate.Pcorr = nan(4,4);
  end
 end
+
+for j = 1 : length(est_vec)
+ d(j,:) = est_vec(j).corrState(1:2);
+ sigs = diag(est_vec(j).Pcorr);
+ sigsUp(j,:) = d(j,:) + 2*sigs(1:2)'.^0.5;
+ sigsDo(j,:) = d(j,:) - 2*sigs(1:2)'.^0.5;
+ r(j) = m(j).distance*1000;
+ th(j) = m(j).angle;
+end
+scatter(datum(:,1).*cosd(datum(:,2)), datum(:,1).*sind(datum(:,2)));
+hold on
+scatter(sensorParams.boundingbox.cornerx, sensorParams.boundingbox.cornery)
+scatter(r.*cos(-th), r.*sin(-th))
+figure
+plot(d(:,1), d(:,2), sigsUp(:,1), sigsUp(:,2), sigsDo(:,1), sigsDo(:,2))

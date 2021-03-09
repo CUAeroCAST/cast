@@ -3,43 +3,29 @@ function objMeasurement = filter_scan(sensorParams)
  
 % Get data and bounding lines from sensor parameters
 data = sensorParams.sensorObj.UserData.scan;
-r12 = sensorParams.boundingbox.r12;
-r13 = sensorParams.boundingbox.r13;
-r24 = sensorParams.boundingbox.r24;
-r43 = sensorParams.boundingbox.r43;
+cornerx = sensorParams.boundingbox.cornerx;
+cornery = sensorParams.boundingbox.cornery;
  
 % Filter out object data
  objMeasurement = struct;
  objMeasurement.distance = [];
  objMeasurement.angle = [];
  objMeasurement.count = 0;
- count = 1;
-for i = 1:length(data.distance)
-    
-    theta = data.angle(i);
-    rvec = [r12(theta);r13(theta);r24(theta);r43(theta)];
-    rvec = rvec(rvec>0);
-    
-   if all(data.distance(i)<rvec)
-       
-       objMeasurement.distance(count) = data.distance(i);
-       objMeasurement.angle(count) = data.angle(i);
-       
-       count = count+1;
-       
-   end
-    
-end
+ x = data.distance .* cosd(data.angle);
+ y = data.distance .* sind(data.angle);
+ inds = inpolygon(x, y, cornerx, cornery);
+ inds = inds & data.distance~=0;
+ count = sum(inds);
+ objMeasurement.distance = data.distance(inds);
+ objMeasurement.angle = data.angle(inds);
+
 
 % Taking the mean of two object measurements in one scan
-if count > 1
+if count > 0
            
-       %objMeasurement.time = mean(data.time);
-       %objMeasurement.start = mean(data.start);
-       %objMeasurement.qual = mean(data.qual);
-       objMeasurement.angle = mean(objMeasurement.angle);
-       objMeasurement.distance = mean(objMeasurement.distance);
-       objMeasurement.count = count - 1;
+       objMeasurement.angle = deg2rad(meanangle(-objMeasurement.angle));
+       objMeasurement.distance = mean(objMeasurement.distance)/1000;
+       objMeasurement.count = count;
        
 end
        

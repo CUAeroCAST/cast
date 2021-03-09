@@ -1,4 +1,4 @@
-function [r12,r13,r24,r43] = sensor_Bounds(data)
+function [cornerx, cornery] = sensor_Bounds(data)
 
 % Get x,y from distance/angle
 rangelow = 1;
@@ -8,7 +8,7 @@ y = data.distance(rangelow:rangehigh) .* sind(data.angle(rangelow:rangehigh));
 
 %shortside = 1524;
 shortside = 1112.52; % 43.8 in
-tolerance = 50;
+tolerance = 100;
 
 % Find first corners
 pos=[x,y];
@@ -48,23 +48,8 @@ corner2_bound=corner2+bound_step*(delta_corner2_unit+bigpos_unit);
 corner3_bound=corner1_bound+(len-bound_step)*(bigpos_unit);
 corner4_bound=corner2_bound+(len-bound_step)*(bigpos_unit);
 
-% Creating lines that define the bounds in polar
-m12=(corner1_bound(2)-corner2_bound(2))/(corner1_bound(1)-corner2_bound(1));
-b12=corner1_bound(2)-m12*corner1_bound(1);
+cornerx = [corner1_bound(1), corner2_bound(1), corner4_bound(1), corner3_bound(1)];
+cornery = [corner1_bound(2), corner2_bound(2), corner4_bound(2), corner3_bound(2)];
 
-m13=(corner1_bound(2)-corner3_bound(2))/(corner1_bound(1)-corner3_bound(1));
-b13=corner1_bound(2)-m13*corner1_bound(1);
-
-m24=(corner2_bound(2)-corner4_bound(2))/(corner2_bound(1)-corner4_bound(1));
-b24=corner2_bound(2)-m24*corner2_bound(1);
-
-m43=(corner4_bound(2)-corner3_bound(2))/(corner4_bound(1)-corner3_bound(1));
-b43=corner4_bound(2)-m43*corner4_bound(1);
-
-% Turning the polar lines into function handles
-r12= @(theta) b12./(sind(theta)-m12*cosd(theta));
-r13= @(theta) b13./(sind(theta)-m13*cosd(theta));
-r24= @(theta) b24./(sind(theta)-m24*cosd(theta));
-r43= @(theta) b43./(sind(theta)-m43*cosd(theta));
 
 end
