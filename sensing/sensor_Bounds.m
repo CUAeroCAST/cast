@@ -8,12 +8,12 @@ y = data.distance(rangelow:rangehigh) .* sind(data.angle(rangelow:rangehigh));
 
 %shortside = 1524;
 shortside = 1112.52; % 43.8 in
-tolerance = 100;
+tolerance = 200;
 
 % Find first corners
 pos=[x,y];
 mags = vecnorm(pos,2,2);
-ind = find(mags == max(mags));
+ind = find(mags == max(mags),1);
 bigpos = [x(ind), y(ind)];
 deltapos = bigpos - pos;
 mags = vecnorm(deltapos,2,2);
