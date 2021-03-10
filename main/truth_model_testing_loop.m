@@ -33,7 +33,7 @@ estimatorParams.llsSeeding = false;
 estimatorParams.batchSamples = 0;
 estimatorParams.sensorCovariance = [0.025^2,0;0,deg2rad(0.45)^2]; %Range, bearing
 estimatorParams.qGain = 1; %Process noise gain for forward prediction
-estimatorParams.initState = [1.5;-1;0;0]; %Constant x-vel init state
+estimatorParams.initState = [1.5;0;-1;0]; %Constant x-vel init state
 
 %Sensor parameters
 sensorParams.samplingRate = 4e3;
@@ -140,7 +140,7 @@ end
 lam = lam_vals(estimatorParams.sensorCovariance);
 plotStruct.axis = [-.5 2 -1.25 1.25];
 %% NIS Loop
-n = 500;
+n = 200;
 N = 50;
 performEstimation = false;
 sensorRecordings = [];
@@ -187,8 +187,8 @@ for j = 1:n
             %Estimate the state
             meanReading = mean(sensorRecordings);
             meanTime = mean(timeRecordings);
-            Q = diag([.05 .05]);
-            [estimate,estimatorParams,H,ymeas,ypred] = ekf(meanReading, timeVec(i-1), estimatorParams, 0, 0);
+            Q = 0.01*eye(4);
+            [estimate,estimatorParams,H,ymeas,ypred] = ekf(meanReading, timeVec(i-1), estimatorParams, 0, 0,Q);
             midTimeIndex = ceil(length(timeRecordings)/2);
             midTime = timeRecordings(midTimeIndex);
             timeIndex = find(timeVec==midTime);
@@ -199,7 +199,7 @@ for j = 1:n
                 ex = xtruth-estimate.corrState;
                 R = estimatorParams.sensorCovariance;
                 S = H * Pk_minus * H' + R;
-                nees = ex'*estimate.Pcorr*ex;
+                nees = ex'*inv(estimate.Pcorr)*ex;
                 nis = ey'*inv(S)*ey;
                 nisSum(timeIndex) = nisSum(timeIndex)+nis;
                 neesSum(timeIndex) = neesSum(timeIndex)+nees;
@@ -248,5 +248,4 @@ end
 %Use these variables for each trial
 %xtrue, timeVec, xp,xc,Pp,Pc, sensorReadings
 alpha = 0.05;
-test_NIS( nisVec, tVec, N, alpha )
-test_NEES( neesVec, tVec, N, alpha )
+test_consistancy( neesVec, nisVec, tVec, N, alpha )

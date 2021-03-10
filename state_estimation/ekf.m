@@ -1,14 +1,11 @@
-function [estimate,estimatorParams,H,yk,y_pred] = ekf(sensorReading,time,estimatorParams,xs,ys)
+function [estimate,estimatorParams,H,yk,y_pred] = ekf(sensorReading,time,estimatorParams,xs,ys,Q)
 yk = [sensorReading(2);sensorReading(1)];
-% figure(2)
-% polarplot(sensorReading(2),sensorReading(1),'*')
-% hold on
 deltat = time - estimatorParams.currentTime;
 estimatorParams.currentTime = time;
 xk = estimatorParams.filter.State;
 Pk = estimatorParams.filter.StateCovariance;
 % Q = estimatorParams.filter.ProcessNoise(deltat);
-Q = .01*eye(4);
+%Q = .01*eye(4);%+[0 0 0 0;0 0 0 0;0 0 .04 0;0 0 0 .04];
 R = estimatorParams.sensorCovariance;
 A = [0 0 1 0;0 0 0 1;0 0 0 0;0 0 0 0];
 Omega = [deltat^2/2 0;0 deltat^2/2;deltat 0; 0 deltat];
