@@ -51,5 +51,4 @@ corner4_bound=corner2_bound+(len-bound_step)*(bigpos_unit);
 cornerx = [corner1_bound(1), corner2_bound(1), corner4_bound(1), corner3_bound(1)];
 cornery = [corner1_bound(2), corner2_bound(2), corner4_bound(2), corner3_bound(2)];
 
-
 end
