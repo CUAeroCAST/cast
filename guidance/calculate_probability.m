@@ -18,14 +18,14 @@ function [pdf,probability,sigx,sigy] = calculate_probability(estimate)
 estimate.Pcorr = estimate.Ppred;
 estimate.corrState = estimate.predState;
 %%%%%%%%%%%%%%%%%%%
-mu = [estimate.corrState(1) estimate.corrState(3)];
-sigma = [estimate.Pcorr(1,1) estimate.Pcorr(1,3);estimate.Pcorr(1,3) estimate.Pcorr(3,3)];
+mu = [estimate.corrState(1) estimate.corrState(2)];
+sigma = [estimate.Pcorr(1,1) estimate.Pcorr(1,2);estimate.Pcorr(1,2) estimate.Pcorr(2,2)];
 rSensor = .1011;
 probability = mvncdf([-rSensor -rSensor],[rSensor rSensor],mu,sigma);
 if probability>.25
     Pcorr = sqrt(estimate.Pcorr);
     xrange=estimate.corrState(1)-3*Pcorr(1,1):1e-1:estimate.corrState(1)+3*Pcorr(1,1);
-    yrange=estimate.corrState(3)-3*Pcorr(3,3):1e-1:estimate.corrState(3)+3*Pcorr(3,3);
+    yrange=estimate.corrState(2)-3*Pcorr(2,2):1e-1:estimate.corrState(2)+3*Pcorr(2,2);
     % Get the mean and sigma for the pdf
     % Calculate the pdf
     % Source: https://www.mathworks.com/help/stats/multivariate-normal-distribution.html
@@ -42,7 +42,7 @@ if probability>.25
     % If the satellie is not in the range of the pdf, probabilty is 0, else
     % calculate the probability
     sigx = [estimate.corrState(1)-2*Pcorr(1,1) estimate.corrState(1)+2*Pcorr(1,1)];
-    sigy = [estimate.corrState(3)-2*Pcorr(3,3) estimate.corrState(3)+2*Pcorr(3,3)];
+    sigy = [estimate.corrState(2)-2*Pcorr(2,2) estimate.corrState(2)+2*Pcorr(2,2)];
 else
     sigx = 0;
     sigy = 0;
