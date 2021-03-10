@@ -14,6 +14,7 @@ K = Pm*(H')*inv(H*Pm*(H') + R);%Consider replacing with backslash
 y_hat = [sqrt((xm(1)-xs)^2+(xm(2)-ys)^2);
          atan2((xm(2)-ys),(xm(1)-xs))];
 %Correction algo
-xp = xm + K*(sensorReading - y_hat);
+diffs = sensorReading - y_hat;
+xp = xm + K*(diffs);
 Pp = (eye(4) - K*H)*Pm*(eye(4)-K*H)' + K*R*K';
 end
