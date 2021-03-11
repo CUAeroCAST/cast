@@ -10,7 +10,7 @@ writematrix(["time(s)", "distance(mm)", "angle(rad)"], filename);
 sensorParams = struct;
 sensorParams.scanMode = "express";
 sensorParams.readsize = 84;
-sensorParams.portstr = "/dev/tty.usbserial-0001";
+sensorParams.portstr = "COM3";
 sensorParams.sensorObj = serial_Sensor(sensorParams);
 cleanup = onCleanup(@()clean_up(sensorParams.sensorObj));
 

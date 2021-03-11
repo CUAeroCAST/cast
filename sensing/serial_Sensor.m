@@ -21,6 +21,7 @@ function sensorObj = serial_Sensor(sensorParams)
   else
    sensorObj = serialport(portstr, 115200, "ByteOrder", "big-endian");
   end
+ setDTR(sensorObj, false);
  sensorObj.UserData = struct('dataReady', false, 'scan', nan, 'raw', nan);
  flush(sensorObj)
 
