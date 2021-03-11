@@ -3,7 +3,7 @@ function [] = start_Motor(sensorObj)
 %   Detailed explanation goes here
 
 % Start Motor: a5f0029402c1
-writestr = [0xA5; 0xF0; 0x02; 0x94; 0x02];
+writestr = [0xA5; 0xF0; 0x02; 0xFF; 0x03];
 writestr = [writestr; rplidar_checksum(writestr)];
 
 if sensorObj.ByteOrder == "little-endian"

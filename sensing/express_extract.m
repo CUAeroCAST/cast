@@ -4,7 +4,7 @@ close all
 
 blah()
 function blah()
-filename = "expressdata--empty4.txt";
+filename = "expressdata.txt";
 writematrix(["distance","angle"], filename);
 
 sensorParams = struct;

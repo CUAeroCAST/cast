@@ -4,13 +4,14 @@ close all
 importCast;
 SPD = 24 * 3600;
 
-filename = "livedata--1-5m--267mm-offset--bigmiss--2ndbulb--march8.txt";
+filename = "nothing.txt";
+
 writematrix(["time(s)", "distance(mm)", "angle(rad)"], filename);
 
 sensorParams = struct;
 sensorParams.scanMode = "express";
 sensorParams.readsize = 84;
-sensorParams.portstr = "COM3";
+sensorParams.portstr = "/dev/tty.usbserial-0001";
 sensorParams.sensorObj = serial_Sensor(sensorParams);
 cleanup = onCleanup(@()clean_up(sensorParams.sensorObj));
 
@@ -34,7 +35,7 @@ first_scan = struct;
 first_scan.distance = [];
 first_scan.angle = [];
 
-while length(first_scan.distance) < 800
+while length(first_scan.distance) < 400
  pause(1e-6)
  if sensorParams.sensorObj.UserData.dataReady
   first_scan.distance = [first_scan.distance; sensorParams.sensorObj.UserData.scan.distance'];
@@ -91,7 +92,7 @@ end
 scatter(sensorParams.boundingbox.cornerx, sensorParams.boundingbox.cornery)
 hold on
 scatter(r.*cos(th), r.*sin(th))
-scatter(first_scan.distance.*cosd(first_scan.angle), first_scan.distance.*sind(first_scan.angle))
+scatter(first_scan.distance.*cosd(-first_scan.angle), first_scan.distance.*sind(-first_scan.angle))
 figure
 plot(d(:,1), d(:,2), sigsUp(:,1), sigsUp(:,2), sigsDo(:,1), sigsDo(:,2))
 datum = [t',r',th'];
