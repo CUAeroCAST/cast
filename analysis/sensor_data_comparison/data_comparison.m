@@ -11,6 +11,7 @@ data1(:,3) = deg2rad(data1(:,3)); %convert to radians
 data1_live(:,3) = deg2rad(data1_live(:,3)); %convert to radians
 
 %Averging generated data
+sig1_t_gen = std(data1(:,1)); %Grab before averaging
 data1(:,1) = round(data1(:,1),2);
 [C,~,idx] = unique(data1(:,1),'stable');
 data1_avg(:,1) = C;
@@ -36,10 +37,13 @@ xlim([-0.1,1.5])
 ylim([-0.1,0.1])
 
 %Statistics
-sig1_gen = rad2deg(std(data1_avg(:,3)));
-sig1_live = rad2deg(std(data1_live(:,3)));
-fprintf("Generated Data Headon Angle std = %.2f deg\n", sig1_gen);
-fprintf("Live Data Headon Angle std = %.2f deg\n", sig1_live);
+sig1_y_gen = std(y1_gen);
+sig1_y_live = std(y1_live);
+sig1_t_live = std(data1_live(:,1));
+fprintf("Generated Data Headon y std = %.4f m\n", sig1_y_gen);
+fprintf("Live Data Headon y std = %.4f m\n", sig1_y_live);
+fprintf("Generated Data Headon t std = %.4f s\n", sig1_t_gen);
+fprintf("Live Data Headon t std = %.4f s\n", sig1_t_live);
 
 %% Near Miss
 load('nearMiss.mat')
@@ -48,6 +52,7 @@ data2_live(:,1) = data2_live(:,1) - data2_live(1,1);
 data2_live(:,2) = data2_live(:,2)/1000; %covert to meters
 data2(:,3) = deg2rad(data2(:,3)); %convert to radians
 
+sig2_t_gen = std(data2(:,1)); %Grab before averaging
 data2(:,1) = round(data2(:,1),2);
 [C,~,idx] = unique(data2(:,1),'stable');
 data2_avg(:,1) = C;
@@ -73,10 +78,13 @@ xlim([-0.1,1.5])
 ylim([-0.1,0.25])
 
 %statistics
-sig2_gen = rad2deg(std(data2_avg(:,3)));
-sig2_live = rad2deg(std(data2_live(:,3)));
-fprintf("Generated Data Near Miss Angle std = %.2f deg\n", sig2_gen);
-fprintf("Live Data Near Miss Angle std = %.2f deg\n", sig2_live);
+sig2_y_gen = std(y2_gen);
+sig2_y_live = std(y2_live);
+sig2_t_live = std(data2_live(:,1));
+fprintf("Generated Data Near Miss y std = %.4f m\n", sig2_y_gen);
+fprintf("Live Data Near Miss y std = %.4f m\n", sig2_y_live);
+fprintf("Generated Data Near Miss t std = %.4f s\n", sig2_t_gen);
+fprintf("Live Data Near Miss t std = %.4f s\n", sig2_t_live);
 
 %% Clear Miss
 load('clearMiss.mat')
@@ -85,6 +93,7 @@ data3_live(:,1) = data3_live(:,1) - data3_live(1,1);
 data3_live(:,2) = data3_live(:,2)/1000; %covert to meters
 data3(:,3) = deg2rad(data3(:,3)); %convert to radians
 
+sig3_t_gen = std(data3(:,1)); %Grab before averaging
 data3(:,1) = round(data3(:,1),2);
 [C,~,idx] = unique(data3(:,1),'stable');
 data3_avg(:,1) = C;
@@ -110,7 +119,10 @@ xlim([-0.1,1.5])
 ylim([-0.1,0.5])
 
 %Statistics
-sig3_gen = rad2deg(std(data3_avg(:,3)));
-sig3_live = rad2deg(std(data3_live(:,3)));
-fprintf("Generated Data Clear Miss Angle std = %.2f deg\n", sig3_gen);
-fprintf("Live Data Clear Miss Angle std = %.2f deg\n", sig3_live);
+sig3_y_gen = std(y3_gen);
+sig3_y_live = std(y3_live);
+sig3_t_live = std(data3_live(:,1));
+fprintf("Generated Data Clear Miss y std = %.4f m\n", sig3_y_gen);
+fprintf("Live Data Clear Miss y std = %.4f m\n", sig3_y_live);
+fprintf("Generated Data Clear Miss t std = %.4f s\n", sig3_t_gen);
+fprintf("Live Data Clear Miss t std = %.4f s\n", sig3_t_live);
