@@ -24,8 +24,8 @@ rSensor = .1011;
 probability = mvncdf([-rSensor -rSensor],[rSensor rSensor],mu,sigma);
 if probability>.25
     Pcorr = sqrt(estimate.Pcorr);
-    xrange=estimate.corrState(1)-3*Pcorr(1,1):1e-1:estimate.corrState(1)+3*Pcorr(1,1);
-    yrange=estimate.corrState(3)-3*Pcorr(3,3):1e-1:estimate.corrState(3)+3*Pcorr(3,3);
+    xrange=estimate.corrState(1)-3*Pcorr(1,1):1e-2:estimate.corrState(1)+3*Pcorr(1,1);
+    yrange=estimate.corrState(3)-3*Pcorr(3,3):1e-2:estimate.corrState(3)+3*Pcorr(3,3);
     % Get the mean and sigma for the pdf
     % Calculate the pdf
     % Source: https://www.mathworks.com/help/stats/multivariate-normal-distribution.html

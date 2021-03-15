@@ -1,6 +1,15 @@
 %% HOUSEKEEPING
-clear; clc; close all
+clearvars -except burnTable accelTable timeTable positionTable aChief chiefOrbit tChief; 
+clc; close all
 importCast;
+addpath('../../../LookupTables')    %This needs to change to where people keep their tables
+% load('burnTable.mat');
+% load('positionTable.mat');
+% load('timeTable.mat');
+% load('accelTable.mat');
+% load('aChief.mat');
+% load('chiefOrbit.mat');
+% load('tChief.mat');
 
 %% CONFIG
 
@@ -198,11 +207,15 @@ if ~moving
     chiefState = [0;0;7578;7.25256299066873;0;0];
     muE = 398600;
     tstep = timeVec(2)-timeVec(1);
-    [maneuver,tAfter,stateAfter] = make_maneuver(collisionEstimate,chiefState,...
-        1.5-time,length(timeVec)-i);
+    maneuver = make_maneuver(collisionEstimate,chiefState,...
+        1.5-time,length(timeVec)-i,burnTable,positionTable,timeTable);
     if maneuver
-        [tChief, chiefOrbit] = ode45(@(t, y) orbit_prop(t, y, muE), tAfter, chiefState);
+        direction = round(atand(maneuver(2)/maneuver(1)));
+        tAfter = timeTable{maneuver(3),direction};
+        accel = accelTable{maneuver(3),direction};
+        stateAfter = burnTable{maneuver(3),direction};
         [tAfter,maneuverPos] = convert_2d(tAfter,chiefOrbit,stateAfter(:,1:6));
+        [tAfter,maneuverAcc] = convert_2d_accel(tAfter,chiefOrbit,stateAfter(:,1:6),aChief,accel);
         divideTimes = tAfter(end)/(timeVec(end)-time);
         tAfter = tAfter/divideTimes;
         tAfter = tAfter+time;
@@ -223,19 +236,28 @@ end
  %recv = run_io(maneuver, delay);
  
  % Visualization
-%  if ~(isnan(estimate.corrState(1))) && (plotCorrCount >= plotStruct.interval)%plot if count == 0, increment until reaches plotInterval, then reset to 0
-%      plotStruct = update_live_plot(plotStruct,estimate,collisionEstimate,recv);
-%      plotCorrCount = 0; %reset count so at least plotStruct.interval steps have to pass before another plot update
-%      plotCount = 1;%reset count so plotCount.interval iterations need to pass before another update
-%  elseif plotCount == 0 %plotCount has reached and count has been set to 0, update plot
-%      plotCount = plotCount + 1; 
-%      plotStruct = update_live_plot(plotStruct,estimate,collisionEstimate,recv);
-%  elseif plotCount == plotStruct.interval 
-%      plotCount = 0; %reset to 0 so that plot can update next iteration
-%  else
-%      plotCount = plotCount+1; 
-%  end
-% plotCorrCount = plotCorrCount + 1; %increment no matter what
+ if moving
+     plotIndex = find(time<tMove,1);
+     if isempty(plotIndex)
+         recv.state = prevState;
+     else
+         prevState = movementPos(:,plotIndex);
+         recv.state = movementPos(:,plotIndex);
+     end
+ end
+ if ~(isnan(estimate.corrState(1))) && (plotCorrCount >= plotStruct.interval)%plot if count == 0, increment until reaches plotInterval, then reset to 0
+     plotStruct = update_live_plot(plotStruct,estimate,collisionEstimate,recv);
+     plotCorrCount = 0; %reset count so at least plotStruct.interval steps have to pass before another plot update
+     plotCount = 1;%reset count so plotCount.interval iterations need to pass before another update
+ elseif plotCount == 0 %plotCount has reached and count has been set to 0, update plot
+     plotCount = plotCount + 1; 
+     plotStruct = update_live_plot(plotStruct,estimate,collisionEstimate,recv);
+ elseif plotCount == plotStruct.interval 
+     plotCount = 0; %reset to 0 so that plot can update next iteration
+ else
+     plotCount = plotCount+1; 
+ end
+plotCorrCount = plotCorrCount + 1; %increment no matter what
 
 %Additonal KF Plotting
 % t = [t, time];
