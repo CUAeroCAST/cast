@@ -1,4 +1,4 @@
-function ydot = orbit_prop_maneuver(t, y, mu, direction, burnTime)
+function [ydot vdot] = orbit_prop_maneuver(t, y, mu, direction, burnTime)
 % propogates the undisturbed two body equation
  r = y(1:3);
  v = y(4:6);
@@ -9,6 +9,9 @@ function ydot = orbit_prop_maneuver(t, y, mu, direction, burnTime)
  Tslope = -5.29496953160763;
 %  direction = [direction 0];
  thrustUnitVec = direction/norm(direction);
+ if isnan(thrustUnitVec)
+     thrustUnitVec = [0;0;0];
+ end
  rdot = v;
  if t>burnTime
      vdot = -mu*r/norm(r)^3;
@@ -17,6 +20,7 @@ function ydot = orbit_prop_maneuver(t, y, mu, direction, burnTime)
      mdot = T/(g0*Isp);
      vdot = (-mu*r/norm(r)^3)+(T/m)*thrustUnitVec;
  end
+ 
 
  ydot = [rdot; vdot; mdot];
 end
