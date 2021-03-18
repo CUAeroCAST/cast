@@ -29,7 +29,7 @@ estimatorParams.filter.ProcessNoise = @(dt) 0.01*eye(4); %constant process noise
 estimatorParams.filter.StateCovariance = eye(4); %Initial estimate covariance
 estimatorParams.filter.STM = @(dt) eye(4) + [0,0,1,0;0,0,0,1;0,0,0,0;0,0,0,0]*dt;
 estimatorParams.filter.State = [1.5;0;-1;0];
-collisionEstimate(1) = struct("collisionTime", nan, "predState", nan, "Ppred", nan);
+
 
 first_scan = struct;
 first_scan.distance = [];

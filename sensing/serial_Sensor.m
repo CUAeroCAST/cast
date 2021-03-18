@@ -1,26 +1,7 @@
-
-%clc
-%clear
-%close all
-
-% Get health status: a552
-% Stop data: a525
-% Set motor: a5f0
-% Start scan:  a520
-
-% Start Motor: a5f0029402c1
-% Stop Motor:  a5f002000057
-
 function sensorObj = serial_Sensor(sensorParams)
 
  portstr = sensorParams.portstr;
  readsize = sensorParams.readsize;
- [~, ~, endian] = computer;
-  if endian == 'L'
-   sensorObj = serialport(portstr,115200, "ByteOrder", "little-endian");
-  else
-   sensorObj = serialport(portstr, 115200, "ByteOrder", "big-endian");
-  end
  setDTR(sensorObj, false);
  sensorObj.UserData = struct('dataReady', false, 'scan', nan, 'raw', nan);
  flush(sensorObj)

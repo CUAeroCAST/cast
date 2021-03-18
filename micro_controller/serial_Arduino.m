@@ -1,9 +1,9 @@
 
 
-function arduinoObj = serial_Arduino(sensorParams)
+function arduinoObj = serial_Arduino(arduinoParams)
 
- portstr = sensorParams.portstr;
- readsize = sensorParams.readsize;
+ portstr = arduinoParams.portstr;
+ readsize = arduinoParams.readsize;
  [~, ~, endian] = computer;
 %   if endian == 'L'
 %    arduinoObj = serialport(portstr,115200, "ByteOrder", "little-endian");
@@ -16,7 +16,7 @@ function arduinoObj = serial_Arduino(sensorParams)
 
  %% INTERRUPT
  
- function arduinoInterrupt(arduinoObj,info)  
+ function arduinoInterrupt(arduinoObj, info)  
   if ~arduinoObj.UserData.dataReady
    xdata = read(arduinoObj, 1, "int16");
    ydata = read(arduinoObj, 1, "int16");

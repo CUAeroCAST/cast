@@ -1,4 +1,4 @@
-function [tRef,relScaledHill] = convert_2d(tRef,refOrbit,conjOrbit)
+function relScaledHill = convert_2d(refOrbit, conjOrbit)
 % Convert 3D orbit to 2D testbed plane
 % This function converts the state vectors of two orbits in earth cartesian
 % frame to a relitive hill frame on the 2D testbed
@@ -14,6 +14,15 @@ function [tRef,relScaledHill] = convert_2d(tRef,refOrbit,conjOrbit)
 % Get normal vector to collision plane and location of collision
 planeNormalVec = cross(refOrbit(1,4:6),conjOrbit(2,4:6));
 colPoint = [refOrbit(1,1:3) 0 0 0]; 
+len = length(refOrbit);
+ref2colPoint = zeros(len, 6);
+conj2colPoint = zeros(len, 6);
+ref2dPos = zeros(len, 3);
+conj2dPos = zeros(len, 3);
+ref2dVel = zeros(len, 3);
+conj2dVel = zeros(len, 3);
+relScaledHill = zeros(len, 4);
+
 % Projecting onto 2D plane
 for j = 1:length(refOrbit)
     % Get state vectors relitive to collision point
@@ -38,7 +47,7 @@ conjScaled = conj2d/222;
 % Get relitive position
 relScaledCart = conjScaled-refScaled;
 % Convert to the 2D Hill frame
-for k = 1:length(tRef)
+for k = 1:len
     % Get Hill frame unit vectors
     scaledUnitAlong = refScaled(k,3:4)/norm(refScaled(k,3:4));
     along3d = [scaledUnitAlong 0];

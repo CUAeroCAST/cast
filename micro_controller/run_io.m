@@ -1,7 +1,12 @@
 % This function handles serial output of the maneuver to the microcontroller.
-function recv = run_io(maneuver, delay)
- %fprintf('run_io is not implemented\n')
- send_delay = delay;
- send_maneuver = maneuver;
- recv = dummy_run_io(maneuver, delay, 1, 0);
+function [xs, ys, arduinoParams] = run_io(xpoly, ypoly, arduinoParams, estimatorParams)
+ if arduinoParams.arduinoObj.UserData.dataReady
+  xs = arduinoParams.arduinoObj.UserData.data.xpos;
+  ys = arduinoParams.arduinoObj.UserData.data.ypos;
+  arduinoParams.arduinoObj.UserData.dataReady = false;
+ else
+  xs = estimatorParams.xs;
+  ys = estimatorParams.ys;
+ end
+ send_commands(arduinoParams.arduinoObj, xpoly(2), xpoly(1), ypoly(2), ypoly(1), arduinoParams.xStop, arduinoParams.yStop);
 end

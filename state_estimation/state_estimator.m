@@ -13,8 +13,8 @@ function [estimate, estimatorParams] = state_estimator(sensorReading, time,...
  [estimate.predState, estimate.Ppred] = predict_ekf(estimatorParams.filter, stepSize);
  if(~any(isnan(sensorReading)))
      %Sensor location
-     xs = 0;
-     ys = 0;
+     xs = estimatorParams.xs;
+     ys = estimatorParams.ys;
     [estimate.corrState, estimate.Pcorr] = correct_ekf(estimatorParams.filter,sensorReading,estimate,xs,ys);
     %Update filter from correction
     estimatorParams.filter.StateCovariance = estimate.Pcorr;
