@@ -1,13 +1,9 @@
 
-int xEA_minus = 9;
-int xEA_plus = 8;
-int xEB_minus = 7;
-int xEB_plus = 6;
+int xEA_plus = 32; //C5
+int xEB_plus = 30; //C7
 
-int yEA_minus = 2;
-int yEA_plus = 3;
-int yEB_minus = 4;
-int yEB_plus = 5;
+int yEA_plus = 3; //E5
+int yEB_plus = 5; //E3
 
 int xaState;
 int xaLastState;
@@ -16,17 +12,17 @@ int yaLastState;
 int xbState;
 int ybState;
 
-int xDriverPUL = 10;
-int xDriverDIR = 11;
+int xDriverPUL = 24; //A2
+int xDriverDIR = 26; //A4
 
-int yDriverPUL = 12;
-int yDriverDIR = 13;
+int yDriverPUL = 9; //H6
+int yDriverDIR = 8; //H5
 
-int xlswitch0 = 53;
-int ylswitch0 = 50;
+int xlswitch0 = 50;
+int ylswitch0 = 52;
 
 bool xDirection = true; //true indicates positive direction movement
-bool yDirection = true; 
+bool yDirection = true;
 
 float xPos;
 float yPos;
@@ -40,30 +36,6 @@ int ycounter = 0;
 int pulseDelay = 70;
 
 bool testComplete = false;
-
-float xa4 = -46.4830629783752;
-float xa3 = 256.692660762877;
-float xa2 = -530.959515178541;
-float xa1 = 486.616060761667;
-float xa0 = -166.533812886303;
-
-float ya4 = 6.19682228638927;
-float ya3 = -34.2215871056436;
-float ya2 = 70.8022756878349;
-float ya1 = -64.9124271668663;
-float ya0 = 22.2246250399582;
-
-//float vxa4 = 8.73902649480158;
-//float vxa3 = -48.9521600754277;
-//float vxa2 = 102.734082857076;
-//float vxa1 = -95.7351150133154;
-//float vxa0 = 33.4139661600938;
-//
-//float vya4 = -1.16048543803213;
-//float vya3 = 6.50166359753673;
-//float vya2 = -13.6471919249566;
-//float vya1 = 12.7198212155205;
-//float vya0 = -4.44043197560714;
 
 float vxa4 = 0;
 float vxa3 = 0;
@@ -79,6 +51,8 @@ float vya1 = .001;
 
 float xStop = 0.3;
 float yStop = 0.3;
+
+float absBounds = 0.4;
 
 unsigned long startTime;
 unsigned long currentMicros;
@@ -112,11 +86,11 @@ void setup() {
   pinMode(xEA_plus, INPUT);
   pinMode(xEB_plus, INPUT);
   pinMode(yEA_plus, INPUT);
-  pinMode(yEB_plus, INPUT);  
+  pinMode(yEB_plus, INPUT);
 
   xaLastState = digitalRead(xEA_plus);
   yaLastState = digitalRead(yEA_plus);
-  
+
   ////////////////// TIMER SETUPS ////////////////////////
   ////// TIMER3 Corresponds to x pulses ///////
   ////// TIMER4 Corresponds to y pulses ///////
@@ -132,7 +106,7 @@ void setup() {
    // turn on CTC mode
    TCCR1B |= (1 << WGM12);
    // Set CS12 and CS10 bits for 1024 prescaler
-   TCCR1B |= (1 << CS12) | (1 << CS10);  
+   TCCR1B |= (1 << CS12) | (1 << CS10);
    // enable timer compare interrupt
    TIMSK1 |= (0 << OCIE1A);
 
@@ -146,7 +120,7 @@ void setup() {
   // turn on CTC mode
   TCCR3B |= (1 << WGM32);
   // Set CS21 bit for no prescaler
-  TCCR3B |= (1 << CS30);  
+  TCCR3B |= (1 << CS30);
   // enable timer compare interrupt
   //TIMSK3 |= (1 << OCIE5A);
 
@@ -159,12 +133,12 @@ void setup() {
   // turn on CTC mode
   TCCR4B |= (1 << WGM42);
   // Set CS21 bit for 1024 prescaler
-  TCCR4B |= (1 << CS40);  
+  TCCR4B |= (1 << CS40);
   // enable timer compare interrupt
   //TIMSK5 |= (1 << OCIE5A);
 
     //////////////////// Move to home then move to middle to start test /////////////////////
- // homing();
+    homing();
     testRange();
     sei();
 }
@@ -189,50 +163,58 @@ void loop() {
     vya0 = readInFloat();
     vya1 = readInFloat();
     xStop = readInFloat();
-    float yStop = readInFloat();
+    yStop = readInFloat();
+
+    // Adjust bounds to make sure they fall within the maximum
+    if (xStop>absBounds){
+      xStop = absBounds;
+    }
+    if (yStop>absBounds){
+      yStop = absBounds;
+    }   
     // START TESTING
     startTime = micros(); //Time that maneuver starts
     TIMSK1 |= (1 << OCIE1A); // enable interrupt for thrust curve
    }
-   
-   
+
+
  ////////////////////////////// GET ENCODER FEEDBACK ////////////////////////////////////
-   xaState = (PINH & _BV (5)) == 0; // digitalRead (8);
-   xbState = (PINH & _BV (3)) == 0; // digitalRead (6);
+   xaState = (PINC & _BV (5)) == 0; // digitalRead (8);
+   xbState = (PINC & _BV (7)) == 0; // digitalRead (6);
 
    yaState = (PINE & _BV (5)) == 0; // digitalRead (3);
    ybState = (PINE & _BV (3)) == 0; // digitalRead (5);
-   
+
    // If the previous and the current state of the outputA are different, that means a Pulse has occured
-   if (xaState != xaLastState){     
+   if (xaState != xaLastState){
      // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
-     if (xbState != xaState) { 
+     if (xbState != xaState) {
        xcounter ++; //cw towards is positive
      } else {
        xcounter --; //ccw away is negative
      }
       xPos = float(xcounter)*0.0000705;
-   } 
-   
+   }
+
    // If the previous and the current state of the outputA are different, that means a Pulse has occured
-   if (yaState != yaLastState){     
+   if (yaState != yaLastState){
      // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
-     if (ybState != yaState) { 
+     if (ybState != yaState) {
        ycounter ++; //cw towards is positive
      } else {
        ycounter --; //ccw away is negative
      }
      yPos = float(ycounter)*0.0000704995;
-   } 
+   }
    xaLastState = xaState; // Updates the previous state of the outputA with the current state
    yaLastState = yaState; // Updates the previous state of the outputA with the current state
  /////////////////////////////////////////////////////////////////////////////////////////////
 
   ////////////// Position Check ////////////////////
    if (abs(xPos-.5)>xStop | abs(yPos-.5)>yStop){ //Stop gantry if position is +- .4 meters from center
-    TIMSK5 |= (0 << OCIE5A);    
-    TIMSK3 |= (0 << OCIE3A);  
-    TIMSK4 |= (0 << OCIE4A);  
+    TIMSK5 |= (0 << OCIE5A);
+    TIMSK3 |= (0 << OCIE3A);
+    TIMSK4 |= (0 << OCIE4A);
     cli(); //disable interrupts
    }
 }
@@ -241,13 +223,13 @@ void loop() {
 ///////////////////// ISR Timer 3 /////////////////////////////
 // Toggle the x pulse pin //
 ISR(TIMER3_COMPA_vect){ //change to timer3 when done testing
-  PORTB ^= _BV (4);
+  PORTA ^= _BV (2);
 }
 
 ///////////////////// ISR Timer 4 /////////////////////////////
 // Toggle the y pulse pin //
 ISR(TIMER4_COMPA_vect){ //change to timer4 when done testing
-  PORTB ^= _BV (6);
+  PORTH ^= _BV (6);
 }
 
 
@@ -257,31 +239,31 @@ ISR(TIMER4_COMPA_vect){ //change to timer4 when done testing
 // Set compare registers //
 // Serial write encoder positions //
 // Enable interrupts //
-ISR(TIMER1_COMPA_vect){ 
-  TIMSK3 |= (0 << OCIE3A);  
-  TIMSK4 |= (0 << OCIE4A);  
+ISR(TIMER1_COMPA_vect){
+  TIMSK3 |= (0 << OCIE3A);
+  TIMSK4 |= (0 << OCIE4A);
   cli(); //disable interrupts
-  
+
   currentMicros = micros();
   float currentTime = (float(currentMicros - startTime)) / float(pow(10,6)); //convert to seconds
   xpulseDelay = find_speedX(vxa0,vxa1,vxa2,vxa3,vxa4,currentTime);
   ypulseDelay = find_speedY(vya0,vya1,vya2,vya3,vya4,currentTime);
 
-  
+
   OCR3A = xpulseDelay*16 - 1;
   OCR4A = ypulseDelay*16 - 1;
 
   // encoder output
   Serial.write((xcounter & 0xFF));
   Serial.write((xcounter>>8 & 0xFF));
-  
+
   Serial.write((ycounter & 0xFF));
   Serial.write((ycounter>>8 & 0xFF));
 
   TIMSK3 |= (1 << OCIE3A);
   TIMSK4 |= (1 << OCIE4A);
   sei();//allow interrupts
-  
+
 }
 
 long find_speedY(float a0,float a1,float a2,float a3,float a4,float currentTime){
@@ -289,7 +271,7 @@ long find_speedY(float a0,float a1,float a2,float a3,float a4,float currentTime)
   // change direction based on result
   if((vel>0)!=yDirection){
     //flip direction pin, if needed add delay
-    PORTB ^= _BV (7);
+    PORTH ^= _BV (5);
     yDirection = !yDirection;
   }
   long pulseDelay = (1.36/(abs(vel))); //1.36 is based on empirical calculation relating motor pulses to distance traveled
@@ -304,7 +286,7 @@ long find_speedX(float a0,float a1,float a2,float a3,float a4,float currentTime)
   // change direction based on result
   if((vel>0)!=xDirection){
     //flip direction pin, if needed add delay
-    PORTB ^= _BV (5);
+    PORTA ^= _BV (4);
     xDirection = !xDirection;
   }
   long pulseDelay = (1.36/(abs(vel))); //1.4959 is based on empirical calculation relating motor pulses to distance traveled
@@ -358,44 +340,44 @@ void testRange(){
   digitalWrite(xDriverDIR,LOW); //switch dir
   digitalWrite(yDriverDIR,LOW);
   delayMicroseconds(pulseDelay*2);
-  
+
   OCR3A = pulseDelay*16 - 1;
   OCR4A = pulseDelay*16 - 1;
   TIMSK3 |= (1 << OCIE3A);
   TIMSK4 |= (1 << OCIE4A);
   sei();
-  
+
   while(xPos<.5 || yPos<.5){
  ////////////////////////////// GET ENCODER FEEDBACK ////////////////////////////////////
 //   Serial.print(xPos);
 //   Serial.write("\n");
-   xaState = (PINH & _BV (5)) == 0; // digitalRead (8);
-   xbState = (PINH & _BV (3)) == 0; // digitalRead (6);
+   xaState = (PINC & _BV (5)) == 0; // digitalRead (8);
+   xbState = (PINC & _BV (7)) == 0; // digitalRead (6);
 
    yaState = (PINE & _BV (5)) == 0; // digitalRead (3);
    ybState = (PINE & _BV (3)) == 0; // digitalRead (5);
-   
+
    // If the previous and the current state of the outputA are different, that means a Pulse has occured
-   if (xaState != xaLastState){     
+   if (xaState != xaLastState){
      // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
-     if (xbState != xaState) { 
+     if (xbState != xaState) {
        xcounter ++; //cw towards is positive
      } else {
        xcounter --; //ccw away is negative
      }
       xPos = float(xcounter)*0.0000705;
-   } 
-   
+   }
+
    // If the previous and the current state of the outputA are different, that means a Pulse has occured
-   if (yaState != yaLastState){     
+   if (yaState != yaLastState){
      // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
-     if (ybState != yaState) { 
+     if (ybState != yaState) {
        ycounter ++; //cw towards is positive
      } else {
        ycounter --; //ccw away is negative
      }
      yPos = float(ycounter)*0.0000704995;
-   } 
+   }
    xaLastState = xaState; // Updates the previous state of the outputA with the current state
    yaLastState = yaState; // Updates the previous state of the outputA with the current state
  /////////////////////////////////////////////////////////////////////////////////////////////
@@ -412,57 +394,6 @@ void testRange(){
   TIMSK4 = 0x00; // turn off interrupt
   cli();           // disable all interrupts
 }
-
-//
-//void testRange(){//FIX
-//  digitalWrite(xDriverDIR,LOW); //switch dir
-//  digitalWrite(yDriverDIR,LOW);
-//  delayMicroseconds(pulseDelay*2);
-//  float ratio = 0.00000021819;
-//  while(xPos<.5 || yPos<.5){
-//    if(xPos<.5){
-//      digitalWrite(xDriverPUL,HIGH);
-//      delayMicroseconds(pulseDelay);
-//      digitalWrite(xDriverPUL,LOW);
-//      delayMicroseconds(pulseDelay);
-//      xaState = (PINH & _BV (5)) == 0; // digitalRead (8);
-//      xbState = (PINH & _BV (3)) == 0; // digitalRead (6);
-//      // If the previous and the current state of the outputA are different, that means a Pulse has occured
-//      if (xaState != xaLastState){
-//        // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
-//        if (digitalRead(xEB_plus) != xaState) {
-//          xcounter ++; //cw
-//        } 
-//        else{
-//          xcounter --; //ccw
-//        }
-//      xPos = float(xcounter)*0.0000705;
-//      }
-//      xaLastState = xaState; // Updates the previous state of the outputA with the current state
-//    }
-// 
-//  if(yPos<.5){
-//      digitalWrite(yDriverPUL,HIGH);
-//      delayMicroseconds(pulseDelay);
-//      digitalWrite(yDriverPUL,LOW);
-//      delayMicroseconds(pulseDelay);
-//      yaState = (PINE & _BV (5)) == 0; // digitalRead (3);
-//      ybState = (PINE & _BV (3)) == 0; // digitalRead (5);
-//      // If the previous and the current state of the outputA are different, that means a Pulse has occured
-//      if (yaState != yaLastState){
-//        // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
-//        if (digitalRead(yEB_plus) != yaState) {
-//          ycounter ++; //cw
-//        } 
-//        else{
-//          ycounter --; //ccw
-//        }
-//     yPos = float(ycounter)*0.0000704995;
-//      }
-//      yaLastState = yaState; // Updates the previous state of the outputA with the current state
-//    }
-//    }
-//}
 
 float readInFloat(){
   for(int i=0;i<4;i++){
