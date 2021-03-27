@@ -1,4 +1,3 @@
-
 int xEA_plus = 32; //C5
 int xEB_plus = 30; //C7
 
@@ -145,17 +144,6 @@ void setup() {
 
 void loop() {
    if(Serial.available()==24){
-    // READ IN MANUEVER COMMANDS
-//    float testVal1 = readInFloat();
-//    float testVal2 = readInFloat();
-//    float testVal3 = readInFloat();
-//    float testVal4 = readInFloat();
-//    float testVal5 = readInFloat();
-//    float testVal6 = readInFloat();
-//    // START TESTING
-//    startTime = micros(); //Time that maneuver starts
-//    TIMSK1 |= (1 << OCIE1A); // enable interrupt for thrust curve
-
 
     // READ IN MANUEVER COMMANDS
     vxa0 = readInFloat();
@@ -172,9 +160,12 @@ void loop() {
     if (yStop>absBounds){
       yStop = absBounds;
     }   
-    // START TESTING
-    startTime = micros(); //Time that maneuver starts
-    TIMSK1 |= (1 << OCIE1A); // enable interrupt for thrust curve
+    if(vxa0 && vxa1 && vya0 && vya1 && xStop && yStop){//GO BACK TO CENTER
+      restartTest();
+    }else{// START TESTING
+      startTime = micros(); //Time that maneuver starts
+      TIMSK1 |= (1 << OCIE1A); // enable interrupt for thrust curve
+    }
    }
 
 
@@ -211,7 +202,7 @@ void loop() {
  /////////////////////////////////////////////////////////////////////////////////////////////
 
   ////////////// Position Check ////////////////////
-   if (abs(xPos-.5)>xStop | abs(yPos-.5)>yStop){ //Stop gantry if position is +- .4 meters from center
+   if (abs(xPos)>xStop | abs(yPos)>yStop){ //Stop gantry if position is +- .4 meters from center
     TIMSK5 |= (0 << OCIE5A);
     TIMSK3 |= (0 << OCIE3A);
     TIMSK4 |= (0 << OCIE4A);
@@ -387,6 +378,73 @@ void testRange(){
       TIMSK4 |= (0 << OCIE4A); // turn off interrupt
     }
   if(xPos>=.5){
+      TIMSK3 |= (0 << OCIE3A);
+    }
+  }
+  TIMSK3 = 0x00; // turn off interrupt
+  TIMSK4 = 0x00; // turn off interrupt
+  cli();           // disable all interrupts
+  // New 0,0
+  xPos = 0;
+  yPos = 0;
+  xcounter = 0;
+  ycounter = 0;
+}
+
+void restartTest(){
+  // Flip directions
+  PORTH ^= _BV (5);
+  yDirection = !yDirection;
+  PORTA ^= _BV (4);
+  xDirection = !xDirection;
+  delayMicroseconds(pulseDelay*2);
+
+  OCR3A = pulseDelay*16 - 1;
+  OCR4A = pulseDelay*16 - 1;
+  TIMSK3 |= (1 << OCIE3A);
+  TIMSK4 |= (1 << OCIE4A);
+  sei();
+  
+  while(xPos!=0 || yPos!=0){
+ ////////////////////////////// GET ENCODER FEEDBACK ////////////////////////////////////
+//   Serial.print(xPos);
+//   Serial.write("\n");
+   xaState = (PINC & _BV (5)) == 0; // digitalRead (8);
+   xbState = (PINC & _BV (7)) == 0; // digitalRead (6);
+
+   yaState = (PINE & _BV (5)) == 0; // digitalRead (3);
+   ybState = (PINE & _BV (3)) == 0; // digitalRead (5);
+
+   // If the previous and the current state of the outputA are different, that means a Pulse has occured
+   if (xaState != xaLastState){
+     // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
+     if (xbState != xaState) {
+       xcounter ++; //cw towards is positive
+     } else {
+       xcounter --; //ccw away is negative
+     }
+      xPos = float(xcounter)*0.0000705;
+   }
+
+   // If the previous and the current state of the outputA are different, that means a Pulse has occured
+   if (yaState != yaLastState){
+     // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
+     if (ybState != yaState) {
+       ycounter ++; //cw towards is positive
+     } else {
+       ycounter --; //ccw away is negative
+     }
+     yPos = float(ycounter)*0.0000704995;
+   }
+   xaLastState = xaState; // Updates the previous state of the outputA with the current state
+   yaLastState = yaState; // Updates the previous state of the outputA with the current state
+ /////////////////////////////////////////////////////////////////////////////////////////////
+
+  // CHECK IF MANEUVER OUTSIDE OF RANGE, IF SO, TURN OFF TIMERS
+  if(yPos!=0){
+      TIMSK4 |= (0 << OCIE4A); // turn off interrupt
+    }
+  if(xPos!=0){
       TIMSK3 |= (0 << OCIE3A);
     }
   }

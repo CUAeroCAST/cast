@@ -22,6 +22,10 @@ log_data = true;
 
 datapath = open_logging(log_data);
 
+%Arduino parameters
+arduinoParams = make_arduino_params();
+arduinoCleanup = onCleanup(@()clean_up(arduinoParams.arduinoObj, false));
+
 %Sensor parameters
 sensorParams = make_sensor_params();
 sensorParams = build_bounding_box(sensorParams);
@@ -32,10 +36,6 @@ estimatorParams = make_estimator_params();
 
 %Guidance parameters
 guidanceParams = make_guidance_params();
-
-%Arduino parameters
-arduinoParams = make_arduino_params();
-arduinoCleanup = onCleanup(@()clean_up(arduinoParams.arduinoObj, false));
 
 %Save parameter structs
 if log_data
