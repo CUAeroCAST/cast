@@ -61,8 +61,6 @@ storage = 1;
 fprintf("Setup Complete")
 while true
 
- pause(1e-6) % microsecond pause to enable callback execution
-
  % Figure based loop exit, press the button to stop the while loop
  if ~ishandle(ButtonHandle)
   break;
@@ -92,6 +90,7 @@ while true
       moving = 1;
      end
     end
+    pause(1e-6) % microsecond pause to enable callback execution
     [estimatorParams.xs, estimatorParams.ys, arduinoParams] = run_io(xpoly, ypoly, arduinoParams, estimatorParams);
   end
  end

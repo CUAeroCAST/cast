@@ -18,11 +18,17 @@ function arduinoObj = serial_Arduino(arduinoParams)
  
  function arduinoInterrupt(arduinoObj, info)  
   if ~arduinoObj.UserData.dataReady
-   xdata = read(arduinoObj, 1, "int16");
-   ydata = read(arduinoObj, 1, "int16");
-   data = struct("xpos", xdata*0.0000705, "ypos",ydata*0.0000705);
+   metersPerStep = 0000705;
+   data = read(arduinoObj, arduinoObj.NumBytesAvailable);
+   parity = mod(length(data), 2);
+   shift = 0;
+   if parity
+    shift = 1;
+   end
+   xdata = data(end - shift - 1);
+   ydata = data(end - shift);
+   data = struct("xpos", xdata*metersPerStep, "ypos",ydata*metersPerStep);
    arduinoObj.UserData = struct("dataReady", true, "feedback", data);
-%    arduinoObj.UserData = rplidar_decode(read(arduinoObj, readsize, "single"), sensorParams, arduinoObj);
   end
  end
 
