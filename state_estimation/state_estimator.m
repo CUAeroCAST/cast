@@ -1,5 +1,5 @@
 % This function will implement a state estimation algorithm on a set of sensor readings
-function [estimate, estimatorParams] = state_estimator(sensorReading, time,...
+function [estimate, estimatorParams,nis] = state_estimator(sensorReading, time,...
                                                        estimatorParams)
  %Calculate the requested step size and update current estimator time
  stepSize = time - estimatorParams.currentTime; 
@@ -10,12 +10,12 @@ function [estimate, estimatorParams] = state_estimator(sensorReading, time,...
  %Update sensor covariance
  
  %Estimate the requested state and correct based on sensor reading
- [estimate.predState, estimate.Ppred] = predict_ekf(estimatorParams.filter, stepSize);
+ [estimate.predState, estimate.Ppred] = predict_ekf(estimatorParams.filter, stepSize,time);
  if(~any(isnan(sensorReading)))
      %Sensor location
      xs = 0;
      ys = 0;
-    [estimate.corrState, estimate.Pcorr] = correct_ekf(estimatorParams.filter,sensorReading,estimate,xs,ys);
+    [estimate.corrState, estimate.Pcorr,nis] = correct_ekf(estimatorParams.filter,sensorReading,estimate,xs,ys);
     %Update filter from correction
     estimatorParams.filter.StateCovariance = estimate.Pcorr;
     estimatorParams.filter.State = estimate.corrState;
