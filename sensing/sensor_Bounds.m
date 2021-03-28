@@ -40,7 +40,7 @@ bigpos_unit=bigpos_vec/norm(bigpos_vec);
 
 bound_step=100; %mm
 % len=(95.37-6.40651)*25.4; % mm (long gantry distance-distance ramp comes into gantry)
-len=(86.85-6.40651)*25.4; % mm (long gantry distance-distance ramp comes into gantry) 86.85
+len=(86.85-6.40651)*25.4; % mm (long gantry distance-distance ramp comes into gantry)
 
 corner1_bound=corner1+bound_step*(delta_corner1_unit+bigpos_unit);
 corner2_bound=corner2+bound_step*(delta_corner2_unit+bigpos_unit);

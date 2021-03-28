@@ -1,5 +1,10 @@
 % This function handles serial output of the maneuver to the microcontroller.
-function [xs, ys, arduinoParams] = run_io(xpoly, ypoly, arduinoParams, estimatorParams)
+function [xs, ys, arduinoParams,sensorParams] = run_io(commanding, xpoly, ypoly, arduinoParams, estimatorParams,sensorParams)
+
+if commanding
+ send_commands(arduinoParams.arduinoObj, xpoly(2), xpoly(1), ypoly(2), ypoly(1), arduinoParams.xStop, arduinoParams.yStop);
+end
+
  if arduinoParams.arduinoObj.UserData.dataReady
   xs = arduinoParams.arduinoObj.UserData.data.xpos;
   ys = arduinoParams.arduinoObj.UserData.data.ypos;
@@ -8,5 +13,12 @@ function [xs, ys, arduinoParams] = run_io(xpoly, ypoly, arduinoParams, estimator
   xs = estimatorParams.xs;
   ys = estimatorParams.ys;
  end
- send_commands(arduinoParams.arduinoObj, xpoly(2), xpoly(1), ypoly(2), ypoly(1), arduinoParams.xStop, arduinoParams.yStop);
+ 
+diffx = sensorParams.xoffset - xs;
+diffy = sensorParams.yoffset - ys;
+
+
+sensorParams.boundingbox.cornerx = sensorParams.boundingbox.cornerx - diffx*1000;
+sensorParams.boundingbox.cornery = sensorParams.boundingbox.cornery - diffy*1000;
+ 
 end

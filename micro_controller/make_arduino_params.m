@@ -1,5 +1,5 @@
 function params = make_arduino_params()
- [opsys, ~, ~] = compter;
+ [opsys, ~, ~] = computer;
  if contains(opsys, "WIN")
   params.portstr = "COM3";
  else
