@@ -1,4 +1,4 @@
-function relScaledHill = convert_2d(refOrbit, conjOrbit)
+function relScaledHill = convert_2d(refOrbit, conjOrbit, guidanceParams)
 % Convert 3D orbit to 2D testbed plane
 % This function converts the state vectors of two orbits in earth cartesian
 % frame to a relitive hill frame on the 2D testbed
@@ -12,6 +12,7 @@ function relScaledHill = convert_2d(refOrbit, conjOrbit)
 % Author: Jason Balke | Project: CAST | Date: 10/20/20
 %----------------------------------------------------------------------------------------%
 % Get normal vector to collision plane and location of collision
+scaling = guidanceParams.scaling;
 planeNormalVec = cross(refOrbit(1,4:6),conjOrbit(2,4:6));
 colPoint = [refOrbit(1,1:3) 0 0 0]; 
 len = length(refOrbit);
@@ -42,8 +43,8 @@ end
 ref2d = [ref2dPos(:,1:2) ref2dVel(:,1:2)];
 conj2d = [conj2dPos(:,1:2) conj2dVel(:,1:2)];
 % Scale to testbed size
-refScaled = ref2d/222;
-conjScaled = conj2d/222;
+refScaled = ref2d/scaling;
+conjScaled = conj2d/scaling;
 % Get relitive position
 relScaledCart = conjScaled-refScaled;
 % Convert to the 2D Hill frame
@@ -57,7 +58,7 @@ for k = 1:len
     % Transistion matrix
     Q = [scaledUnitAlong;scaledUnitCross];
     % Convert state vectors to Hill frame
-    relScaledHill(1:2,k) = Q*relScaledCart(k,1:2)';
-    relScaledHill(3:4,k) = Q*relScaledCart(k,3:4)';
+    relScaledHill(k,1:2) = Q*relScaledCart(k,1:2)';
+    relScaledHill(k,3:4) = Q*relScaledCart(k,3:4)';
 end
 end

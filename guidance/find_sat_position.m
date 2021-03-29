@@ -11,19 +11,13 @@ function [x,y] = find_sat_position(estimate, guidanceParams)
 %----------------------------------------------------------------------------------------%
 % Create the range for the pdf
 stepsize = guidanceParams.discSize;
-if any(isnan(estimate.corrState), "all")
- Pcorr = estimate.Ppred;
- estimate.corrState = estimate.predState;
-else
- Pcorr = estimate.Pcorr;
-end
+
+Pcorr = estimate.Ppred;
+estimate.corrState = estimate.predState;
+
 xrange = estimate.corrState(1)-3*Pcorr(1, 1) : stepsize : estimate.corrState(1)+3*Pcorr(1, 1);
 yrange = estimate.corrState(2)-3*Pcorr(2, 2) : stepsize : estimate.corrState(2)+3*Pcorr(2, 2);
 % Find the indices of the satelliet position
-x= find(abs(xrange - 0.01)== min(abs(xrange-0.01)));
-indxMin = find(xrange > -0.01, 1);
-indyMax = find(yrange < 0.01, 1,  'last' );
-indyMin = find(yrange > -0.01, 1);
-x = [indxMin indxMax];
-y = [indyMin indyMax];
+x= find(abs(xrange)== min(abs(xrange)));
+y = find(abs(yrange) == min(abs(yrange)));
 end

@@ -84,9 +84,9 @@ while true
 
     % calculate maneuver
     if ~moving
-     maneuver = make_maneuver(collisionEstimate, chiefState, guidanceParams);
-     if any(maneuver)
-      [xpoly, ypoly] = make_command(maneuver, collisionEstimate.collisionTime - estimatorParams.currentTime);
+     maneuver = make_maneuver(collisionEstimate, guidanceParams);
+     if maneuver(3)
+      [xpoly, ypoly] = make_command(maneuver, collisionEstimate.collisionTime - estimatorParams.currentTime, guidanceParams);
       moving = 1;
      end
     end

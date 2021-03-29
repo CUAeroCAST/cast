@@ -11,10 +11,10 @@ function burnTime = find_burn_time(Q, estimate, positionTable, directionIndex, g
 % Author: Jason Balke | Project: CAST | Date: 10/29/20
 %----------------------------------------------------------------------------------------%
 % https://www.youtube.com/watch?v=VDeZyRtPJvI&ab_channel=AnatollD. :p
-if any(isnan(estimate.corrState), "all")
- estimate.Pcorr = estimate.Ppred;
- estimate.corrState = estimate.predState;
-end
+
+estimate.Pcorr = estimate.Ppred;
+estimate.corrState = estimate.predState;
+
 scaling = guidanceParams.scaling;
 estimate.corrState = estimate.corrState * scaling;
 estimate.Pcorr = estimate.Pcorr * scaling^2;
@@ -26,8 +26,8 @@ colState = [217.547021908829, 0, 7574.87672106969, 7.24957465758464, 0, -0.20820
 % Calculating the pdf
 xmax = estimate.corrState(1)+2*sqrt(estimate.Pcorr(1,1));
 xmin =  estimate.corrState(1)-2*sqrt(estimate.Pcorr(1,1));
-ymax = estimate.corrState(3)+2*sqrt(estimate.Pcorr(3,3));
-ymin =  estimate.corrState(3)-2*sqrt(estimate.Pcorr(3,3));
+ymax = estimate.corrState(2)+2*sqrt(estimate.Pcorr(2,2));
+ymin =  estimate.corrState(2)-2*sqrt(estimate.Pcorr(2,2));
 
 
 %Transform pdf coordinates into cartesian coordiantes

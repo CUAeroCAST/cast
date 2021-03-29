@@ -1,5 +1,5 @@
 % This function handles serial output of the maneuver to the microcontroller.
-function [xs, ys, arduinoParams,sensorParams] = run_io(commanding, xpoly, ypoly, arduinoParams, estimatorParams,sensorParams)
+function [xs, ys, arduinoParams, sensorParams] = run_io(commanding, xpoly, ypoly, arduinoParams, estimatorParams,sensorParams)
 
 if commanding
  send_commands(arduinoParams.arduinoObj, xpoly(2), xpoly(1), ypoly(2), ypoly(1), arduinoParams.xStop, arduinoParams.yStop);

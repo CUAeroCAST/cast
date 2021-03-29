@@ -12,7 +12,7 @@ function maneuver = make_maneuver(propogation, guidanceParams)
 % Calculate the probability of collision
 global positionTable;
 satelliteState = guidanceParams.chiefState;
-[pdf, probability, ~, ~] = calculate_probability(propogation, guidanceParams);
+[pdf, probability] = calculate_probability(propogation, guidanceParams);
 % If probability is too great, impliment maneuver
  if probability > guidanceParams.threshold   %Initial probability of a near miss scenerio
      % Calculate the gradient of the pdf to find the maneuver direction
@@ -31,7 +31,7 @@ satelliteState = guidanceParams.chiefState;
      if directionIndex<0
          directionIndex = 360+directionIndex;
      end
-     burnTime = find_burn_time(Q, propogation, satelliteState, positionTable, directionIndex, guidanceParams);
+     burnTime = find_burn_time(Q, propogation, positionTable, directionIndex, guidanceParams);
 
      % Output the maneuver
      maneuver = [maneuverx,maneuvery,burnTime];
