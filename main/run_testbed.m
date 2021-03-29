@@ -86,6 +86,7 @@ while true
     if ~moving
      maneuver = make_maneuver(collisionEstimate, chiefState, guidanceParams);
      if any(maneuver)
+      arduinoParams = set_stops(collisionEstimate, arduinoParams);
       [xpoly, ypoly] = make_command(maneuver, collisionEstimate.collisionTime - estimatorParams.currentTime);
       moving = 1;
      end
