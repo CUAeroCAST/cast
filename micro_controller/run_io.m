@@ -1,5 +1,9 @@
 % This function handles serial output of the maneuver to the microcontroller.
+<<<<<<< HEAD
 function [xs, ys, arduinoParams, sensorParams] = run_io(commanding, xpoly, ypoly, arduinoParams, estimatorParams,sensorParams)
+=======
+function [xs, ys, arduinoParams, sensorParams] = run_io(commanding, xpoly, ypoly, arduinoParams, estimatorParams, sensorParams)
+>>>>>>> 14db4d5971739bcb82ac8e74bc65cf8b7b9f1653
 
 if commanding
  send_commands(arduinoParams.arduinoObj, xpoly(2), xpoly(1), ypoly(2), ypoly(1), arduinoParams.xStop, arduinoParams.yStop);
