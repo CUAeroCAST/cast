@@ -2,7 +2,7 @@ function sensorObj = serial_Sensor(sensorParams)
 
  portstr = sensorParams.portstr;
  readsize = sensorParams.readsize;
- sensorObj = serialport(portstr,115200, "ByteOrder", "little-endian");
+ sensorObj = serialport(portstr, 115200, "ByteOrder", "little-endian");
  setDTR(sensorObj, false);
  sensorObj.UserData = struct('dataReady', false, 'scan', nan, 'raw', nan);
  flush(sensorObj)

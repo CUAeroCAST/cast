@@ -10,4 +10,10 @@ function [xpoly, ypoly] = make_command(maneuver, timeToCollision, guidanceParams
  maneuverEnd = max(find(abs(velDiffs(:, 1)) <= 1e-5, 1), find(abs(velDiffs(:, 2)) <= 1e-5, 1));
  xpoly = polyfit(stateTime(1:maneuverEnd), vels2d(1:maneuverEnd, 1), 1);
  ypoly = polyfit(stateTime(1:maneuverEnd), vels2d(1:maneuverEnd, 2), 1);
+ if abs(xpoly(1)) > 3
+  xpoly(1) = sign(xpoly(1)) * 2;
+ end
+ if abs(ypoly(1)) > 3
+  ypoly(1) = sign(ypoly(1)) * 2;
+ end
 end

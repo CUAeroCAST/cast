@@ -41,7 +41,7 @@ miss = true;
 while miss && burnTime>0
     maneuverPos = positionTable{burnTime,directionIndex};
     if (maneuverPos(1)>xminCart(1) && maneuverPos(1)<xmaxCart(1)) && (maneuverPos(2)>yminCart(2) && maneuverPos(2)<ymaxCart(2))
-        burnTime = burnTime+1;
+        burnTime = min(burnTime+1, 30);
         break
     else
         miss = true;

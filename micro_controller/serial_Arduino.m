@@ -19,7 +19,7 @@ function arduinoObj = serial_Arduino(arduinoParams)
  function arduinoInterrupt(arduinoObj, info)  
   if ~arduinoObj.UserData.dataReady
    metersPerStep = .0000705;
-   data = read(arduinoObj, arduinoObj.NumBytesAvailable);
+   data = read(arduinoObj, arduinoObj.NumBytesAvailable, "uint16");
    parity = mod(length(data), 2);
    shift = 0;
    if parity

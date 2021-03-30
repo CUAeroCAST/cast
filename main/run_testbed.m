@@ -7,7 +7,7 @@ importCast;
 %% GLOBALS
 
 global datapath burnTable positionTable chiefOrbit timeTable;
-if ~(exist("burnTable", "var") && exist("positionTable", "var") && exist("chiefOrbit", "var") && exist("timeTable", "var"))
+if (isempty(burnTable) || isempty(positionTable) || isempty(chiefOrbit) || isempty(timeTable))
  load burnTable.mat burnTable
  load positionTable.mat positionTable
  load chiefOrbit.mat chiefOrbit
@@ -25,7 +25,7 @@ datapath = open_logging(log_data);
 %Arduino parameters
 arduinoParams = make_arduino_params();
 arduinoCleanup = onCleanup(@()clean_up(arduinoParams.arduinoObj, false));
-
+pause(65)
 %Sensor parameters
 sensorParams = make_sensor_params();
 sensorParams = build_bounding_box(sensorParams);
@@ -39,10 +39,10 @@ guidanceParams = make_guidance_params();
 
 %Save parameter structs
 if log_data
- log_struct(estimatorParams, [datapath, filesep, "estimatorParams"])
- log_struct(sensorParams, [datapath, filesep, "sensorParams"])
- log_struct(guidanceParams, [datapath, filesep, "guidanceParams"])
- log_struct(arduinoParams, [datapath, filesep, "arduinoParams"])
+ log_struct(estimatorParams, [datapath, filesep, 'estimatorParams'])
+ log_struct(sensorParams, [datapath, filesep, 'sensorParams'])
+ log_struct(guidanceParams, [datapath, filesep, 'guidanceParams'])
+ log_struct(arduinoParams, [datapath, filesep, 'arduinoParams'])
 end
 
 %% MAIN LOOP
@@ -56,8 +56,10 @@ ButtonHandle = uicontrol('Style', 'PushButton', ...
                          'Callback', 'delete(gcbf)');
 estimateStorage(100) = struct("corrState", nan, "Pcorr", nan, "predState", nan, "Ppred", nan);
 collisionStorage(100) = struct("collisionTime", nan, "predState", nan, "Ppred", nan);
+measurementStorage(100) = struct("distance", nan, "angle", nan, "count", nan);
 storage = 1;
 
+skip = true;
 fprintf("Setup Complete")
 while true
  pause(1e-6) % microsecond pause to enable callback execution
@@ -73,13 +75,17 @@ while true
   sensorParams.sensorObj.UserData.dataReady = false;
   
   if measurement.count > 0
-
+    if skip
+     estimatorParams.currentTime = time - 0.25;
+     skip = false;
+    end
     % Estimate the state
     [estimate, estimatorParams] = state_estimator([measurement.distance; measurement.angle],...
                                                        time, estimatorParams);
     collisionEstimate = collision_prediction(estimate, estimatorParams, collisionEstimate);
     estimateStorage(storage) = estimate;
     collisionStorage(storage) = collisionEstimate;
+    measurementStorage(storage) = measurement;
     storage = storage + 1;
 
     % calculate maneuver
@@ -89,10 +95,9 @@ while true
       arduinoParams = set_stops(collisionEstimate, arduinoParams);
       [xpoly, ypoly] = make_command(maneuver, collisionEstimate.collisionTime - estimatorParams.currentTime, guidanceParams);
       moving = 1;
+      [estimatorParams.xs, estimatorParams.ys, arduinoParams] = run_io(true, xpoly, ypoly, arduinoParams, estimatorParams, sensorParams);
      end
-    end
-    
-    [estimatorParams.xs, estimatorParams.ys, arduinoParams] = run_io(true, xpoly, ypoly, arduinoParams, estimatorParams);
+    end   
   end
  end
 end
@@ -101,6 +106,9 @@ end
 %Post Plotting
 % plotStruct = make_plotting_params();
 % close_logging(plotStruct);
+
+clean_up(sensorParams.sensorObj, true);
+clean_up(arduinoParams.arduinoObj, false);
  
 function clean_up(serialObj, motorStop)
 if motorStop

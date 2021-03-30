@@ -10,6 +10,7 @@ while length(first_scan.distance) < samplesPerScan
   for i = 1 : length(sensorParams.sensorObj.UserData.scan)
    first_scan.distance = [first_scan.distance; sensorParams.sensorObj.UserData.scan(i).distance'];
    first_scan.angle = [first_scan.angle; sensorParams.sensorObj.UserData.scan(i).angle'];
+  end
   sensorParams.sensorObj.UserData.dataReady = false;
  end
 end
