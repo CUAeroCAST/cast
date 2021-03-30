@@ -1,6 +1,7 @@
 int xEA_plus = 32; //C5
 int xEB_plus = 30; //C7
-
+//1600
+//25600
 int yEA_plus = 3; //E5
 int yEB_plus = 5; //E3
 
@@ -10,6 +11,8 @@ int yaState;
 int yaLastState;
 int xbState;
 int ybState;
+
+bool moving = false;
 
 int xDriverPUL = 24; //A2
 int xDriverDIR = 26; //A4
@@ -32,7 +35,7 @@ boolean toggleY = 0;
 
 int xcounter = 0;
 int ycounter = 0;
-int pulseDelay = 70;
+int pulseDelay = 960;
 
 bool testComplete = false;
 
@@ -51,7 +54,7 @@ float vya1 = .001;
 float xStop = 0.3;
 float yStop = 0.3;
 
-float absBounds = 0.4;
+float absBounds = 0.35;
 
 unsigned long startTime;
 unsigned long currentMicros;
@@ -101,7 +104,7 @@ void setup() {
    TCCR1B = 0;// same for TCCR1B
    TCNT1  = 0;//initialize counter value to 0
    // set compare match register for 1hz increments
-   OCR1A = 2000;// = (16*10^6) / (1*1024) - 1 (must be <65536)
+   OCR1A = 1000;// = (16*10^6) / (1*1024) - 1 (must be <65536)
    // turn on CTC mode
    TCCR1B |= (1 << WGM12);
    // Set CS12 and CS10 bits for 1024 prescaler
@@ -160,9 +163,10 @@ void loop() {
     if (yStop>absBounds){
       yStop = absBounds;
     }   
-    if(vxa0 && vxa1 && vya0 && vya1 && xStop && yStop){//GO BACK TO CENTER
+    if(vxa0==0 && vxa1==0 && vya0==0 && vya1==0 && xStop==0 && yStop==0){//GO BACK TO CENTER
       restartTest();
     }else{// START TESTING
+      moving = true;
       startTime = micros(); //Time that maneuver starts
       TIMSK1 |= (1 << OCIE1A); // enable interrupt for thrust curve
     }
@@ -202,11 +206,14 @@ void loop() {
  /////////////////////////////////////////////////////////////////////////////////////////////
 
   ////////////// Position Check ////////////////////
-   if (abs(xPos)>xStop | abs(yPos)>yStop){ //Stop gantry if position is +- .4 meters from center
-    TIMSK5 |= (0 << OCIE5A);
-    TIMSK3 |= (0 << OCIE3A);
-    TIMSK4 |= (0 << OCIE4A);
-    cli(); //disable interrupts
+   if (abs(xPos)>xStop | abs(yPos)>yStop && moving){ //Stop gantry if position is +- .4 meters from center
+    cli(); //disable interrupts    
+    TIMSK1 = 0x00;
+    TIMSK3 = 0x00; // turn off interrupt
+    TIMSK4 = 0x00; // turn off interrupt
+    cli();           // disable all interrupts
+    moving = false;
+    sei();
    }
 }
 
@@ -258,14 +265,14 @@ ISR(TIMER1_COMPA_vect){
 }
 
 long find_speedY(float a0,float a1,float a2,float a3,float a4,float currentTime){
-  float vel = a4*pow(currentTime,4)+a3*pow(currentTime,3)+a2*pow(currentTime,2)+a1*currentTime+a0;
+  float vel = a1*currentTime+a0;
   // change direction based on result
   if((vel>0)!=yDirection){
     //flip direction pin, if needed add delay
     PORTH ^= _BV (5);
     yDirection = !yDirection;
   }
-  long pulseDelay = (1.36/(abs(vel))); //1.36 is based on empirical calculation relating motor pulses to distance traveled
+  long pulseDelay = (16/(abs(vel))); //1.36 is based on empirical calculation relating motor pulses to distance traveled
   if(pulseDelay>4096){
     pulseDelay = 4096;
   }
@@ -273,14 +280,14 @@ long find_speedY(float a0,float a1,float a2,float a3,float a4,float currentTime)
 }
 
 long find_speedX(float a0,float a1,float a2,float a3,float a4,float currentTime){
-  float vel = a4*pow(currentTime,4)+a3*pow(currentTime,3)+a2*pow(currentTime,2)+a1*currentTime+a0;
+  float vel = a1*currentTime+a0;
   // change direction based on result
   if((vel>0)!=xDirection){
     //flip direction pin, if needed add delay
     PORTA ^= _BV (4);
     xDirection = !xDirection;
   }
-  long pulseDelay = (1.36/(abs(vel))); //1.4959 is based on empirical calculation relating motor pulses to distance traveled
+  long pulseDelay = (16/(abs(vel))); //1.4959 is based on empirical calculation relating motor pulses to distance traveled
   if(pulseDelay>4096){
     pulseDelay = 4096;
   }
@@ -338,7 +345,7 @@ void testRange(){
   TIMSK4 |= (1 << OCIE4A);
   sei();
 
-  while(xPos<.5 || yPos<.5){
+  while(xPos<.75 || yPos<.2){
  ////////////////////////////// GET ENCODER FEEDBACK ////////////////////////////////////
 //   Serial.print(xPos);
 //   Serial.write("\n");
@@ -374,11 +381,11 @@ void testRange(){
  /////////////////////////////////////////////////////////////////////////////////////////////
 
   // CHECK IF MANEUVER OUTSIDE OF RANGE, IF SO, TURN OFF TIMERS
-  if(yPos>=.5){
-      TIMSK4 |= (0 << OCIE4A); // turn off interrupt
+  if(yPos>=.2){
+      TIMSK4 &= (0 << OCIE4A); // turn off interrupt
     }
-  if(xPos>=.5){
-      TIMSK3 |= (0 << OCIE3A);
+  if(xPos>=.75){
+      TIMSK3 &= (0 << OCIE3A);
     }
   }
   TIMSK3 = 0x00; // turn off interrupt
@@ -393,6 +400,7 @@ void testRange(){
 
 void restartTest(){
   // Flip directions
+  cli();
   PORTH ^= _BV (5);
   yDirection = !yDirection;
   PORTA ^= _BV (4);
@@ -404,8 +412,18 @@ void restartTest(){
   TIMSK3 |= (1 << OCIE3A);
   TIMSK4 |= (1 << OCIE4A);
   sei();
-  
-  while(xPos!=0 || yPos!=0){
+
+  int xScale = 1;
+  if(xPos<0){
+    xScale = -1;
+  }
+
+  int yScale = 1; 
+  if(yPos<0){
+    yScale = -1;
+  }
+ 
+  while(xPos*xScale>0 || yPos*yScale>0){
  ////////////////////////////// GET ENCODER FEEDBACK ////////////////////////////////////
 //   Serial.print(xPos);
 //   Serial.write("\n");
@@ -441,16 +459,19 @@ void restartTest(){
  /////////////////////////////////////////////////////////////////////////////////////////////
 
   // CHECK IF MANEUVER OUTSIDE OF RANGE, IF SO, TURN OFF TIMERS
-  if(yPos!=0){
-      TIMSK4 |= (0 << OCIE4A); // turn off interrupt
+  if(yPos*yScale<=0){
+      TIMSK4 &= (0 << OCIE4A); // turn off interrupt
+      //TIMSK4 = 0x00; // turn off interrupt
     }
-  if(xPos!=0){
-      TIMSK3 |= (0 << OCIE3A);
+  if(xPos*xScale<=0){
+      TIMSK3 &= (0 << OCIE3A);
+      //TIMSK3 = 0x00; // turn off interrupt
     }
   }
   TIMSK3 = 0x00; // turn off interrupt
   TIMSK4 = 0x00; // turn off interrupt
   cli();           // disable all interrupts
+  sei();
 }
 
 float readInFloat(){
