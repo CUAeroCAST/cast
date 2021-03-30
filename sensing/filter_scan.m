@@ -11,19 +11,21 @@ cornery = sensorParams.boundingbox.cornery;
  objMeasurement.distance = [];
  objMeasurement.angle = [];
  objMeasurement.count = 0;
- x = data.distance .* cosd(data.angle);
- y = data.distance .* sind(data.angle);
- inds = inpolygon(x, y, cornerx, cornery);
- inds = inds & data.distance~=0;
- count = sum(inds);
- objMeasurement.distance = data.distance(inds);
- objMeasurement.angle = data.angle(inds);
+ for i = 1 : length(data)
+  x = data(i).distance .* cosd(data(i).angle);
+  y = data(i).distance .* sind(data(i).angle);
+  inds = inpolygon(x, y, cornerx, cornery);
+  inds = inds & data(i).distance~=0;
+  count = sum(inds);
+  objMeasurement.distance = [objMeasurement.distance, data(i).distance(inds)];
+  objMeasurement.angle = [objMeasurement.angle, data(i).angle(inds)];
+ end
 
 
 % Taking the mean of two object measurements in one scan
 if count > 0
            
-       objMeasurement.angle = deg2rad(meanangle(-objMeasurement.angle));
+       objMeasurement.angle = deg2rad(meanangle(objMeasurement.angle));
        objMeasurement.distance = mean(objMeasurement.distance)/1000;
        objMeasurement.count = count;
        

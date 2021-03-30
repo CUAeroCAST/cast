@@ -11,7 +11,7 @@ writematrix(["time(s)", "distance(mm)", "angle(rad)"], filename);
 sensorParams = struct;
 sensorParams.scanMode = "express";
 sensorParams.readsize = 84;
-sensorParams.portstr = "/dev/tty.usbserial-0001";
+sensorParams.portstr = "COM3";
 sensorParams.sensorObj = serial_Sensor(sensorParams);
 cleanup = onCleanup(@()clean_up(sensorParams.sensorObj));
 
@@ -29,7 +29,8 @@ estimatorParams.filter.ProcessNoise = @(dt) 0.01*eye(4); %constant process noise
 estimatorParams.filter.StateCovariance = eye(4); %Initial estimate covariance
 estimatorParams.filter.STM = @(dt) eye(4) + [0,0,1,0;0,0,0,1;0,0,0,0;0,0,0,0]*dt;
 estimatorParams.filter.State = [1.5;0;-1;0];
-
+estimatorParams.xs = 0;
+estimatorParams.ys = 0;
 
 first_scan = struct;
 first_scan.distance = [];
@@ -38,8 +39,10 @@ first_scan.angle = [];
 while length(first_scan.distance) < 400
  pause(1e-6)
  if sensorParams.sensorObj.UserData.dataReady
-  first_scan.distance = [first_scan.distance; sensorParams.sensorObj.UserData.scan.distance'];
-  first_scan.angle = [first_scan.angle; sensorParams.sensorObj.UserData.scan.angle'];
+  for i = 1 : length(sensorParams.sensorObj.UserData.scan)
+   first_scan.distance = [first_scan.distance; sensorParams.sensorObj.UserData.scan(i).distance'];
+   first_scan.angle = [first_scan.angle; sensorParams.sensorObj.UserData.scan(i).angle'];
+  end
   sensorParams.sensorObj.UserData.dataReady = false;
  end
 end
@@ -51,6 +54,7 @@ fprintf("Setup Complete")
 ButtonHandle = uicontrol('Style', 'PushButton', ...
                          'String', 'Stop loop', ...
                          'Callback', 'delete(gcbf)');
+collisionEstimate(1) = struct("collisionTime", nan, "predState", nan, "Ppred", nan);                        
 
 n = 1;
 while true
@@ -102,5 +106,5 @@ writematrix(datum, filename, "WriteMode", "append")
 
 function clean_up(sensorObj)
  stop_Motor(sensorObj);
- delete(sensorObj);
+ %delete(sensorObj);
 end

@@ -12,7 +12,7 @@ function UserData = rplidar_decode(bits, numPkts, sensorParams, sensorObj)
    if numPkts > 1
     % get first packet, run merge on remainder
     raw = express_decode(bits(1 : sensorParams.readsize));
-    [UserData.scan, UserData.raw] = express_merge(raw, bits(readsize + 1 : 2*readsize), numPkts-1, sensorParams);
+    [UserData.scan, UserData.raw] = express_merge(raw, bits(readsize + 1 : end), numPkts-1, sensorParams);
    else
     % only initialization packet is available.
     UserData.raw = express_decode(bits);
