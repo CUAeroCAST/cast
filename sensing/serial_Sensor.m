@@ -32,9 +32,10 @@ function sensorObj = serial_Sensor(sensorParams)
 
 
  
- function sensorInterrupt(sensorObj,info)  
+ function sensorInterrupt(sensorObj, info)  
   if ~sensorObj.UserData.dataReady
-   sensorObj.UserData = rplidar_decode(read(sensorObj, readsize, "uint8"), sensorParams, sensorObj);
+   availablePkts = floor(sensorObj.NumBytesAvailable / readsize);
+   sensorObj.UserData = rplidar_decode(read(sensorObj, readsize*availablePkts, "uint8"), availablePkts, sensorParams, sensorObj);
   end
  end
 
