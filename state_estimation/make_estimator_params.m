@@ -7,8 +7,8 @@ function params = make_estimator_params()
      -(y - ys)/((x - xs)^2*((y - ys)^2/(x - xs)^2 + 1)),...
      1/((x - xs)*((y - ys)^2/(x - xs)^2 + 1)), 0, 0]; %Range bearing model
  params.filter.MeasurementNoise = [0.025^2,0;0,deg2rad(0.45)^2]; %Range, bearing
- params.filter.ProcessNoise = @(dt) 0.005*eye(4); %constant process noise
- params.filter.StateCovariance = eye(4); %Initial estimate covariance
+ params.filter.ProcessNoise = @(dt) diag([0,0,1e-3,1e-3]); %constant process noise
+ params.filter.StateCovariance = diag([0.001,0.001,0.1,0.1]); %Initial estimate covariance
  params.filter.STM = @(dt) eye(4) + [0,0,1,0;0,0,0,1;0,0,0,0;0,0,0,0]*dt;
  params.filter.State = [1.5;0;-1;0];
  params.xs = 0;
