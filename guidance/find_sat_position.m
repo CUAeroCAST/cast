@@ -12,7 +12,7 @@ function [x,y] = find_sat_position(estimate, guidanceParams)
 % Create the range for the pdf
 stepsize = guidanceParams.discSize;
 
-Pcorr = estimate.Ppred;
+Pcorr = sqrt(estimate.Ppred);
 estimate.corrState = estimate.predState;
 
 xrange = estimate.corrState(1)-3*Pcorr(1, 1) : stepsize : estimate.corrState(1)+3*Pcorr(1, 1);

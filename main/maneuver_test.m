@@ -16,7 +16,7 @@ end
 
 datapath = open_logging(true);
 
-measurementPath = "livedata--1-5m--nearmiss--2ndbulb--march8.txt";
+measurementPath = "livedata--1-5m--headon--2ndbulb--march8.txt";
 data = readmatrix(measurementPath);
 data(:, 2) = data(:, 2) / 1000;
 

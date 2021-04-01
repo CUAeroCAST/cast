@@ -24,23 +24,24 @@ colState = [217.547021908829, 0, 7574.87672106969, 7.24957465758464, 0, -0.20820
 %5 Oct 2020 00:26:51.325 434.915387 0.000000 12.490366 -14.481090 -0.000000 -0.832453 
 
 % Calculating the pdf
-xmax = estimate.corrState(1)+2*sqrt(estimate.Pcorr(1,1));
-xmin =  estimate.corrState(1)-2*sqrt(estimate.Pcorr(1,1));
-ymax = estimate.corrState(2)+2*sqrt(estimate.Pcorr(2,2));
-ymin =  estimate.corrState(2)-2*sqrt(estimate.Pcorr(2,2));
-
+xmax = estimate.corrState(1) + 2*sqrt(estimate.Pcorr(1, 1));
+xmin =  estimate.corrState(1) - 2*sqrt(estimate.Pcorr(1, 1));
+ymax = estimate.corrState(2) + 2*sqrt(estimate.Pcorr(2, 2));
+ymin =  estimate.corrState(2) - 2*sqrt(estimate.Pcorr(2, 2));
+maxvecCart = Q*[xmax; ymax; 0];
+minvecCart = Q*[xmin; ymin; 0];
 
 %Transform pdf coordinates into cartesian coordiantes
-xmaxCart = Q*[0;xmax;0]+colState(1);
-xminCart = Q*[0;xmin;0]+colState(1);
-ymaxCart = Q*[0;0;ymax]+colState(2);
-yminCart = Q*[0;0;ymin]+colState(2);
+xmaxCart = maxvecCart(1) + colState(1);
+xminCart = minvecCart(1) + colState(1);
+ymaxCart = maxvecCart(3) + colState(2);
+yminCart = minvecCart(3) + colState(2);
 
 burnTime = 30;
 miss = true;
 while miss && burnTime>0
     maneuverPos = positionTable{burnTime,directionIndex};
-    if (maneuverPos(1)>xminCart(1) && maneuverPos(1)<xmaxCart(1)) && (maneuverPos(2)>yminCart(2) && maneuverPos(2)<ymaxCart(2))
+    if (maneuverPos(1)>xminCart && maneuverPos(1)<xmaxCart) && (maneuverPos(2)>yminCart && maneuverPos(2)<ymaxCart)
         burnTime = min(burnTime+1, 30);
         break
     else
