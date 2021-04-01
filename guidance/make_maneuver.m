@@ -19,8 +19,8 @@ satelliteState = guidanceParams.chiefState;
      [gradx, grady] = gradient(pdf);
      
      [satellitex, satellitey] = find_sat_position(propogation, guidanceParams);
-     maneuverx = -gradx(satellitey(1), satellitex);
-     maneuvery = -grady(satellitey(1), satellitex);
+     maneuverx = -gradx(satellitey, satellitex);
+     maneuvery = -grady(satellitey, satellitex);
      
      unit_rad = satelliteState(1:3) / norm(satelliteState(1:3));
      unit_along = satelliteState(4:6) / norm(satelliteState(4:6));

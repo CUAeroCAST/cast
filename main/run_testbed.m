@@ -59,7 +59,7 @@ collisionStorage(100) = struct("collisionTime", nan, "predState", nan, "Ppred", 
 measurementStorage(100) = struct("distance", nan, "angle", nan, "count", nan);
 storage = 1;
 
-skip = true;
+firstReading = true;
 fprintf("Setup Complete")
 while true
  pause(1e-6) % microsecond pause to enable callback execution
@@ -75,9 +75,10 @@ while true
   sensorParams.sensorObj.UserData.dataReady = false;
   
   if measurement.count > 0
-    if skip
-     estimatorParams.currentTime = time - 0.25;
-     skip = false;
+    if firstReading
+     estimatorParams.currentTime = time - 0.1;
+     firstReadingTime = time - 0.1;
+     firstReading = false;
     end
     % Estimate the state
     [estimate, estimatorParams] = state_estimator([measurement.distance; measurement.angle],...
@@ -93,7 +94,8 @@ while true
      maneuver = make_maneuver(collisionEstimate, guidanceParams);
      if maneuver(3)
       arduinoParams = set_stops(collisionEstimate, arduinoParams);
-      [xpoly, ypoly] = make_command(maneuver, collisionEstimate.collisionTime - estimatorParams.currentTime, guidanceParams);
+      timeToCollision = collisionEstimate.collisionTime - estimatorParams.currentTime;
+      [xpoly, ypoly] = make_command(maneuver, timeToCollision, guidanceParams);
       moving = 1;
       [estimatorParams.xs, estimatorParams.ys, arduinoParams] = run_io(true, xpoly, ypoly, arduinoParams, estimatorParams, sensorParams);
      end

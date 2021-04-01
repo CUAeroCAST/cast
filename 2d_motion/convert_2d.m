@@ -1,4 +1,4 @@
-function relScaledHill = convert_2d(refOrbit, conjOrbit, guidanceParams)
+function colVels = convert_2d(refOrbit, burnOrbit, guidanceParams)
 % Convert 3D orbit to 2D testbed plane
 % This function converts the state vectors of two orbits in earth cartesian
 % frame to a relitive hill frame on the 2D testbed
@@ -10,55 +10,29 @@ function relScaledHill = convert_2d(refOrbit, conjOrbit, guidanceParams)
 % relScalledHill: relitive state vector in 2D testbead hill frame
 % tRef: Time vector
 % Author: Jason Balke | Project: CAST | Date: 10/20/20
+% Updated: Trace Valade | Project: CAST| Date: 4/1/21
+%  Was previously transforming into an incorrect coordinate system.
 %----------------------------------------------------------------------------------------%
 % Get normal vector to collision plane and location of collision
 scaling = guidanceParams.scaling;
-planeNormalVec = cross(refOrbit(1,4:6),conjOrbit(2,4:6));
-colPoint = [refOrbit(1,1:3) 0 0 0]; 
-len = length(refOrbit);
-ref2colPoint = zeros(len, 6);
-conj2colPoint = zeros(len, 6);
-ref2dPos = zeros(len, 3);
-conj2dPos = zeros(len, 3);
-ref2dVel = zeros(len, 3);
-conj2dVel = zeros(len, 3);
-relScaledHill = zeros(len, 4);
+colOrbit = guidanceParams.deputyState;
+len = length(burnOrbit);
 
-% Projecting onto 2D plane
-for j = 1:length(refOrbit)
-    % Get state vectors relitive to collision point
-    ref2colPoint(j,:) = refOrbit(j,1:6)-colPoint;
-    conj2colPoint(j,:) = conjOrbit(j,1:6)-colPoint;
-    % Project the vectors onto the 2D plane
-    ref2dPos(j,:) = ref2colPoint(j,1:3)-...
-        (dot(ref2colPoint(j,1:3),planeNormalVec)/norm(planeNormalVec)^2)*planeNormalVec;
-    conj2dPos(j,:) = conj2colPoint(j,1:3)-...
-        (dot(conj2colPoint(j,1:3),planeNormalVec)/norm(planeNormalVec)^2)*planeNormalVec;
-    ref2dVel(j,:) = ref2colPoint(j,4:6)-...
-        (dot(ref2colPoint(j,4:6),planeNormalVec)/norm(planeNormalVec)^2)*planeNormalVec;
-    conj2dVel(j,:) = conj2colPoint(j,4:6)-...
-        (dot(conj2colPoint(j,4:6),planeNormalVec)/norm(planeNormalVec)^2)*planeNormalVec;
-end
-% Combine position and velocity into the full state vector
-ref2d = [ref2dPos(:,1:2) ref2dVel(:,1:2)];
-conj2d = [conj2dPos(:,1:2) conj2dVel(:,1:2)];
-% Scale to testbed size
-refScaled = ref2d/scaling;
-conjScaled = conj2d/scaling;
-% Get relitive position
-relScaledCart = conjScaled-refScaled;
-% Convert to the 2D Hill frame
-for k = 1:len
-    % Get Hill frame unit vectors
-    scaledUnitAlong = refScaled(k,3:4)/norm(refScaled(k,3:4));
-    along3d = [scaledUnitAlong 0];
-    rad3d = [0 0 1];
-    crossProduct = cross(along3d,rad3d);
-    scaledUnitCross = crossProduct(1:2);
-    % Transistion matrix
-    Q = [scaledUnitAlong;scaledUnitCross];
-    % Convert state vectors to Hill frame
-    relScaledHill(k,1:2) = Q*relScaledCart(k,1:2)';
-    relScaledHill(k,3:4) = Q*relScaledCart(k,3:4)';
-end
+% get the coordinate frame defined by the collision velocity and position
+% at first detection (30s from collision).
+colZVec = cross(colOrbit(4:6), refOrbit(1,4:6));
+colXVec = colOrbit(1:3)' - refOrbit(1, 1:3);
+colYVec = cross(colXVec, colZVec);
+
+
+% Projecting onto 2D plane, we care about the relative velocity between the
+% reference chief orbit and the burn orbit as this is the velocity that we
+% can represent on the test bed starting at a stand still.
+relVels = burnOrbit(:, 4:6) - refOrbit(:, 4:6);
+colXVels = dot(relVels, repmat(colXVec, len, 1), 2) / norm(colXVec);
+colYVels = dot(relVels, repmat(colYVec, len, 1), 2) / norm(colYVec);
+
+% rescale the distances to fit on the test bed
+colVels = [colXVels, colYVels] / scaling;
+
 end
