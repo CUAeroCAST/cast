@@ -39,7 +39,8 @@ for i = 1 : length(data)
  maneuver = make_maneuver(collisionEstimate, guidanceParams);
  
  if maneuver(3)
-  [xpoly, ypoly] = make_command(maneuver, collisionEstimate.collisionTime - estimatorParams.currentTime, guidanceParams);
+  timeToCollision = collisionEstimate.collisionTime - estimatorParams.currentTime;
+  [xpoly, ypoly] = make_command(maneuver, timeToCollision, guidanceParams);
   writematrix([xpoly, ypoly], writepath, "WriteMode", "append");
   written = true;
   break;

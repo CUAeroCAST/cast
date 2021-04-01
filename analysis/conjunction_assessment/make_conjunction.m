@@ -1,6 +1,6 @@
 function state = make_conjunction(altitude, mu, rad)
 % generates a random polar orbit
- r = [0; 0; altitude + rad];
+ r = [217.54; 0; 7575];
  solved = 0;
  v_guess = sqrt(mu/rad);
  while solved < 1
