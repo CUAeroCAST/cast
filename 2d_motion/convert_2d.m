@@ -20,17 +20,21 @@ len = length(burnOrbit);
 
 % get the coordinate frame defined by the collision velocity and position
 % at first detection (30s from collision).
-colZVec = cross(colOrbit(4:6), refOrbit(1,4:6));
-colXVec = colOrbit(1:3)' - refOrbit(1, 1:3);
-colYVec = cross(colXVec, colZVec);
+colYVec = colOrbit(1:3)' - refOrbit(1, 1:3);
+colYVec = colYVec / norm(colYVec);
+colZVec = cross(colOrbit(4:6), refOrbit(1, 4:6));
+colZVec = colZVec - dot(colYVec, colZVec) * colYVec;
+colZVec = colZVec / norm(colZVec);
+colXVec = cross(colYVec, colZVec);
+
 
 
 % Projecting onto 2D plane, we care about the relative velocity between the
 % reference chief orbit and the burn orbit as this is the velocity that we
 % can represent on the test bed starting at a stand still.
 relVels = burnOrbit(:, 4:6) - refOrbit(:, 4:6);
-colXVels = dot(relVels, repmat(colXVec, len, 1), 2) / norm(colXVec);
-colYVels = dot(relVels, repmat(colYVec, len, 1), 2) / norm(colYVec);
+colXVels = dot(relVels, repmat(colXVec, len, 1), 2);
+colYVels = dot(relVels, repmat(colYVec, len, 1), 2);
 
 % rescale the distances to fit on the test bed
 colVels = [colXVels, colYVels] / scaling;
