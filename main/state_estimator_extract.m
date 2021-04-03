@@ -4,52 +4,19 @@ close all
 importCast;
 SPD = 24 * 3600;
 
+global datapath;
 filename = "nothing.txt";
+
+datapath = open_logging(true);
 
 writematrix(["time(s)", "distance(mm)", "angle(rad)"], filename);
 
-sensorParams = struct;
-sensorParams.scanMode = "express";
-sensorParams.readsize = 84;
-sensorParams.portstr = "COM3";
-sensorParams.sensorObj = serial_Sensor(sensorParams);
-cleanup = onCleanup(@()clean_up(sensorParams.sensorObj));
+sensorParams = make_sensor_params();
+sensorParams = build_bounding_box(sensorParams);
+estimatorParams = make_estimator_params();
 
-scan_Request(sensorParams);
 
-estimatorParams = struct;
-estimatorParams.currentTime = now * SPD;
-estimatorParams.filter.MeasurementModel = @(x,xs,y,ys)...
-    [(2*x - 2*xs)/(2*((x - xs)^2 + (y - ys)^2)^(1/2)),...
-    (2*y - 2*ys)/(2*((x - xs)^2 + (y - ys)^2)^(1/2)), 0, 0;
-    -(y - ys)/((x - xs)^2*((y - ys)^2/(x - xs)^2 + 1)),...
-    1/((x - xs)*((y - ys)^2/(x - xs)^2 + 1)), 0, 0]; %Range bearing model
-estimatorParams.filter.MeasurementNoise = [0.025^2,0;0,deg2rad(0.45)^2]; %Range, bearing
-estimatorParams.filter.ProcessNoise = @(dt) 0.01*eye(4); %constant process noise
-estimatorParams.filter.StateCovariance = eye(4); %Initial estimate covariance
-estimatorParams.filter.STM = @(dt) eye(4) + [0,0,1,0;0,0,0,1;0,0,0,0;0,0,0,0]*dt;
-estimatorParams.filter.State = [1.5;0;-1;0];
-estimatorParams.xs = 0;
-estimatorParams.ys = 0;
-
-first_scan = struct;
-first_scan.distance = [];
-first_scan.angle = [];
-
-while length(first_scan.distance) < 400
- pause(1e-6)
- if sensorParams.sensorObj.UserData.dataReady
-  for i = 1 : length(sensorParams.sensorObj.UserData.scan)
-   first_scan.distance = [first_scan.distance; sensorParams.sensorObj.UserData.scan(i).distance'];
-   first_scan.angle = [first_scan.angle; sensorParams.sensorObj.UserData.scan(i).angle'];
-  end
-  sensorParams.sensorObj.UserData.dataReady = false;
- end
-end
 fprintf("Setup Complete")
-
-[sensorParams.boundingbox.cornerx, sensorParams.boundingbox.cornery]... 
- = sensor_Bounds(first_scan);
 
 ButtonHandle = uicontrol('Style', 'PushButton', ...
                          'String', 'Stop loop', ...
@@ -83,6 +50,9 @@ while true
   end
  end
 end
+
+log_struct(est_vec, [datapath, filesep, 'estimates']);
+log_struct(m, [datapath,filesep, 'measurements'])
 
 clean_up(sensorParams.sensorObj);
 for j = 1 : length(est_vec)

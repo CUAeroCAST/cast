@@ -1,8 +1,13 @@
 function [xpoly, ypoly] = make_command(maneuver, timeToCollision, guidanceParams)
  global burnTable chiefOrbit timeTable;
- direction = round(atand(maneuver(2) / maneuver(1)));
+ colPrimary = guidanceParams.deputyState(1:3)' - chiefOrbit(1, 1:3);
+ colPrimary = colPrimary / norm(colPrimary);
+ directionShift = sign(colPrimary(2)) * dot(colPrimary, [1, 0, 0]);
+ direction = round(atan2d(maneuver(2), maneuver(1)) + directionShift);
  if direction < 0
   direction = direction + 360;
+ elseif direction > 360
+  direction = direction - 360;
  end
  burnState = burnTable{maneuver(3), direction};
  stateTime = timeTable{maneuver(3), direction};

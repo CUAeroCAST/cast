@@ -25,7 +25,7 @@ datapath = open_logging(log_data);
 %Arduino parameters
 arduinoParams = make_arduino_params();
 arduinoCleanup = onCleanup(@()clean_up(arduinoParams.arduinoObj, false));
-pause(65)
+pause(75)
 %Sensor parameters
 sensorParams = make_sensor_params();
 sensorParams = build_bounding_box(sensorParams);
@@ -93,11 +93,11 @@ while true
     if ~moving
      maneuver = make_maneuver(collisionEstimate, guidanceParams);
      if maneuver(3)
-      arduinoParams = set_stops(collisionEstimate, arduinoParams);
+      arduinoParams = set_stops(collisionEstimate, arduinoParams, guidanceParams);
       timeToCollision = collisionEstimate.collisionTime - estimatorParams.currentTime;
       [xpoly, ypoly] = make_command(maneuver, timeToCollision, guidanceParams);
       moving = 1;
-      [estimatorParams.xs, estimatorParams.ys, arduinoParams] = run_io(true, xpoly, ypoly, arduinoParams, estimatorParams, sensorParams);
+      [estimatorParams.xs, estimatorParams.ys, arduinoParams, sensorParams] = run_io(true, xpoly, ypoly, arduinoParams, estimatorParams, sensorParams);
      end
     end   
   end

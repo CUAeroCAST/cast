@@ -6,8 +6,8 @@ if commanding
 end
 
  if arduinoParams.arduinoObj.UserData.dataReady
-  xs = arduinoParams.arduinoObj.UserData.data.xpos;
-  ys = arduinoParams.arduinoObj.UserData.data.ypos;
+  xs = arduinoParams.arduinoObj.UserData.feedback.xpos;
+  ys = arduinoParams.arduinoObj.UserData.feedback.ypos;
   arduinoParams.arduinoObj.UserData.dataReady = false;
  else
   xs = estimatorParams.xs;
