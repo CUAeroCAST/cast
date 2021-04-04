@@ -23,13 +23,19 @@ log_data = true;
 datapath = open_logging(log_data);
 
 %Estimator parameters
-estimatorParams = make_estimator_params();
+estimatorParams = make_estimator_params(0.05);
 
 %Save parameter structs
 
-
+n = 100;
+N = 50;
+alpha = 0.3;
+longTimeVec = 0:2.5e-4:1;
+nisVec = zeros(1,length(longTimeVec));
+neesVec = zeros(1,length(longTimeVec));
+numStats = zeros(1,length(longTimeVec));
+tMat = [];
 %% MAIN LOOP
-
 % initialization constants
 collisionEstimate(1) = struct("collisionTime", nan, "predState", nan, "Ppred", nan);
 moving = false;
@@ -41,16 +47,21 @@ estimateStorage(100) = struct("corrState", nan, "Pcorr", nan, "predState", nan, 
 collisionStorage(100) = struct("collisionTime", nan, "predState", nan, "Ppred", nan);
 storage = 1;
 
-load('C:\Users\Jason\Documents\ASEN4018-4028\git\cast\data\precomputed_sensors\headOn.mat')
-fprintf("Setup Complete")
-data(:,3) = deg2rad(data(:,3));
+% fileNum = num2str(j);
+% fileName = ['consistancyTestRand' fileNum '.mat'];
+data = load('connorsdata(1).txt');
+data = data(1:9,:);
+data(:,2) = data(:,2)/1000;
+data(:,1) = data(:,1)-data(1,1);
+polarscatter(data(:,3),data(:,2))
+% data(:,3) = rad2deg(data(:,3));
+%     fprintf("Setup Complete \n")
+%data(:,3) = deg2rad(data(:,3));
 timeVec = [];
 distance = [];
 angle = [];
 estimatorParams.currentTime = 0;
-ytruth = 0;
-vxtruth = -1.5;
-vytruth = 0;
+xtruth = @(t) 1.5-1.5*t;
 x = [];
 y = [];
 sigx = [];
@@ -62,71 +73,78 @@ sigvy = [];
 t = [];
 for i = 1:length(data)-1
     
-    distance = [distance;data(i,2)];
-    angle = [angle;data(i,3)];
-    timeVec = [timeVec;data(i,1)];
+%     distance = [distance;data(i,2)];
+%     angle = [angle;data(i,3)];
+%     timeVec = [timeVec;data(i,1)];
     pause(1e-6) % microsecond pause to enable callback execution
-
+    measurement.distance = data(i,2);
+    measurement.angle = data(i,3);
+    time = data(i,1);
+    
     % filter raw scan for object measurements
     % Estimate the state
-    if (data(i,3)<pi && data(i+1,3)>pi) || i==length(data)-1
-        measurement.distance = mean(distance);
-        measurement.angle = mean(wrapToPi(angle));
-        time = mean(timeVec);
-        [estimate, estimatorParams] = state_estimator([measurement.distance; measurement.angle],...
-                                                           time, estimatorParams);
-        collisionEstimate = collision_prediction(estimate, estimatorParams, collisionEstimate);
+%     if (data(i,3)<180 && data(i+1,3)>180) || i==length(data)-1
+%         measurement.distance = mean(distance);
+%         measurement.angle = meanangle(angle);
+%         time = mean(timeVec);
+        [estimate, estimatorParams,nis] = state_estimator([measurement.distance; measurement.angle],...
+            time, estimatorParams);
+        %             collisionEstimate = collision_prediction(estimate, estimatorParams, collisionEstimate);
         estimateStorage(storage) = estimate;
         collisionStorage(storage) = collisionEstimate;
         storage = storage + 1;
+        ex = xtruth(time)-estimate.corrState;
+        timeIndex = find(abs(longTimeVec-time)<0.0001);
+        if numStats(timeIndex)<N
+            neesVec(timeIndex) = neesVec(timeIndex)+ ex'*estimate.Pcorr*ex;
+            nisVec(timeIndex) = neesVec(timeIndex)+ nis;
+            numStats(timeIndex) = numStats(timeIndex)+1;
+        end
         x = [x estimate.corrState(1)];
         y = [y estimate.corrState(2)];
         sigx = [sigx estimate.Pcorr(1,1)];
         sigy = [sigy estimate.Pcorr(2,2)];
         vx = [vx estimate.corrState(3)];
         vy = [vy estimate.corrState(4)];
-        sigvx = [vx estimate.Pcorr(3,3)];
-        sigvy = [vy estimate.Pcorr(4,4)];
+        sigvx = [sigvx estimate.Pcorr(3,3)];
+        sigvy = [sigvy estimate.Pcorr(4,4)];
         t = [t time];
         distance = [];
         angle = [];
         timeVec = [];
-    end
+%     end
+    
+    %% CLEANUP
+    
+    %Post Plotting
+    % plotStruct = make_plotting_params();
+    % close_logging(plotStruct);
+    
+    % function clean_up(serialObj, motorStop)
+    % if motorStop
+    %  stop_Motor(serialObj);
+    % end
+    %  delete(serialObj);
+    % end
 end
-xtruth = 1.5-1.5*t;
-xerror = x-xtruth;
-yerror = y-ytruth;
-vxerror = vx-vxtruth;
-vyerror = vy-vytruth;
 figure
-subplot(2,1,1)
-plot(t,x,'k')
+plot(t,x)
 hold on
-plot(t,x+2*sqrt(sigx),'k--')
-plot(t,x-2*sqrt(sigx),'k--')
-title('X vs Time')
-xlabel('Time(s)')
-ylabel('X (m)')
-subplot(2,1,2)
-plot(t,y,'k')
+plot(t,x+2*sqrt(sigx))
+plot(t,x-2*sqrt(sigx))
+figure
+plot(data(:,2).*cos(data(:,3)),data(:,2).*sin(data(:,3)))
 hold on
-plot(t,y+2*sqrt(sigx),'k--')
-plot(t,y-2*sqrt(sigx),'k--')
+plot(x,y)
 ylim([-.5 .5])
-title('Y vs Time')
-xlabel('Time(s)')
-ylabel('Y (m)')
-figure
-plot(t,xerror)
-%% CLEANUP
-
-%Post Plotting
-% plotStruct = make_plotting_params();
-% close_logging(plotStruct);
- 
-% function clean_up(serialObj, motorStop)
-% if motorStop
-%  stop_Motor(serialObj);
+% neesSum = [];
+% nisSum = [];
+% tSum = [];
+% for k = 1:length(neesVec)
+%     if numStats(k)==N
+%         neesSum = [neesSum neesVec(k)];
+%         nisSum = [nisSum nisVec(k)];
+%         tSum = [tSum longTimeVec(k)];
+%     end
 % end
-%  delete(serialObj);
-% end
+% test_consistancy( neesSum, nisSum, tSum, N, alpha )

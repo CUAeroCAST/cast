@@ -36,6 +36,6 @@ ra3 = 0;
 for i = 1:100
     data = generate_test_data(sensorParams,targetParams,v1,r1,ra1);
     fileNum = num2str(i);
-    fileName = ['consistancyTest' fileNum '.mat'];
+    fileName = ['consistancyTestRand' fileNum '.mat'];
     save(fileName,'data')
 end

@@ -49,7 +49,7 @@ for j = 1:n
     storage = 1;
     
     fileNum = num2str(j);
-    fileName = ['consistancyTest' fileNum '.mat'];
+    fileName = ['consistancyTestRand' fileNum '.mat'];
     load(fileName)
 %     fprintf("Setup Complete \n")
     %data(:,3) = deg2rad(data(:,3));
