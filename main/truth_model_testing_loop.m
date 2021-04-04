@@ -28,7 +28,7 @@ estimatorParams = make_estimator_params(0.01);
 %Save parameter structs
 
 n = 100;
-N = 50;
+N = 100;
 alpha = 0.3;
 longTimeVec = 0:2.5e-4:1;
 nisVec = zeros(1,length(longTimeVec));
@@ -57,7 +57,7 @@ for j = 1:n
     distance = [];
     angle = [];
     estimatorParams.currentTime = 0;
-    xtruth = @(t) 1.5-1.5*t;
+    xtruth = @(t) [1.5-1.5*t;0;-1.5;0];
     x = [];
     y = [];
     sigx = [];
@@ -67,7 +67,8 @@ for j = 1:n
     sigvx = [];
     sigvy = [];
     t = [];
-    for i = 1:length(data)-1
+    estimatorParams.filter.State = [cosd(data(1,3))*data(1,2); sind(data(1,3))*data(1,3); -1; 0];
+    for i = 2:length(data)-1
 
         distance = [distance;data(i,2)];
         angle = [angle;data(i,3)];
@@ -89,8 +90,8 @@ for j = 1:n
             ex = xtruth(time)-estimate.corrState;
             timeIndex = find(abs(longTimeVec-time)<0.0001);
             if numStats(timeIndex)<N
-                neesVec(timeIndex) = neesVec(timeIndex)+ ex'*estimate.Pcorr*ex;
-                nisVec(timeIndex) = neesVec(timeIndex)+ nis;
+                neesVec(timeIndex) = neesVec(timeIndex)+ ex'*inv(estimate.Pcorr)*ex;
+                nisVec(timeIndex) = nisVec(timeIndex)+ nis;
                 numStats(timeIndex) = numStats(timeIndex)+1;
             end
             x = [x estimate.corrState(1)];
@@ -131,4 +132,6 @@ for k = 1:length(neesVec)
         tSum = [tSum longTimeVec(k)];
     end
 end
+neesSum = neesSum./N;
+nisSum = nisSum./N;
 test_consistancy( neesSum, nisSum, tSum, N, alpha )
