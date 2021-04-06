@@ -100,6 +100,7 @@ while true
       moving = 1;
       moveTime = time;
       [estimatorParams.xs, estimatorParams.ys, arduinoParams] = run_io(true, xpoly, ypoly, arduinoParams, estimatorParams, sensorParams);
+      maneuver = [maneuver, moveTime];
      end
     end   
   end
