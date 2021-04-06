@@ -1,4 +1,4 @@
-function data = generate_test_data(sensorParams, targetParams,...
+function [data,state] = generate_test_data(sensorParams, targetParams,...
     initSpeed, rampPos, rampAng)
 vx = -initSpeed * cos(rampAng);%Negative to account for ramp shooting towards 0,0
 vy = initSpeed * sin(rampAng);
@@ -21,6 +21,7 @@ for i = 2:n_samples
     v = mvnrnd(zeros(2,1),Q)';
     state(:,i) = F*state(:,i-1)+Omega*v;
 end
+state = [state;timeVec'];
 x_rel = state(1,:)';
 y_rel = state(2,:)';
 %relative path is xyz

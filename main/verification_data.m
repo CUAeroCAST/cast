@@ -21,8 +21,8 @@ targetParams.Dimensions.OriginOffset = [0,0,0];
 
 %Scenario parameters
 v1 = 1.5; %initial speed (unsigned), m/s
-v2 = 1.5;
-v3 = 1.5;
+v2 = 1.88;
+v3 = 1.88;
 
 r1 = [1.5,0]; %ramp position, m
 r2 = [1.5,0.05];
@@ -33,9 +33,11 @@ ra2 = 0.01693; %radians
 ra3 = 0;
 
 %% Generate Data
-for i = 1:100
-    data = generate_test_data(sensorParams,targetParams,v1,r1,ra1);
+for i = 1:50
+    [data,state] = generate_test_data(sensorParams,targetParams,v1,r1,ra1);
+    dataStruct.data = data;
+    dataStruct.state = state;
     fileNum = num2str(i);
-    fileName = ['consistancyTestRand' fileNum '.mat'];
-    save(fileName,'data')
+    fileName = ['consistancyTestRandState' fileNum '.mat'];
+    save(fileName,'dataStruct')
 end

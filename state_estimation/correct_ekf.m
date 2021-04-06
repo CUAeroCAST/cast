@@ -1,4 +1,4 @@
-function [xp,Pp,nis] = correct_ekf(filter,sensorReading, estimate, xs, ys)
+function [xp,Pp,nis,diffs] = correct_ekf(filter,sensorReading, estimate, xs, ys)
 %This function corrects the predicition based on received reading
 %xs and ys are the sensor x and y locations
 %xm is x,y,vx,vy
