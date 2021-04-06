@@ -70,7 +70,7 @@ while true
   measurement.Time = now * SPD;
   sensorParams.sensorObj.UserData.dataReady = false;
   if measurement.Obj.count > 0
-    [measurement.xs, measurement.ys, arduinoParams] = run_io(false, xpoly, ypoly, arduinoParams, estimatorParams, sensorParams);
+    [measurement.xs, measurement.ys, arduinoParams, sensorParams] = run_io(false, xpoly, ypoly, arduinoParams, estimatorParams, sensorParams);
 
     measurementStorage(const) = measurement;
 
