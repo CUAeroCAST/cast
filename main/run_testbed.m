@@ -111,10 +111,10 @@ end
 % plotStruct = make_plotting_params();
 % close_logging(plotStruct);
 
-save_struct(estimateStorage, [datapath, filesep, 'estimateStorage']);
-save_struct(measurementStorage, [datapath, filesep, 'measurementStorage']);
-save_struct(collisionStorage, [datapath, filesep, 'colisionStorage']);
-save([datapath, filesep, 'maneuver'], "maneuver");
+log_struct(estimateStorage, [datapath, filesep, 'estimateStorage']);
+log_struct(measurementStorage, [datapath, filesep, 'measurementStorage']);
+log_struct(collisionStorage, [datapath, filesep, 'colisionStorage']);
+log_struct(maneuver, [datapath, filesep, 'maneuver']);
 
 clean_up(sensorParams.sensorObj, true);
 clean_up(arduinoParams.arduinoObj, false);
