@@ -119,7 +119,7 @@ log_struct(maneuver, [datapath, filesep, 'maneuver']);
 clean_up(sensorParams.sensorObj, true);
 clean_up(arduinoParams.arduinoObj, false);
 
-function clean_up
+function clean_up(serialObj, motorStop)
  if motorStop
   stop_Motor(serialObj);
  end
