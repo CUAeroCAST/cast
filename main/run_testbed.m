@@ -56,7 +56,7 @@ ButtonHandle = uicontrol('Style', 'PushButton', ...
                          'Callback', 'delete(gcbf)');
 estimateStorage(100) = struct("corrState", nan, "Pcorr", nan, "predState", nan, "Ppred", nan);
 collisionStorage(100) = struct("collisionTime", nan, "predState", nan, "Ppred", nan);
-measurementStorage(100) = struct("distance", nan, "angle", nan, "count", nan);
+measurementStorage(100) = struct("time", nan, "distance", nan, "angle", nan, "count", nan);
 storage = 1;
 
 firstReading = true;
@@ -72,6 +72,7 @@ while true
  if sensorParams.sensorObj.UserData.dataReady
   measurement = filter_scan(sensorParams);
   time = now * SPD;
+  measurement.time = time;
   sensorParams.sensorObj.UserData.dataReady = false;
   
   if measurement.count > 0
@@ -97,7 +98,8 @@ while true
       timeToCollision = collisionEstimate.collisionTime - estimatorParams.currentTime;
       [xpoly, ypoly] = make_command(maneuver, timeToCollision, guidanceParams);
       moving = 1;
-      [estimatorParams.xs, estimatorParams.ys, arduinoParams, sensorParams] = run_io(true, xpoly, ypoly, arduinoParams, estimatorParams, sensorParams);
+      moveTime = time;
+      [estimatorParams.xs, estimatorParams.ys, arduinoParams] = run_io(true, xpoly, ypoly, arduinoParams, estimatorParams, sensorParams);
      end
     end   
   end
@@ -109,14 +111,14 @@ end
 % plotStruct = make_plotting_params();
 % close_logging(plotStruct);
 
+save_struct(estimateStorage, [datapath, filesep, 'estimateStorage']);
+save_struct(measurementStorage. [datapath, filesep, 'measurementStorage']);
+save_struct(collisionStorage, [datapath, filesep, 'colisionStorage']);
+save([datapath, filesep, 'maneuver'], "maneuver");
+
 clean_up(sensorParams.sensorObj, true);
 clean_up(arduinoParams.arduinoObj, false);
- 
-save("C:\Users\checkout\Desktop\System Tests\measurementStorage.mat", "measurementStorage");
-save("C:\Users\checkout\Desktop\System Tests\estimateStorage.mat", "estimateStorage");
-save("C:\Users\checkout\Desktop\System Tests\collisionStorage.mat", "collisionStorage");
-save("C:\Users\checkout\Desktop\System Tests\maenuver.mat","maneuver");
-function clean_up(serialObj, motorStop)
+
 if motorStop
  stop_Motor(serialObj);
 end
