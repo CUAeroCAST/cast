@@ -112,9 +112,15 @@ end
 clean_up(sensorParams.sensorObj, true);
 clean_up(arduinoParams.arduinoObj, false);
  
+save("C:\Users\checkout\Desktop\System Tests\measurementStorage.mat", "measurementStorage");
+save("C:\Users\checkout\Desktop\System Tests\estimateStorage.mat", "estimateStorage");
+save("C:\Users\checkout\Desktop\System Tests\collisionStorage.mat", "collisionStorage");
+save("C:\Users\checkout\Desktop\System Tests\maenuver.mat","maneuver");
 function clean_up(serialObj, motorStop)
 if motorStop
  stop_Motor(serialObj);
 end
  delete(serialObj);
 end
+
+
