@@ -112,16 +112,17 @@ end
 % close_logging(plotStruct);
 
 save_struct(estimateStorage, [datapath, filesep, 'estimateStorage']);
-save_struct(measurementStorage. [datapath, filesep, 'measurementStorage']);
+save_struct(measurementStorage, [datapath, filesep, 'measurementStorage']);
 save_struct(collisionStorage, [datapath, filesep, 'colisionStorage']);
 save([datapath, filesep, 'maneuver'], "maneuver");
 
 clean_up(sensorParams.sensorObj, true);
 clean_up(arduinoParams.arduinoObj, false);
 
-if motorStop
- stop_Motor(serialObj);
-end
+function clean_up
+ if motorStop
+  stop_Motor(serialObj);
+ end
  delete(serialObj);
 end
 
