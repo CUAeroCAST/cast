@@ -359,7 +359,7 @@ void testRange(){
   TIMSK4 |= (1 << OCIE4A);
   sei();
 
-  while(xPos<.75 || yPos<.25){
+  while(xPos<.5 || yPos<.5){
  ////////////////////////////// GET ENCODER FEEDBACK ////////////////////////////////////
 //   Serial.print(xPos);
 //   Serial.write("\n");
@@ -403,10 +403,10 @@ void testRange(){
     yPulseFlag = false;
   }
   // CHECK IF MANEUVER OUTSIDE OF RANGE, IF SO, TURN OFF TIMERS
-  if(yPos>=.25){
+  if(yPos>=.5){
       TIMSK4 &= (0 << OCIE4A); // turn off interrupt
     }
-  if(xPos>=.75){
+  if(xPos>=.5){
       TIMSK3 &= (0 << OCIE3A);
     }
   }
