@@ -95,11 +95,11 @@ while true
       moving = 1;
       moveTime = time;
       [estimatorParams.xs, estimatorParams.ys, arduinoParams, sensorParams] = run_io(true, xpoly, ypoly, arduinoParams, estimatorParams, sensorParams);
-      measurement.xs = estimatorParams.xs;
-      measurement.ys = estimatorParams.ys;
       maneuver = [maneuver, moveTime];
      end
     end
+    measurement.xs = estimatorParams.xs;
+    measurement.ys = estimatorParams.ys;
     estimateStorage(storage) = estimate;
     collisionStorage(storage) = collisionEstimate;
     measurementStorage(storage) = measurement;
