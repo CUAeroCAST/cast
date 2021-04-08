@@ -56,7 +56,7 @@ ButtonHandle = uicontrol('Style', 'PushButton', ...
                          'Callback', 'delete(gcbf)');
 estimateStorage(100) = struct("corrState", nan, "Pcorr", nan, "predState", nan, "Ppred", nan);
 collisionStorage(100) = struct("collisionTime", nan, "predState", nan, "Ppred", nan);
-measurementStorage(100) = struct("time", nan, "distance", nan, "angle", nan, "count", nan);
+measurementStorage(100) = struct("time", nan, "distance", nan, "angle", nan, "count", nan, "xs", nan, "ys", nan);
 storage = 1;
 
 firstReading = true;
@@ -85,10 +85,6 @@ while true
     [estimate, estimatorParams] = state_estimator([measurement.distance; measurement.angle],...
                                                        time, estimatorParams);
     collisionEstimate = collision_prediction(estimate, estimatorParams, collisionEstimate);
-    estimateStorage(storage) = estimate;
-    collisionStorage(storage) = collisionEstimate;
-    measurementStorage(storage) = measurement;
-    storage = storage + 1;
 
     % calculate maneuver
     if ~moving
@@ -99,10 +95,16 @@ while true
       [xpoly, ypoly] = make_command(maneuver, timeToCollision, guidanceParams);
       moving = 1;
       moveTime = time;
-      [estimatorParams.xs, estimatorParams.ys, arduinoParams] = run_io(true, xpoly, ypoly, arduinoParams, estimatorParams, sensorParams);
+      [estimatorParams.xs, estimatorParams.ys, arduinoParams, sensorParams] = run_io(true, xpoly, ypoly, arduinoParams, estimatorParams, sensorParams);
+      measurement.xs = estimatorParams.xs;
+      measurement.ys = estimatorParams.ys;
       maneuver = [maneuver, moveTime];
      end
-    end   
+    end
+    estimateStorage(storage) = estimate;
+    collisionStorage(storage) = collisionEstimate;
+    measurementStorage(storage) = measurement;
+    storage = storage + 1;
   end
  end
 end
