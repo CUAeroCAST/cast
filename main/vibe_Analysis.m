@@ -23,7 +23,7 @@ datapath = open_logging(log_data);
 %Arduino parameters
 arduinoParams = make_arduino_params();
 arduinoCleanup = onCleanup(@()clean_up(arduinoParams.arduinoObj, false));
-pause(75);
+pause(90);
 
 %Sensor parameters
 sensorParams = make_sensor_params();
@@ -54,7 +54,6 @@ ButtonHandle = uicontrol('Style', 'PushButton', ...
 % Dummy Estimator Params
 estimatorParams.xs = 0;
 estimatorParams.ys = 0;
-[~,~,arduinoParams, sensorParams] = run_io(true, xpoly, ypoly, arduinoParams, estimatorParams, sensorParams);
 
 const=1;
 while true
@@ -73,7 +72,9 @@ while true
     [measurement.xs, measurement.ys, arduinoParams, sensorParams] = run_io(false, xpoly, ypoly, arduinoParams, estimatorParams, sensorParams);
 
     measurementStorage(const) = measurement;
-
+    if const == 1
+        [~,~,arduinoParams, sensorParams] = run_io(true, xpoly, ypoly, arduinoParams, estimatorParams, sensorParams);
+    end
     const = const + 1;
   end
  end
@@ -83,4 +84,5 @@ end
 % Save Off Data into the Data Folder
 log_struct(measurementStorage,[datapath,filesep,'Vibin'])
 
-
+clean_up(sensorParams.sensorObj, true);
+clean_up(arduinoParams.arduinoObj, false);

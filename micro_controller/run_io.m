@@ -17,7 +17,8 @@ end
 diffx = sensorParams.xoffset - xs;
 diffy = sensorParams.yoffset - ys;
 
-
+sensorParams.xoffset = xs;
+sensorParams.yoffset = ys;
 sensorParams.boundingbox.cornerx = sensorParams.boundingbox.cornerx - diffx*1000;
 sensorParams.boundingbox.cornery = sensorParams.boundingbox.cornery - diffy*1000;
  

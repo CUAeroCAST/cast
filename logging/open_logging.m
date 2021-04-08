@@ -6,7 +6,7 @@ function datapath = open_logging(log_data)
 
   % strip path down to repo base
   currpath = split(pwd, filesep);
-  if contains(currpath{end}, 'main')
+  if ~contains(currpath{end}, 'cast')
    currpath = currpath(1:end-1);
   end
   currpath = join(currpath, filesep);

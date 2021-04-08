@@ -9,8 +9,6 @@ function params = make_sensor_params()
   params.portstr = "/dev/tty.usbserial-0001";
  end
  params.sensorObj = serial_Sensor(params);
- stop_Motor(params.sensorObj);
- pause(5);
  scan_Request(params);
 
  params.xoffset=0;
