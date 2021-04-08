@@ -31,15 +31,16 @@ n = 50;
 N = 50;
 alpha = 0.3;
 longTimeVec = 0:2.5e-4:1;
-% nisVec = zeros(1,length(longTimeVec));
-% neesVec = zeros(1,length(longTimeVec));
-% numStats = zeros(1,length(longTimeVec));
+nisVec = zeros(1,length(longTimeVec));
+neesVec = zeros(1,length(longTimeVec));
+numStats = zeros(1,length(longTimeVec));
 nisVec = [];
 neesVec = [];
 storeTimes = [];
 tMat = [];
 stateError = [];
 innovation = [];
+measErrorVec = [];
 %% MAIN LOOP
 for j = 1:n
     % initialization constants
@@ -75,14 +76,24 @@ for j = 1:n
     sigvx = [];
     sigvy = [];
     t = [];
-    estimatorParams.filter.State = [cosd(data(1,3))*data(1,2); sind(data(1,3))*data(1,2); -1.5; 0];
+    estimatorParams.filter.State = [cosd(data(1,3))*data(1,2); 0; -1.5; 0];
     for i = 2:length(data)
-
         distance = [distance;data(i,2)];
         angle = [angle;data(i,3)];
         timeVec = [timeVec;data(i,1)];
         truthStateIndex = find(data(i,1)==state(5,:));
         truthState = [truthState state(1:4,truthStateIndex)];
+        yTruth = [sqrt((state(1,truthStateIndex)-0)^2+(state(2,truthStateIndex)-0)^2);
+                atan2d(state(2,truthStateIndex),state(1,truthStateIndex))];
+        yTruth(2) = wrapTo180(yTruth(2));
+        measError = [yTruth(1)-distance;yTruth(2)-wrapTo180(data(i,3))];
+        expectError = atand(0.0254/state(1,truthStateIndex));
+        measError(2) = wrapTo180(measError(2));
+        measErrorVec = [measErrorVec measError(2)];
+        figure(1)
+        scatter(data(i,1),measError(2))
+        hold on
+        scatter(data(i,1),expectError,'k*')
         pause(1e-6) % microsecond pause to enable callback execution
 
         % filter raw scan for object measurements
@@ -90,7 +101,11 @@ for j = 1:n
         if i==length(data)
             measurement.distance = mean(distance);
             measurement.angle = deg2rad(meanangle(angle));
+            angle = deg2rad(angle);
+            angle = wrapToPi(angle);
+            meanAngle = mean(angle);
             truthState = (mean(truthState'))';
+%             measurement.angle = meanAngle;
             time = mean(timeVec);
             [estimate, estimatorParams,nis,diffs] = state_estimator([measurement.distance; measurement.angle],...
                                                                time, estimatorParams);
@@ -127,7 +142,11 @@ for j = 1:n
         elseif (data(i,3)<180 && data(i+1,3)>180)
             measurement.distance = mean(distance);
             measurement.angle = deg2rad(meanangle(angle));
+            angle = deg2rad(angle);
+            angle = wrapToPi(angle);
+            meanAngle = mean(angle);
             truthState = (mean(truthState'))';
+%             measurement.angle = meanAngle;
             time = mean(timeVec);
             [estimate, estimatorParams,nis,diffs] = state_estimator([measurement.distance; measurement.angle],...
                                                                time, estimatorParams);
@@ -160,6 +179,7 @@ for j = 1:n
             distance = [];
             angle = [];
             timeVec = [];
+            truthState = [];
         end
     end
     
