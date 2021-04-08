@@ -23,7 +23,6 @@ datapath = open_logging(log_data);
 %Arduino parameters
 arduinoParams = make_arduino_params();
 arduinoCleanup = onCleanup(@()clean_up(arduinoParams.arduinoObj, false));
-pause(90);
 
 %Sensor parameters
 sensorParams = make_sensor_params();
