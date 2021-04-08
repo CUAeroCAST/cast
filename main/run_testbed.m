@@ -25,7 +25,6 @@ datapath = open_logging(log_data);
 %Arduino parameters
 arduinoParams = make_arduino_params();
 arduinoCleanup = onCleanup(@()clean_up(arduinoParams.arduinoObj, false));
-pause(75)
 %Sensor parameters
 sensorParams = make_sensor_params();
 sensorParams = build_bounding_box(sensorParams);

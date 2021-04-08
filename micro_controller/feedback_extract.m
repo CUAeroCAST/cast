@@ -4,7 +4,7 @@ close all
 
 blah()
 function blah()
-filename = "encoder2.txt";
+filename = "encoder5.txt";
 writematrix(["xPos","yPos", "nr"], filename);
 
 arduinoParams = struct;
@@ -15,8 +15,9 @@ arduinoParams.ratio = 0.0000705;
 arduinoParams.arduinoObj = serial_Arduino(arduinoParams);
 cleanup = onCleanup(@()clean_up(arduinoParams.arduinoObj));
 pause(75)
+flush(arduinoParams.arduinoObj)
 %% Send manuever commands
-send_commands(arduinoParams.arduinoObj,0.0,0.000,0.0,0.000,0.2,0.2);
+send_commands(arduinoParams.arduinoObj,0.0,.01,0.0,.01,0.2,0.2);
 
 %%
 while true

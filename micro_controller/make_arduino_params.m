@@ -8,6 +8,8 @@ function params = make_arduino_params()
  params.readsize = 4;
  params.ratio = 0.0000705;
  params.arduinoObj = serial_Arduino(params);
+ pause(75)
+ flush(params.arduinoObj);
  params.xStop = 0.4;
  params.yStop = 0.4;
 end
