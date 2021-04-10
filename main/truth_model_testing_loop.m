@@ -83,30 +83,26 @@ for j = 1:n
         timeVec = [timeVec;data(i,1)];
         truthStateIndex = find(data(i,1)==state(5,:));
         truthState = [truthState state(1:4,truthStateIndex)];
-        yTruth = [sqrt((state(1,truthStateIndex)-0)^2+(state(2,truthStateIndex)-0)^2);
-                atan2d(state(2,truthStateIndex),state(1,truthStateIndex))];
-        yTruth(2) = wrapTo180(yTruth(2));
-        measError = [yTruth(1)-distance;yTruth(2)-wrapTo180(data(i,3))];
-        expectError = atand(0.0254/state(1,truthStateIndex));
-        measError(2) = wrapTo180(measError(2));
-        measErrorVec = [measErrorVec measError(2)];
-        figure(1)
-        scatter(data(i,1),measError(2))
-        hold on
-        scatter(data(i,1),expectError,'k*')
         pause(1e-6) % microsecond pause to enable callback execution
 
         % filter raw scan for object measurements
         % Estimate the state
         if i==length(data)
             measurement.distance = mean(distance);
+            truthState = (mean(truthState'))';
+            %             measurement.angle = meanAngle;
+            yTruth = [sqrt((truthState(1))^2+(truthState(2))^2);
+                atan2(truthState(2),truthState(1))];
+            yTruth(2) = wrapToPi(yTruth(2));
+            measError = [yTruth(1)-measurement.distance;yTruth(2)-wrapToPi(mean(angle))];
             measurement.angle = deg2rad(meanangle(angle));
             angle = deg2rad(angle);
             angle = wrapToPi(angle);
             meanAngle = mean(angle);
-            truthState = (mean(truthState'))';
-%             measurement.angle = meanAngle;
             time = mean(timeVec);
+%             figure(1)
+%             scatter(time,measError(2))
+%             hold on
             [estimate, estimatorParams,nis,diffs] = state_estimator([measurement.distance; measurement.angle],...
                                                                time, estimatorParams);
             innovation = [innovation diffs];
@@ -141,13 +137,20 @@ for j = 1:n
             truthState = [];
         elseif (data(i,3)<180 && data(i+1,3)>180)
             measurement.distance = mean(distance);
+            truthState = (mean(truthState'))';
+            %             measurement.angle = meanAngle;
+            yTruth = [sqrt((truthState(1))^2+(truthState(2))^2);
+                atan2(truthState(2),truthState(1))];
+            yTruth(2) = wrapToPi(yTruth(2));
+            measError = [yTruth(1)-measurement.distance;yTruth(2)-wrapToPi(mean(angle))];
             measurement.angle = deg2rad(meanangle(angle));
             angle = deg2rad(angle);
             angle = wrapToPi(angle);
             meanAngle = mean(angle);
-            truthState = (mean(truthState'))';
-%             measurement.angle = meanAngle;
             time = mean(timeVec);
+%             figure(1)
+%             scatter(time,measError(2))
+%             hold on
             [estimate, estimatorParams,nis,diffs] = state_estimator([measurement.distance; measurement.angle],...
                                                                time, estimatorParams);
             innovation = [innovation diffs];
