@@ -55,7 +55,7 @@ ylim([0 30])
 title('NIS Dynamic Consistency Test')
 set(gca, 'FontSize', 20)
 grid minor;
-set(gcf,'Position', [250 250 850 750]);
+set(gcf,'Position', [150 150 750 650]);
 
 
 

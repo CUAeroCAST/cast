@@ -89,20 +89,11 @@ for j = 1:n
         % Estimate the state
         if i==length(data)
             measurement.distance = mean(distance);
-            truthState = (mean(truthState'))';
-            %             measurement.angle = meanAngle;
-            yTruth = [sqrt((truthState(1))^2+(truthState(2))^2);
-                atan2(truthState(2),truthState(1))];
-            yTruth(2) = wrapToPi(yTruth(2));
-            measError = [yTruth(1)-measurement.distance;yTruth(2)-wrapToPi(mean(angle))];
             measurement.angle = deg2rad(meanangle(angle));
-            angle = deg2rad(angle);
-            angle = wrapToPi(angle);
-            meanAngle = mean(angle);
             time = mean(timeVec);
-%             figure(1)
-%             scatter(time,measError(2))
-%             hold on
+            if length(angle)>1
+                truthState = mean(truthState')';
+            end
             [estimate, estimatorParams,nis,diffs] = state_estimator([measurement.distance; measurement.angle],...
                                                                time, estimatorParams);
             innovation = [innovation diffs];
@@ -137,22 +128,13 @@ for j = 1:n
             truthState = [];
         elseif (data(i,3)<180 && data(i+1,3)>180)
             measurement.distance = mean(distance);
-            truthState = (mean(truthState'))';
-            %             measurement.angle = meanAngle;
-            yTruth = [sqrt((truthState(1))^2+(truthState(2))^2);
-                atan2(truthState(2),truthState(1))];
-            yTruth(2) = wrapToPi(yTruth(2));
-            measError = [yTruth(1)-measurement.distance;yTruth(2)-wrapToPi(mean(angle))];
             measurement.angle = deg2rad(meanangle(angle));
-            angle = deg2rad(angle);
-            angle = wrapToPi(angle);
-            meanAngle = mean(angle);
             time = mean(timeVec);
-%             figure(1)
-%             scatter(time,measError(2))
-%             hold on
+            if length(angle)>1
+                truthState = mean(truthState')';
+            end
             [estimate, estimatorParams,nis,diffs] = state_estimator([measurement.distance; measurement.angle],...
-                                                               time, estimatorParams);
+                time, estimatorParams);
             innovation = [innovation diffs];
 %             collisionEstimate = collision_prediction(estimate, estimatorParams, collisionEstimate);
             estimateStorage(storage) = estimate;
