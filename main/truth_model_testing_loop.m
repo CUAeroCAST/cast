@@ -41,6 +41,15 @@ tMat = [];
 stateError = [];
 innovation = [];
 measErrorVec = [];
+x = [];
+y = [];
+sigx = [];
+sigy = [];
+vx = [];
+vy = [];
+sigvx = [];
+sigvy = [];
+t = [];
 %% MAIN LOOP
 for j = 1:n
     % initialization constants
@@ -67,15 +76,7 @@ for j = 1:n
     truthState = [];
     estimatorParams.currentTime = 0;
     xtruth = @(t) [1.5-1.5*t;0;-1.5;0];
-    x = [];
-    y = [];
-    sigx = [];
-    sigy = [];
-    vx = [];
-    vy = [];
-    sigvx = [];
-    sigvy = [];
-    t = [];
+
     estimatorParams.filter.State = [cosd(data(1,3))*data(1,2); 0; -1.5; 0];
     for i = 2:length(data)
         distance = [distance;data(i,2)];
@@ -195,16 +196,27 @@ end
 % nisSum = nisSum./N;
 figure
 subplot(2,2,1)
+hold on
 scatter(storeTimes,stateError(1,:))
+scatter(storeTimes, stateError(1,:) + 2*sqrt(sigx),'r')
+scatter(storeTimes, stateError(1,:) - 2*sqrt(sigx),'r')
 title('X error')
 subplot(2,2,2)
+hold on
 scatter(storeTimes,stateError(2,:))
+scatter(storeTimes, stateError(2,:) + 2*sqrt(sigy),'r')
+scatter(storeTimes, stateError(2,:) - 2*sqrt(sigy),'r')
 title('Y error')
 subplot(2,2,3)
+hold on
 scatter(storeTimes,stateError(3,:))
+scatter(storeTimes, stateError(3,:) + 2*sqrt(sigvx),'r')
+scatter(storeTimes, stateError(3,:) - 2*sqrt(sigvx),'r')
 title('V_x error')
 subplot(2,2,4)
 scatter(storeTimes,stateError(4,:))
+scatter(storeTimes, stateError(4,:) + 2*sqrt(sigvy),'r')
+scatter(storeTimes, stateError(4,:) - 2*sqrt(sigvy),'r')
 title('V_y error')
 
 figure 
