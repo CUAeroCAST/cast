@@ -11,6 +11,7 @@ Omega = [dt^2/2 0; 0 dt^2/2; dt 0; 0 dt];
 
 %Prediction algo
 x = F*filter.State;
+% P = F*filter.StateCovariance*(F') + Omega*Q*Omega';
 P = F*filter.StateCovariance*(F') + Q;
 end
 

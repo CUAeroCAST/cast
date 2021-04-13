@@ -15,7 +15,7 @@ y_hat = [sqrt((xm(1)-xs)^2+(xm(2)-ys)^2);
          atan2((xm(2)-ys),(xm(1)-xs))];
 %Correction algo
 diffs = sensorReading - y_hat;
-xp = xm + K*(diffs);
+xp = xm + K*(diffs)+[0.01;0;0.01;0];
 Pp = (eye(4) - K*H)*Pm*(eye(4)-K*H)' + K*R*K';
 S = H*Pm*H'+R;
 nis = diffs'*inv(S)*diffs;
