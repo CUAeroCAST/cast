@@ -26,7 +26,7 @@ for i = 1:30
  [tAfter,stateAfter] = ode45(@(tAfter,stateAfter)...
             orbit_prop_maneuver(tAfter,stateAfter,mu,direction,i),[0,timeToCol],satelliteState);
  maneuverPos = stateAfter(end, 1:3);
-    if all(maxvec > maneuverPos) && all(maneuverPos > minvec)
+    if any(maxvec > maneuverPos') && any(maneuverPos' > minvec)
      continue
     else
      break

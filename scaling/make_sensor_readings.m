@@ -8,7 +8,7 @@ function [t, m] = make_sensor_readings(sim, sensor, simParams)
   release(sensor);
   sensor.MountingAngles = set_orientation(tg);
   t(i) = sim.SimulationTime;
-  theta = 180 + sensor.MountingAngles(1);
+  theta = deg2rad(sensor.MountingAngles(1));
   pts = sensor(tg, t(i));
   m(i, :) = [norm(mean(reshape(pts(~isnan(pts)), size(pts)))), theta];
  end

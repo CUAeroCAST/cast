@@ -32,7 +32,7 @@ for i = 1 : steps
                                         t(i), estimatorParams);
  collisionEstimate = collision_prediction(estimate, estimatorParams, collisionEstimate);
  if ~moving
-  timeToCol = collisionEstimate.collisionTime - t(i);
+  timeToCol = t(end) - t(i);%collisionEstimate.collisionTime - t(i);
   [maneuver, tManeuver, stateManeuver] = make_maneuver_sim(collisionEstimate, [chiefOrbit(i,:), simParams.mass], timeToCol, guidanceParams);
   if maneuver(3)
    moving = true;
