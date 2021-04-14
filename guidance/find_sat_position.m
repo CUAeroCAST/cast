@@ -18,6 +18,6 @@ estimate.corrState = estimate.predState;
 xrange = estimate.corrState(1)-3*Pcorr(1, 1) : stepsize : estimate.corrState(1)+3*Pcorr(1, 1);
 yrange = estimate.corrState(2)-3*Pcorr(2, 2) : stepsize : estimate.corrState(2)+3*Pcorr(2, 2);
 % Find the indices of the satelliet position
-x= find(abs(xrange)== min(abs(xrange)));
+x = find(abs(xrange)== min(abs(xrange)));
 y = find(abs(yrange) == min(abs(yrange)));
 end

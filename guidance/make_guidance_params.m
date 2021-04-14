@@ -1,5 +1,5 @@
 function params = make_guidance_params()
- params.threshold = 0.50; % collision probability to trigger a maneuver
+ params.threshold = 0.03; % collision probability to trigger a maneuver
  params.rSensor = 1; % size of sensor integration box
  params.rBall = 1;
  params.rDodge = params.rSensor + params.rBall;

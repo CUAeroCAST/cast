@@ -1,7 +1,7 @@
 function [t,chiefOrbit,collisionOrbit] = generateOrbits(simParams, guidanceParams)
 satelliteState = guidanceParams.chiefState';
 relativeAngle = simParams.angle;
-tspan = [simParams.time, 0];
+tspan = simParams.time : -1/simParams.rate : 0;
 mu = simParams.muEarth;
 v = satelliteState(4);
 vCol = [v*cosd(relativeAngle) v*sind(relativeAngle) 0];

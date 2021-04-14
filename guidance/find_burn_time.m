@@ -1,52 +1,37 @@
-function burnTime = find_burn_time(Q, estimate, positionTable, directionIndex, guidanceParams)
-% Determines the burn time. 
-% Maps the pdf onto the collision plane then uses plans a maneuver to move
-% the satellite outside the pdf
-% Inputs:
-% propogation: the propogated state at colision and its covariance
-% chiefState: state of the satellite
-% direction: x and y direction of the maneuver in the collision plane
-% Outputs:
-% burnTime: time of the burn
-% Author: Jason Balke | Project: CAST | Date: 10/29/20
-%----------------------------------------------------------------------------------------%
-% https://www.youtube.com/watch?v=VDeZyRtPJvI&ab_channel=AnatollD. :p
-
+function [burnTime,tAfter,stateAfter] = find_burn_time(estimate,satelliteState,direction,timeToCol, colState)
 estimate.Pcorr = estimate.Ppred;
 estimate.corrState = estimate.predState;
-
-scaling = guidanceParams.scaling;
-estimate.corrState = estimate.corrState * scaling;
-estimate.Pcorr = estimate.Pcorr * scaling^2;
-% Get the position of the collision
-colState = [217.547021908829, 0, 7574.87672106969, 7.24957465758464, 0, -0.208204291222004];
-% Convert to orbital scale
-%5 Oct 2020 00:26:51.325 434.915387 0.000000 12.490366 -14.481090 -0.000000 -0.832453 
+% Get the position of the debris
+mu = 3.98600e14;
 
 % Calculating the pdf
-xmax = estimate.corrState(1) + 2*sqrt(estimate.Pcorr(1, 1));
-xmin =  estimate.corrState(1) - 2*sqrt(estimate.Pcorr(1, 1));
-ymax = estimate.corrState(2) + 2*sqrt(estimate.Pcorr(2, 2));
-ymin =  estimate.corrState(2) - 2*sqrt(estimate.Pcorr(2, 2));
-maxvecCart = Q*[xmax; ymax; 0];
-minvecCart = Q*[xmin; ymin; 0];
+xmax = estimate.corrState(1)+2*sqrt(estimate.Pcorr(1,1));
+xmin =  estimate.corrState(1)-2*sqrt(estimate.Pcorr(1,1));
+ymax = estimate.corrState(3)+2*sqrt(estimate.Pcorr(3,3));
+ymin =  estimate.corrState(3)-2*sqrt(estimate.Pcorr(3,3));
+% Transform the debris position
+unitRad = satelliteState(1:3)/norm(satelliteState(1:3));
+unitAlong = satelliteState(4:6)/norm(satelliteState(4:6));
+unitCross = cross(unitRad,unitAlong);
+Q = [unitRad;unitAlong;unitCross]';  % make sure this Q goes the right way
 
 %Transform pdf coordinates into cartesian coordiantes
-xmaxCart = maxvecCart(1) + colState(1);
-xminCart = minvecCart(1) + colState(1);
-ymaxCart = maxvecCart(3) + colState(2);
-yminCart = minvecCart(3) + colState(2);
 
-burnTime = 30;
-miss = true;
-while miss && burnTime>0
-    maneuverPos = positionTable{burnTime,directionIndex};
-    if (maneuverPos(1)>xminCart && maneuverPos(1)<xmaxCart) && (maneuverPos(2)>yminCart && maneuverPos(2)<ymaxCart)
-        burnTime = min(burnTime+1, 30);
-        break
+minvec = Q * [xmin; ymin; 0] + colState;
+maxvec = Q * [xmax; ymax; 0] + colState;
+
+direction = Q *[cosd(direction); sind(direction); 0];
+
+for i = 1:30
+ [tAfter,stateAfter] = ode45(@(tAfter,stateAfter)...
+            orbit_prop_maneuver(tAfter,stateAfter,mu,direction,i),[0,timeToCol],satelliteState);
+ maneuverPos = stateAfter(end, 1:3);
+    if all(maxvec > maneuverPos) && all(maneuverPos > minvec)
+     continue
     else
-        miss = true;
+     break
     end
-    burnTime = burnTime-1;
 end
+burnTime = i;
+
 end

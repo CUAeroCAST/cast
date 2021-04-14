@@ -1,4 +1,4 @@
-function [position,t,state] = find_maneuver_position(satelliteState,burnTime,direction,timeToCol,burnTimesteps)
+function [position,t,state] = find_maneuver_position_sim(satelliteState,burnTime,direction,timeToCol,burnTimesteps)
 % Determines the satellite position after the maneuver
 % Calls the ode function to integrate the acceleration of the spacecraft
 % to get the state after the burn

@@ -17,7 +17,7 @@ function [ydot vdot] = orbit_prop_maneuver(t, y, mu, direction, burnTime)
      vdot = -mu*r/norm(r)^3;
  else
      T = Tslope*t+275;   %slope curve fitted from thruster model
-     mdot = T/(g0*Isp);
+     mdot = -T/(g0*Isp);
      vdot = (-mu*r/norm(r)^3)+(T/m)*thrustUnitVec;
  end
  
