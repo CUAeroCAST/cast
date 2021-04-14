@@ -10,7 +10,7 @@ function params = make_estimator_params()
  params.filter.ProcessNoise = @(dt) diag([0,0,1e-3,1e-3]); %constant process noise
  params.filter.StateCovariance = diag([0.001,0.001,0.1,0.1]); %Initial estimate covariance
  params.filter.STM = @(dt) eye(4) + [0,0,1,0;0,0,0,1;0,0,0,0;0,0,0,0]*dt;
- params.filter.State = [1.5;0;-1;0];
+ params.currentTime = 0;
  params.xs = 0;
  params.ys = 0;
 end
