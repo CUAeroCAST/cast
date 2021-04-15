@@ -93,7 +93,7 @@ while true
      if maneuver(3)
       arduinoParams = set_stops(collisionEstimate, arduinoParams, guidanceParams);
       timeToCollision = collisionEstimate.collisionTime - estimatorParams.currentTime;
-      [xpoly, ypoly] = make_command(maneuver, timeToCollision, guidanceParams);
+      [ypoly, xpoly] = make_command(maneuver, timeToCollision, guidanceParams);
       moving = 1;
       moveTime = time;
       [estimatorParams.xs, estimatorParams.ys, arduinoParams, sensorParams] = run_io(true, xpoly, ypoly, arduinoParams, estimatorParams, sensorParams);
