@@ -28,8 +28,8 @@ colYVec = cross(colZVec, colXVec);
 % reference chief orbit and the burn orbit as this is the velocity that we
 % can represent on the test bed starting at a stand still.
 relVels = burnOrbit(:, 4:6) - refOrbit(:, 4:6);
-colXVels = dot(relVels, repmat(colXVec, len, 1), 2);
-colYVels = dot(relVels, repmat(colYVec, len, 1), 2);
+colXVels = dot(relVels, repmat(colXVec', len, 1), 2);
+colYVels = dot(relVels, repmat(colYVec', len, 1), 2);
 
 % rescale the distances to fit on the test bed
 colVels = [colXVels, colYVels] / scaling;

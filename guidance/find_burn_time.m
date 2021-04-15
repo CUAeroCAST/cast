@@ -43,7 +43,7 @@ burnTime = 30;
 miss = true;
 while miss && burnTime>0
     maneuverPos = positionTable{burnTime,directionIndex};
-    if all(maxvecCart < maneuverPos) || all(maneuverPos < minvecCart)
+    if all(maxvecCart < maneuverPos, 'all') || all(maneuverPos < minvecCart,'all')
         burnTime = burnTime - 1;
     else
      burnTime = min(burnTime+1, 30);
