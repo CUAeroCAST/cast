@@ -36,6 +36,7 @@ estimatorParams = make_estimator_params();
 %Guidance parameters
 guidanceParams = make_guidance_params();
 
+
 %Save parameter structs
 if log_data
  log_struct(estimatorParams, [datapath, filesep, 'estimatorParams'])

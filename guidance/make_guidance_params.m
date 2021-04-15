@@ -8,4 +8,6 @@ function params = make_guidance_params()
  params.scaling = 222;
  params.firstDetectionTime = 30; %seconds
  params.deputyState = [237.3344; -216.6338; 7.513e3; -0.6566; 7.2191; 0.2271];
+ params.colState = [217.547021908829, 0, 7574.87672106969, 7.24957465758464, 0, -0.208204291222004];
+ params.angleOffset = find_angle_offset(params);
 end
