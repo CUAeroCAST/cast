@@ -18,6 +18,9 @@ function [xpoly, ypoly] = make_command(maneuver, timeToCollision, guidanceParams
  stateTime = stateTime * timeToCollision / maneuver(3);
  velDiffs = diff(vels2d,1);
  maneuverEnd = max(find(abs(velDiffs(:, 1)) <= 1e-5, 1), find(abs(velDiffs(:, 2)) <= 1e-5, 1));
+ if isempty(maneuverEnd)
+  maneuverEnd = length(stateTime);
+ end
  xpoly = polyfit(stateTime(1:maneuverEnd), vels2d(1:maneuverEnd, 1), 1);
  ypoly = polyfit(stateTime(1:maneuverEnd), vels2d(1:maneuverEnd, 2), 1);
 end
