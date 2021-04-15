@@ -14,13 +14,13 @@ targetParams.Dimensions.Width = 50e-3;
 targetParams.Dimensions.Height = 50e-3;
 targetParams.Dimensions.OriginOffset = [0,0,0];
 
-timeVec = linspace(0, 4, 4*sensorParams.samplingRate);
+timeVec = linspace(0, 2, 2*sensorParams.samplingRate);
 %% SENSOR MODEL
 scenario = trackingScenario('UpdateRate',sensorParams.samplingRate);
 scenario.StopTime = timeVec(end);
 ego = platform(scenario,'Trajectory', ...
-                kinematicTrajectory('Position',[2 0.5 0],...
-                'Velocity', [0, -0.25, 0],...
+                kinematicTrajectory('Position',[0 0 0],...
+                'Velocity', [0.1, 0.1, 0],...
                 'AngularVelocitySource', 'Property',...
                 'AngularVelocity',[0 0 sensorParams.scanRate*2*pi]));
 % Stationary object
@@ -62,8 +62,6 @@ sensorReadings(notValid,:) = [];
 x = xy_loc(:,1) + sensorReadings(:,1).*cos(sensorReadings(:,2));
 y = xy_loc(:,2) + sensorReadings(:,1).*sin(sensorReadings(:,2));
 
-load('vibe_dat.mat')
-
 figure
 hold on
 plot(x,y,'x')
@@ -92,3 +90,13 @@ xlabel('X Position [m]')
 ylabel('Y Position [m]')
 legend('Simulated Data','2\sigma Bound', 'Actual Ball')
 title('Expected Vibration Response')
+
+%Compute number of points within circle
+radius = 0.025;
+x_ball = 0;
+y_ball = 0;
+x0 = x - x_ball;
+y0 = y - y_ball;
+n_within = sum(x0.^2 + y0.^2 - radius^2 < 0);
+n_total = length(x);
+pct_within = n_within/n_total*100;

@@ -23,7 +23,7 @@ function maneuver = make_maneuver(propogation, guidanceParams)
      R = guidanceParams.angleOffset;
      maneuverxy = R * [maneuverx; maneuvery];
      maneuverx = maneuverxy(1);
-     maneuvery = mamneuverxy(2);
+     maneuvery = maneuverxy(2);
      
      directionIndex = round(atan2d(maneuvery,maneuverx));
      if directionIndex<0
