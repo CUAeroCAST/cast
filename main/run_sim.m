@@ -4,12 +4,16 @@ close all
 importCast;
 
 global datapath;
-%datapath = open_logging(true);
+datapath = open_logging(true);
 
 estimatorParams = make_estimator_params();
 estimatorParams.currentTime = 0;
 guidanceParams = make_guidance_params();
 simParams = make_sim_params();
+
+log_struct(estimatorParams, [datapath, filesep, 'estimatorParams'])
+log_struct(guidanceParams, [datapath, filesep, 'guidanceParams'])
+log_struct(simParams, [datapath, filesep, 'simParams'])
 
 [t, chiefOrbit, collisionOrbit] = generateOrbits(simParams, guidanceParams);
 [sim, sensor, estimatorParams.filter.State] = make_simulation(t, chiefOrbit, collisionOrbit, simParams);
@@ -42,3 +46,8 @@ for i = 1 : steps
  collisionStorage(i) = collisionEstimate;
  measurementStorage(i) = measurement;
 end
+
+log_struct(estimateStorage, [datapath, filesep, 'estimateStorage'])
+log_struct(collisionStorage, [datapath, filesep, 'collisionStorage'])
+log_struct(measurementStorage, [datapath, filesep, 'measurementStorage'])
+log_struct(maneuver, [datapath, filesep, 'maneuver'])
