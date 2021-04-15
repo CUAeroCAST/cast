@@ -19,15 +19,15 @@ function arduinoObj = serial_Arduino(arduinoParams)
  function arduinoInterrupt(arduinoObj, info)  
   if ~arduinoObj.UserData.dataReady
    metersPerStep = arduinoParams.ratio;
-   readnum = readsize/2; %arduinoObj.NumBytesAvailable - mod(arduinoObj.NumBytesAvailable, 2);
+   readnum = (arduinoObj.NumBytesAvailable - mod(arduinoObj.NumBytesAvailable, 2))/2;
    data = read(arduinoObj, readnum, "int16");
    parity = mod(length(data), 2);
    shift = 0;
    if parity
     shift = 1;
    end
-   xdata = data(end - shift - 1);
-   ydata = data(end - shift);
+   ydata = data(end - shift - 1);
+   xdata = data(end - shift);
    data = struct("xpos", xdata*metersPerStep, "ypos",ydata*metersPerStep);
    arduinoObj.UserData = struct("dataReady", true, "feedback", data, "nr", readnum);
   end

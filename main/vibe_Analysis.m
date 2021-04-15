@@ -55,6 +55,7 @@ estimatorParams.xs = 0;
 estimatorParams.ys = 0;
 
 const=1;
+flush(arduinoParams.arduinoObj);
 while true
     pause(1e-6)
  % Figure based loop exit, press the button to stop the while loop

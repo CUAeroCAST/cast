@@ -39,7 +39,7 @@ int ycounter = 0;
 long xcounterPulse = 0;
 long ycounterPulse = 0;
 
-int pulseDelay = 900;
+int pulseDelay = 225;
 
 bool testComplete = false;
 
@@ -418,6 +418,8 @@ void testRange(){
   yPos = 0;
   xcounter = 0;
   ycounter = 0;
+  xcounterPulse = 0;
+  ycounterPulse = 0;
 }
 
 void restartTest(){

@@ -53,13 +53,14 @@ SPD = 24*3600;
 ButtonHandle = uicontrol('Style', 'PushButton', ...
                          'String', 'Stop loop', ...
                          'Callback', 'delete(gcbf)');
-estimateStorage(100) = struct("corrState", nan, "Pcorr", nan, "predState", nan, "Ppred", nan);
-collisionStorage(100) = struct("collisionTime", nan, "predState", nan, "Ppred", nan);
-measurementStorage(100) = struct("time", nan, "distance", nan, "angle", nan, "count", nan, "xs", nan, "ys", nan);
+maxStorage = 150;
+estimateStorage(maxStorage) = struct("corrState", nan, "Pcorr", nan, "predState", nan, "Ppred", nan);
+collisionStorage(maxStorage) = struct("collisionTime", nan, "predState", nan, "Ppred", nan);
+measurementStorage(maxStorage) = struct("time", nan, "distance", nan, "angle", nan, "count", nan, "xs", nan, "ys", nan);
 storage = 1;
 
 firstReading = true;
-fprintf("Setup Complete")
+fprintf("Setup Complete\n")
 while true
  pause(1e-6) % microsecond pause to enable callback execution
  % Figure based loop exit, press the button to stop the while loop
@@ -98,6 +99,7 @@ while true
       maneuver = [maneuver, moveTime];
      end
     end
+    [estimatorParams.xs, estimatorParams.ys, arduinoParams, sensorParams] = run_io(false, 0, 0, arduinoParams, estimatorParams, sensorParams);
     measurement.xs = estimatorParams.xs;
     measurement.ys = estimatorParams.ys;
     estimateStorage(storage) = estimate;
