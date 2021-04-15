@@ -261,6 +261,12 @@ ISR(TIMER1_COMPA_vect){
   // encoder output
   xcounter = (int)(((float)xcounterPulse)*.3125);
   ycounter = (int)(((float)ycounterPulse)*.3125);
+  if(!xDirection){
+    xcounter = -xcounter;
+  }
+  if(!yDirection){
+    ycounter = -ycounter;
+  }
   Serial.write((xcounter & 0xFF));
   Serial.write((xcounter>>8 & 0xFF));
 
