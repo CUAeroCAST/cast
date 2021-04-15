@@ -9,9 +9,11 @@ function [xpoly, ypoly] = make_command(maneuver, timeToCollision, guidanceParams
  end
  burnState = burnTable{maneuver(3), direction};
  stateTime = timeTable{maneuver(3), direction};
+ % get 2D, convert back to sensor frame
  burnVels2d = convert_2d(chiefOrbit, burnState(:, 1:6), guidanceParams);
  R = guidanceParams.angleOffset;
  burnVels2d = burnVels2d * R;
+ 
  vels2d = burnVels2d * guidanceParams.firstDetectionTime / timeToCollision;
  stateTime = stateTime * timeToCollision / maneuver(3);
  velDiffs = diff(vels2d,1);

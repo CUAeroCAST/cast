@@ -13,21 +13,16 @@ function colVels = convert_2d(refOrbit, burnOrbit, guidanceParams)
 % Updated: Trace Valade | Project: CAST| Date: 4/1/21
 %  Was previously transforming into an incorrect coordinate system.
 %----------------------------------------------------------------------------------------%
-% Get normal vector to collision plane and location of collision
+%
 scaling = guidanceParams.scaling;
 colOrbit = guidanceParams.deputyState;
 len = length(burnOrbit);
 
-% get the coordinate frame defined by the collision velocity and position
-% at first detection (30s from collision).
-colYVec = colOrbit(1:3)' - refOrbit(1, 1:3);
-colYVec = colYVec / norm(colYVec);
-colZVec = cross(colOrbit(4:6), refOrbit(1, 4:6));
-colZVec = colZVec - dot(colYVec, colZVec) * colYVec;
-colZVec = colZVec / norm(colZVec);
-colXVec = cross(colYVec, colZVec);
-
-
+% get hill frame
+chief = guidanceParams.chiefState;
+colZVec = chief(1:3) / norm(chief(1:3));
+colXVec = chief(4:6) / norm(chief(4:6));
+colYVec = cross(colZVec, colXVec);
 
 % Projecting onto 2D plane, we care about the relative velocity between the
 % reference chief orbit and the burn orbit as this is the velocity that we
