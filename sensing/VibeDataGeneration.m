@@ -14,7 +14,7 @@ targetParams.Dimensions.Width = 50e-3;
 targetParams.Dimensions.Height = 50e-3;
 targetParams.Dimensions.OriginOffset = [0,0,0];
 
-timeVec = linspace(0, 4, 4*sensorParams.samplingRate);
+timeVec = linspace(0, 2, 2*sensorParams.samplingRate);
 %% SENSOR MODEL
 scenario = trackingScenario('UpdateRate',sensorParams.samplingRate);
 scenario.StopTime = timeVec(end);
@@ -61,7 +61,6 @@ sensorReadings(notValid,:) = [];
 
 x = xy_loc(:,1) + sensorReadings(:,1).*cos(sensorReadings(:,2));
 y = xy_loc(:,2) + sensorReadings(:,1).*sin(sensorReadings(:,2));
-
 
 figure
 hold on
