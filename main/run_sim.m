@@ -72,22 +72,60 @@ minvec = min([minvecTemp'; maxvecTemp']);
 X = X*maxvec(1) + colState(1);
 Y = Y*maxvec(2) + colState(2);
 Z = Z*maxvec(3) + colState(3);
-plot3(chiefOrbit(:,1), chiefOrbit(:,2), chiefOrbit(:,3), "LineWidth", 1)
+
+t = tiledlayout('flow');
+t.TileSpacing = 'compact';
+t.Padding = 'compact';
+nexttile
+plot3(chiefOrbit(:,1), chiefOrbit(:,2), chiefOrbit(:,3), "LineWidth", 2)
 hold on
-plot3(collisionOrbit(:,1), collisionOrbit(:,2), collisionOrbit(:,3), "LineWidth", 1)
-plot3(stateManeuver(:,1), stateManeuver(:,2), stateManeuver(:,3), "LineWidth", 1)
+plot3(collisionOrbit(:,1), collisionOrbit(:,2), collisionOrbit(:,3), "LineWidth", 2)
+plot3(stateManeuver(:,1), stateManeuver(:,2), stateManeuver(:,3), "LineWidth", 2)
 s = surf(X,Y,Z);
 set(s, "FaceColor", [0,0,0]);
-set(s, "FaceAlpha", 0.25)
+set(s, "FaceAlpha", 0.1)
 legend("Before Maneuver", "Space Junk", "After Maneuver", "2\sigma Ellipse")
 grid minor
+xlim([-1e2,1e2])
+ylim([-150,150])
+zlim([7.577999e6, 7.5780015e6])
 xlabel("ECEF-X (m)")
 ylabel("ECEF-Y (m)")
 zlabel("ECEF-Z (m)")
-title("Maneuver Comparison Integrated to Time-of-Collision")
-xticks([-100, -50, 0, 50, 100])
-yticks([-50, 0, 50])
-zticks([7578e3 - 10, 7578e3, 7578e3 + 10])
+sgtitle("Maneuver Comparison Integrated to Time-of-Collision")
+
+nexttile
+plot3(chiefOrbit(:,1), chiefOrbit(:,2), chiefOrbit(:,3), "LineWidth", 2)
+hold on
+plot3(collisionOrbit(:,1), collisionOrbit(:,2), collisionOrbit(:,3), "LineWidth", 2)
+plot3(stateManeuver(:,1), stateManeuver(:,2), stateManeuver(:,3), "LineWidth", 2)
+s = surf(X,Y,Z);
+set(s, "FaceColor", [0,0,0]);
+set(s, "FaceAlpha", 0.1)
+grid minor
+xlim([-1e2,1e2])
+ylim([-150,150])
+zlim([7.577999e6, 7.5780015e6])
+xlabel("ECEF-X (m)")
+ylabel("ECEF-Y (m)")
+zlabel("ECEF-Z (m)")
+
+nexttile
+plot3(chiefOrbit(:,1), chiefOrbit(:,2), chiefOrbit(:,3), "LineWidth", 2)
+hold on
+plot3(collisionOrbit(:,1), collisionOrbit(:,2), collisionOrbit(:,3), "LineWidth", 2)
+plot3(stateManeuver(:,1), stateManeuver(:,2), stateManeuver(:,3), "LineWidth", 2)
+s = surf(X,Y,Z);
+set(s, "FaceColor", [0,0,0]);
+set(s, "FaceAlpha", 0.1)
+grid minor
+xlim([-1e2,1e2])
+ylim([-150,150])
+zlim([7.577999e6, 7.5780015e6])
+xlabel("ECEF-X (m)")
+ylabel("ECEF-Y (m)")
+zlabel("ECEF-Z (m)")
+
 
 log_struct(estimateStorage, [datapath, filesep, 'estimateStorage'])
 log_struct(collisionStorage, [datapath, filesep, 'collisionStorage'])
