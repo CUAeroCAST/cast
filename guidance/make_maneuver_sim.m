@@ -26,7 +26,7 @@ function [maneuver, tManeuver, stateManeuver] = make_maneuver_sim(propogation, s
 %      Q = [unit_rad, unit_along, unit_cross];
 
      direction = atan2d(maneuvery,maneuverx);
-     colState = guidanceParams.chiefState(1:3);
+     colState = guidanceParams.colState(1:3);
      [burnTime, tManeuver, stateManeuver] = find_burn_time(propogation, satState, direction, timeToCol, colState);
 
      % Output the maneuver

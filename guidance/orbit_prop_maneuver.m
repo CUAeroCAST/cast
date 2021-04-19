@@ -1,4 +1,4 @@
-function [ydot vdot] = orbit_prop_maneuver(t, y, mu, direction, burnTime)
+function ydot = orbit_prop_maneuver(t, y, mu, direction, burnTime)
 % propogates the undisturbed two body equation
  r = y(1:3);
  v = y(4:6);

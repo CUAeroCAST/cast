@@ -25,6 +25,7 @@ xlabel('BB size target (m)')
 yyaxis left
 ylabel('Testbed size (m)')
 plot(sizes, test_bed_distances)
+hold on
 yyaxis right
 ylabel('Testbed velocity (m/s)')
 plot(sizes, test_bed_velocities)

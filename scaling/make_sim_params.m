@@ -7,6 +7,6 @@ function params = make_sim_params()
  params.abounds = [-1e-3, 1e-3];
  params.res = 1e-4;
  params.acc = 0.01;
- params.mass = 850;
+ params.mass = 100;
  
 end
